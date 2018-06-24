@@ -1,0 +1,22 @@
+{
+  "name": "decco",
+  "version": "1.0.0",
+  "description": "Bucklescript PPX which generates JSON (de)serializers for user-defined types",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "build": "npm run clean && bsb -make-world",
+    "watch": "npm run clean && bsb -make-world -w",
+    "clean": "rm -rf lib && bsb -clean-world"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "author": "Ryan Biwer",
+  "_": [],
+  "peerDependencies": {
+    "bs-platform": "^3.1.5"
+  },
+  "devDependencies": {
+    "@glennsl/bs-jest": "^0.4.2"
+  }
+}

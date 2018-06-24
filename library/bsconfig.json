@@ -1,0 +1,17 @@
+{
+    "name" : "test",
+    "bs-dependencies": [ "bs-result-ex" ],
+    "bs-dev-dependencies": [ "@glennsl/bs-jest" ],
+    "sources" : [
+        { "dir" : "src" },
+        {
+            "dir": "__tests__",
+            "type": "dev"
+        }
+    ],
+    "refmt": 3,
+    "ppx-flags": [
+        "../ppx/ppx_decco.sh"
+    ],
+    "bsc-flags": [ "-w -10", "-bs-super-errors" ]
+}

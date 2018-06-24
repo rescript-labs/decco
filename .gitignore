@@ -21,3 +21,11 @@ setup.log
 
 # Merlin configuring file for Vim and Emacs
 .merlin
+
+*.install
+
+
+#tmp files
+/ast.txt
+/test.ml
+/test.re
