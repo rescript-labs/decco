@@ -7,6 +7,14 @@ type decodeError = {
     value: Js.Json.t
 };
 
+let error = (~path=?, message, value) =>{
+    let path = switch path {
+        | None => ""
+        | Some(s) => s
+    };
+    Error({ path, message, value });
+};
+
 let string_to_json = (s) => Js.Json.string(s);
 let string_from_json = (j) =>
     switch (Js.Json.classify(j)) {
