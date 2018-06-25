@@ -8,34 +8,12 @@ open Expect;
 [@decco] type f = float;
 [@decco] type b = bool;
 [@decco] type u = unit;
-[@deccjo] type a('a) = array('a);
-type l('a) = list('a);
-type o('a) = option('a);
-
-type simpleVar('a) = 'a;
-
-let s__from_json = (j) => string_from_json(j);
-
-let i__to_json = (v) => int_to_json(v);
-let i__from_json = (j) => int_from_json(j);
-
-let f__to_json = (v) => float_to_json(v);
-let f__from_json = (j) => float_from_json(j);
-
-let b__to_json = (v) => bool_to_json(v);
-let b__from_json = (j) => bool_from_json(j);
-
-let u__to_json = (v) => unit_to_json(v);
-let u__from_json = (j) => unit_from_json(j);
-
-let a__to_json = (encoder, v) => array_to_json(encoder, v);
-let a__from_json = (decoder, j) => array_from_json(decoder, j);
-
-let l__to_json = (encoder, v) => list_to_json(encoder, v);
-let l__from_json = (decoder, j) => list_from_json(decoder, j);
-
-let o__to_json = (encoder, v) => option_to_json(encoder, v);
-let o__from_json = (decoder, j) => option_from_json(decoder, j);
+[@decco] type a('a) = array('a);
+[@decco] type l('a) = list('a);
+[@decco] type o('a) = option('a);
+[@decco] type simpleVar('a) = 'a;
+[@decco] type optionList = list(option(string));
+[@decco] type abc = A | B(int) | C(int, int);
 
 let testBadDecode = (name, decode, json, expectedError) =>
     test(name, () => {
@@ -45,7 +23,7 @@ let testBadDecode = (name, decode, json, expectedError) =>
         };
     });
 
-let testGoodDecode = (name, json, decode, expected) =>
+let testGoodDecode = (name, decode, json, expected) =>
     test(name, () =>
         switch (decode(json)) {
             | Ok(actual) => expect(actual) |> toEqual(expected)
@@ -64,7 +42,7 @@ describe("string", () => {
     });
 
     describe("s__from_json", () => {
-        testGoodDecode("good", Js.Json.string("heyy"), s__from_json, "heyy");
+        testGoodDecode("good", s__from_json, Js.Json.string("heyy"), "heyy");
 
         testBadDecode("bad", s__from_json, Js.Json.number(12.), {
             path: "",
@@ -85,7 +63,7 @@ describe("int", () => {
     });
 
     describe("i__from_json", () => {
-        testGoodDecode("good", Js.Json.number(414.), i__from_json, 414);
+        testGoodDecode("good", i__from_json, Js.Json.number(414.), 414);
 
         describe("bad", () => {
             let json = Js.Json.string("12.");
@@ -116,7 +94,7 @@ describe("float", () => {
     });
 
     describe("f__from_json", () => {
-        testGoodDecode("good", Js.Json.number(12.), f__from_json, 12.);
+        testGoodDecode("good", f__from_json, Js.Json.number(12.), 12.);
 
         testBadDecode("bad", f__from_json, Js.Json.string("12."), {
             path: "",
@@ -136,7 +114,7 @@ describe("bool", () => {
     });
 
     describe("b__from_json", () => {
-        testGoodDecode("good", Js.Json.boolean(false), b__from_json, false);
+        testGoodDecode("good", b__from_json, Js.Json.boolean(false), false);
 
         testBadDecode("bad", b__from_json, Js.Json.string("12."), {
             path: "",
@@ -155,7 +133,7 @@ describe("unit", () => {
         };
     });
 
-    testGoodDecode("u__from_json", Js.Json.number(0.), u__from_json, ());
+    testGoodDecode("u__from_json", u__from_json, Js.Json.number(0.), ());
 });
 
 describe("array", () => {
@@ -170,7 +148,7 @@ describe("array", () => {
         let json = [|"10","20"|]
             |> Js.Array.map(Js.Json.string)
             |> Js.Json.array;
-        testGoodDecode("good", json, a__from_json(s__from_json), [|"10","20"|]);
+        testGoodDecode("good", a__from_json(s__from_json),json, [|"10","20"|]);
 
         describe("bad", () => {
             testBadDecode("non-array", a__from_json(s__from_json), Js.Json.number(12.), {
@@ -204,7 +182,7 @@ describe("list", () => {
         let json = [|"10", "20"|]
             |> Js.Array.map(Js.Json.string)
             |> Js.Json.array;
-        testGoodDecode("good", json, l__from_json(s__from_json), ["10", "20"]);
+        testGoodDecode("good", l__from_json(s__from_json), json, ["10", "20"]);
 
         describe("bad", () => {
             testBadDecode("non-array", l__from_json(s__from_json), Js.Json.number(12.), {
@@ -249,14 +227,64 @@ describe("option", () => {
 
     describe("o__from_json", () => {
         describe("good", () => {
-            testGoodDecode("null", Js.Json.null, o__from_json(s__from_json), None);
-            testGoodDecode("non-null", Js.Json.string("heyy"), o__from_json(s__from_json), Some("heyy"));
+            testGoodDecode("null", o__from_json(s__from_json), Js.Json.null, None);
+            testGoodDecode("non-null", o__from_json(s__from_json), Js.Json.string("heyy"), Some("heyy"));
         });
 
         testBadDecode("bad", o__from_json(s__from_json), Js.Json.number(12.), {
             path: "",
             message: "Not a string",
             value: Js.Json.number(12.)
+        });
+    });
+});
+
+describe("simpleVar", () => {
+    test("simpleVar__to_json", () => {
+        let v : simpleVar(string) = "yeah";
+        let json = simpleVar__to_json(s__to_json, v);
+        switch (Js.Json.classify(json)) {
+            | Js.Json.JSONString(v2) => expect(v2) |> toBe("yeah")
+            | _ => failwith("Not a JSONString")
+        };
+    });
+
+    describe("simpleVar__from_json", () => {
+        testGoodDecode("good", simpleVar__from_json(s__from_json), Js.Json.string("yeah"), "yeah");
+
+        testBadDecode("bad", simpleVar__from_json(s__from_json), Js.Json.number(12.), {
+            path: "",
+            message: "Not a string",
+            value: Js.Json.number(12.)
+        });
+    });
+});
+
+describe("optionList", () => {
+    test("optionList__to_json", () => {
+        let v = [ Some("a"), None, Some("b") ];
+        let json = optionList__to_json(v);
+        expect(Js.Json.stringify(json))
+            |> toBe({|["a",null,"b"]|})
+    });
+
+    describe("optionList__from_json", () => {
+        let json = {|["a",null,"b"]|} |> Js.Json.parseExn;
+        testGoodDecode("good", optionList__from_json, json, [Some("a"), None, Some("b")]);
+
+        describe("bad", () => {
+            testBadDecode("non-array", optionList__from_json, Js.Json.number(12.), {
+                path: "",
+                message: "Not an array",
+                value: Js.Json.number(12.)
+            });
+
+            let json = {|[null, 3]|} |> Js.Json.parseExn;
+            testBadDecode("non-string", optionList__from_json, json, {
+                path: "[1]",
+                message: "Not a string",
+                value: Js.Json.number(3.)
+            });
         });
     });
 });
