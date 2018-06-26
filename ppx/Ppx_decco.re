@@ -4,6 +4,10 @@ open Ppx_tools_402;
 open Ast_mapper;
 open Parsetree;
 
+type decl =
+    | CoreType(core_type_desc)
+    | Kind(type_kind);
+
 let annotationName = "decco";
 let encoderVarPrefix = "encoder_";
 let decoderVarPrefix = "decoder_";
@@ -26,7 +30,7 @@ let makeIdentExpr = (s) =>
 
 let rec parameterizeCodecs = (typeArgs, encoderFunc, decoderFunc) => {
     let (subEncoders, subDecoders) = typeArgs
-        |> List.map(({ ptyp_desc, ptyp_loc }) => generateCodecs(ptyp_loc, ptyp_desc))
+        |> List.map(({ ptyp_desc, ptyp_loc }) => generateCodecs(CoreType(ptyp_desc), ptyp_loc))
         |> List.split;
 
     (
@@ -65,33 +69,40 @@ and generateConstrCodecs = ({ Location.txt: identifier, loc }, typeArgs) =>
         | _ => fail(loc, "not implemented")
     }
 
-and generateCodecs = (loc, typeDesc) => {
-    switch typeDesc {
-        | Ptyp_any => fail(loc, "Can't generate codecs for `any` type")
-        | Ptyp_alias(_, _) => fail(loc, "Can't generate codecs for aliased type")
-        | Ptyp_arrow(_, _, _) => fail(loc, "Can't generate codecs for function type")
-        | Ptyp_package(_) => fail(loc, "Can't generate codecs for module type")
+and generateVariantEncoderCase = ({ pcd_name: { txt: name } }) =>
+    {
+        pc_lhs: Ast_helper.Pat.construct(Location.mknoloc(Longident.parse(name)), None),
+        pc_guard: None,
+        pc_rhs: [%expr -1]
+    }
 
-        | Ptyp_var(s) => (
+and generateVariantCodecs = (constrDecls) =>
+    (
+        Ast_helper.Exp.match([%expr v], List.map(generateVariantEncoderCase, constrDecls)),
+        [%expr failwith("unimplemented")]
+    )
+
+and generateCodecs = (typeDesc, loc) => {
+    switch typeDesc {
+        | CoreType(Ptyp_any) => fail(loc, "Can't generate codecs for `any` type")
+        | CoreType(Ptyp_alias(_, _)) => fail(loc, "Can't generate codecs for aliased type")
+        | CoreType(Ptyp_arrow(_, _, _)) => fail(loc, "Can't generate codecs for function type")
+        | CoreType(Ptyp_package(_)) => fail(loc, "Can't generate codecs for module type")
+
+        | CoreType(Ptyp_var(s)) => (
             makeIdentExpr(encoderVarPrefix ++ s),
             makeIdentExpr(decoderVarPrefix ++ s),
         )
 
-        | Ptyp_constr(constr, typeArgs) => generateConstrCodecs(constr, typeArgs)
-
-        | Ptyp_tuple(types) => {
-
-            parameterizeCodecs(types,
-                [%expr ()], [%expr Decco.array_from_json]
-            )
-        }
+        | CoreType(Ptyp_constr(constr, typeArgs)) => generateConstrCodecs(constr, typeArgs)
+        | Kind(Ptype_variant(constrDecls)) => generateVariantCodecs(constrDecls)
 
         | _ => fail(loc, "noo")
     };
 };
 
-let updateTypeDeclStructure = (typeName, paramNames, manifest) => {
-    let (encoder, decoder) = generateCodecs(manifest.ptyp_loc, manifest.ptyp_desc);
+let updateTypeDeclStructure = (typeName, paramNames, decl, loc) => {
+    let (encoder, decoder) = generateCodecs(decl, loc);
 
     let encoderPat = Ast_helper.Pat.var(Location.mknoloc(typeName ++ "__to_json"));
     let encoderParamNames = List.map(s => encoderVarPrefix ++ s, paramNames);
@@ -108,7 +119,7 @@ let updateTypeDeclStructure = (typeName, paramNames, manifest) => {
 
 let mapTypeDecl = (mapper, decl) => {
     let { ptype_attributes, ptype_name: { txt: typeName },
-            ptype_manifest, ptype_params, ptype_loc } = decl;
+          ptype_manifest, ptype_params, ptype_loc, ptype_kind } = decl;
 
     let matchingAttributes = ptype_attributes
         |> List.filter((({ Location.txt }, _)) => txt == annotationName);
@@ -126,15 +137,23 @@ let mapTypeDecl = (mapper, decl) => {
     switch matchingAttributes {
         | [] => []
         | _ =>
-            switch ptype_manifest {
-                | None => fail(ptype_loc, "Can't generate codecs for unspecified type")
-                | Some(manifest) => updateTypeDeclStructure(typeName, paramNames, manifest)
+            switch (ptype_manifest, ptype_kind) {
+                | (Some(manifest), _) => updateTypeDeclStructure(typeName, paramNames, CoreType(manifest.ptyp_desc), manifest.ptyp_loc)
+                | (_, Ptype_variant(_)) => updateTypeDeclStructure(typeName, paramNames, Kind(ptype_kind), ptype_loc)
+                | _ => fail(ptype_loc, "Can't generate codecs for unspecified type")
             }
     };
 };
 
 let mapStructureItem = (mapper, { pstr_desc } as structureItem) =>
     switch pstr_desc {
+        /* | _ => {
+            let constr = Ast_helper.Type.constructor(~res=Ast_helper.Typ.constr(Location.mknoloc(Longident.parse("res")), []), Location.mknoloc("Ha"));
+            let kind = Ptype_variant([constr]);
+            [[Ast_helper.Type.mk(~kind, Location.mknoloc("yaya"))]
+                |> Ast_helper.Str.type_];
+        } */
+
         | Pstr_type(decls) => {
             let generatedStructItems = decls
                 |> List.map(mapTypeDecl(mapper))
