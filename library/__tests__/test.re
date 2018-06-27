@@ -13,48 +13,7 @@ open Expect;
 [@decco] type o('a) = option('a);
 [@decco] type simpleVar('a) = 'a;
 [@decco] type optionList = list(option(string));
-type variant = A | B(i) | C(i, s);
-
-let variant__to_json = (v) =>
-    switch v {
-        | A => Js.Json.array([|Js.Json.string("A")|])
-        | B(v0) => Js.Json.array([|Js.Json.string("B"),i__to_json(v0)|])
-        | C(v0, v1) => Js.Json.array([|Js.Json.string("C"),i__to_json(v0),s__to_json(v1)|])
-    };
-
-let variant__from_json = (v) =>
-    switch (Js.Json.classify(v)) {
-        | Js.Json.JSONArray(jsonArr) => {
-            let tagged = Js.Array.map(Js.Json.classify, jsonArr);
-            switch tagged[0] {
-                | Js.Json.JSONString("A") =>
-                    (Js.Array.length(tagged) !== 1) ?
-                        Decco.error("Invalid number of arguments to variant constructor A", v)
-                    :
-                        Ok(A)
-                | Js.Json.JSONString("B") =>
-                    (Js.Array.length(tagged) !== 2) ?
-                        Decco.error("Invalid number of arguments to variant constructor B", v)
-                    :
-                        switch (i__from_json(jsonArr[1])) {
-                            | (Error(e)) => Error({ ...e, path: "[0]" ++ e.path })
-                            | (Ok(v0)) => Ok(B(v0))
-                        };
-                | Js.Json.JSONString("C") =>
-                    (Js.Array.length(tagged) !== 3) ?
-                        Decco.error("Invalid number of arguments to variant constructor C", v)
-                    :
-                        switch (i__from_json(jsonArr[1]),s__from_json(jsonArr[2])) {
-                            | (Error(e), _) => Error({ ...e, path: "[0]" ++ e.path })
-                            | (_, Error(e)) => Error({ ...e, path: "[1]" ++ e.path })
-                            | (Ok(v0), Ok(v1)) => Ok(C(v0, v1))
-                        };
-                | _ => Decco.error("Invalid variant constructor", jsonArr[0])
-            }
-        }
-
-        | _ => Decco.error("Not a tuple", v)
-    };
+[@decco] type variant = A | B(int) | C(int, string);
 
 let testBadDecode = (name, decode, json, expectedError) =>
     test(name, () => {
@@ -363,9 +322,9 @@ describe("variant", () => {
         });
 
         describe("bad", () => {
-            testBadDecode("non-tuple", variant__from_json, Js.Json.number(12.), {
+            testBadDecode("non-variant", variant__from_json, Js.Json.number(12.), {
                 path: "",
-                message: "Not a tuple",
+                message: "Not a variant",
                 value: Js.Json.number(12.)
             });
 
@@ -379,14 +338,14 @@ describe("variant", () => {
             let json = {|["A",1]|} |> Js.Json.parseExn;
             testBadDecode("bad constructor", variant__from_json, json, {
                 path: "",
-                message: "Invalid number of arguments to variant constructor A",
+                message: "Invalid number of arguments to variant constructor",
                 value: json
             });
 
             let json = {|["B"]|} |> Js.Json.parseExn;
             testBadDecode("bad constructor", variant__from_json, json, {
                 path: "",
-                message: "Invalid number of arguments to variant constructor B",
+                message: "Invalid number of arguments to variant constructor",
                 value: json
             });
         });
