@@ -91,7 +91,7 @@ and generateVariantEncoderCase = ({ pcd_name: { txt: name }, pcd_args, pcd_loc }
         |> Exp.array;
 
     {
-        pc_lhs: Pat.construct(Location.mknoloc(Longident.parse(name)), lhsVars),
+        pc_lhs: Pat.construct(Ast_convenience.lid(name), lhsVars),
         pc_guard: None,
         pc_rhs: [%expr Js.Json.array([%e rhsArray])]
     }
@@ -117,7 +117,7 @@ and generateVariantDecodeSuccessCase = (numArgs, constructorName) => {
         Array.init(numArgs, i =>
             Location.mknoloc("v" ++ string_of_int(i))
                 |> Pat.var
-                |> (p) => Pat.construct(Location.mknoloc(Longident.parse("Ok")), Some(p))
+                |> (p) => Pat.construct(Ast_convenience.lid("Ok"), Some(p))
         )
         |> Array.to_list
         |> (v) => numArgs > 1 ? Pat.tuple(v) : List.hd(v),
@@ -127,9 +127,9 @@ and generateVariantDecodeSuccessCase = (numArgs, constructorName) => {
             |> Array.to_list
             |> ((v) => numArgs > 1 ? Exp.tuple(v) : List.hd(v))
             |> (v) => Some(v)
-            |> Exp.construct(Location.mknoloc(Longident.parse(constructorName)))
+            |> Exp.construct(Ast_convenience.lid(constructorName))
             |> (v) => Some(v)
-            |> Exp.construct(Location.mknoloc(Longident.parse("Ok")))
+            |> Exp.construct(Ast_convenience.lid("Ok"))
 }
 
 and generateVariantArgDecoder = (args, constructorName) => {
@@ -165,7 +165,7 @@ and generateVariantDecoderCase = ({ pcd_name: { txt: name }, pcd_args }) => {
         pc_lhs: Asttypes.Const_string(name, None)
             |> Pat.constant
             |> (v) => Some(v)
-            |> Pat.construct(Location.mknoloc(Longident.parse("Js.Json.JSONString"))),
+            |> Pat.construct(Ast_convenience.lid("Js.Json.JSONString")),
         pc_guard: None,
         pc_rhs: [%expr
             (Js.Array.length(tagged) !== [%e argLen]) ?
@@ -269,7 +269,7 @@ let mapTypeDecl = (mapper, decl) => {
 let mapStructureItem = (mapper, { pstr_desc } as structureItem) =>
     switch pstr_desc {
         /* | _ => {
-            let constr = Type.constructor(~res=Typ.constr(Location.mknoloc(Longident.parse("res")), []), Location.mknoloc("Ha"));
+            let constr = Type.constructor(~res=Typ.constr(Ast_convenience.lid("res"), []), Location.mknoloc("Ha"));
             let kind = Ptype_variant([constr]);
             [[Type.mk(~kind, Location.mknoloc("yaya"))]
                 |> Str.type_];
