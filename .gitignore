@@ -68,3 +68,9 @@ lib/
 
 # persistent-package-linker
 package-links.json
+
+# tmp files
+/test.*
+
+# jbuilder
+*.install

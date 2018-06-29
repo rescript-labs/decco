@@ -6,8 +6,9 @@
   "scripts": {
     "test": "jest",
     "build": "npm run clean && bsb -make-world",
-    "watch": "npm run clean && bsb -make-world -w",
-    "clean": "rm -rf lib && bsb -clean-world"
+    "watch": "bsb -make-world -w",
+    "clean": "rm -rf lib && bsb -clean-world && jbuilder clean",
+    "build-ppx": "jbuilder build"
   },
   "keywords": [],
   "license": "MIT",

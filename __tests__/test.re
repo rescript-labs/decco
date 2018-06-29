@@ -12,8 +12,14 @@ open Expect;
 [@decco] type l('a) = list('a);
 [@decco] type o('a) = option('a);
 [@decco] type simpleVar('a) = 'a;
-[@decco] type optionList = list(option(string));
-[@decco] type variant = A | B(int) | C(int, string);
+[@decco] type optionList = l(o(s));
+[@decco] type variant = A | B(i) | C(i, s);
+
+module TestMod = {
+    [@decco] type t = string;
+};
+
+[@decco] type dependentOnTestMod = TestMod.t;
 
 let testBadDecode = (name, decode, json, expectedError) =>
     test(name, () => {
@@ -348,6 +354,27 @@ describe("variant", () => {
                 message: "Invalid number of arguments to variant constructor",
                 value: json
             });
+        });
+    });
+});
+
+describe("Ldot", () => {
+    test("dependentOnTestMod__to_json", () => {
+        let s = "yeah";
+        let json = dependentOnTestMod__to_json(s);
+        switch (Js.Json.classify(json)) {
+            | Js.Json.JSONString(s2) => expect(s2) |> toBe(s)
+            | _ => failwith("Not a JSONString")
+        };
+    });
+
+    describe("dependentOnTestMod__from_json", () => {
+        testGoodDecode("good", dependentOnTestMod__from_json, Js.Json.string("heyy"), "heyy");
+
+        testBadDecode("bad", dependentOnTestMod__from_json, Js.Json.number(12.), {
+            path: "",
+            message: "Not a string",
+            value: Js.Json.number(12.)
         });
     });
 });
