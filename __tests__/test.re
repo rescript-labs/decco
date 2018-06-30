@@ -14,12 +14,21 @@ open Expect;
 [@decco] type simpleVar('a) = 'a;
 [@decco] type optionList = l(o(s));
 [@decco] type variant = A | B(i) | C(i, s);
+[@decco] type record = {
+    hey: s,
+    ya: i
+};
 
 module TestMod = {
     [@decco] type t = string;
 };
 
 [@decco] type dependentOnTestMod = TestMod.t;
+
+[@decco] type bigV = V(array(option(list(string))));
+[@decco] type bigR = {
+    bigV: bigV
+};
 
 let testBadDecode = (name, decode, json, expectedError) =>
     test(name, () => {
@@ -342,17 +351,60 @@ describe("variant", () => {
             });
 
             let json = {|["A",1]|} |> Js.Json.parseExn;
-            testBadDecode("bad constructor", variant__from_json, json, {
+            testBadDecode("too many arguments", variant__from_json, json, {
                 path: "",
                 message: "Invalid number of arguments to variant constructor",
                 value: json
             });
 
             let json = {|["B"]|} |> Js.Json.parseExn;
-            testBadDecode("bad constructor", variant__from_json, json, {
+            testBadDecode("not enough arguments", variant__from_json, json, {
                 path: "",
                 message: "Invalid number of arguments to variant constructor",
                 value: json
+            });
+
+            let json = {|["B","oh"]|} |> Js.Json.parseExn;
+            testBadDecode("invalid argument", variant__from_json, json, {
+                path: "[0]",
+                message: "Not a number",
+                value: Js.Json.string("oh")
+            });
+        });
+    });
+});
+
+describe("record", () => {
+    test("record__to_json", () => {
+        let v = { hey: "hey", ya: 100 };
+        let json = record__to_json(v);
+        expect(Js.Json.stringify(json))
+            |> toBe({|{"hey":"hey","ya":100}|})
+    });
+
+    describe("record__from_json", () => {
+        let json = {|{"hey":"hey","ya":100}|} |> Js.Json.parseExn;
+        testGoodDecode("good", record__from_json, json, { hey: "hey", ya: 100 });
+
+        describe("bad", () => {
+            testBadDecode("non-object", record__from_json, Js.Json.number(12.), {
+                path: "",
+                message: "Not an object",
+                value: Js.Json.number(12.)
+            });
+
+            let json = {|{"hey":"hey"}|} |> Js.Json.parseExn;
+            testBadDecode("missing field", record__from_json, json, {
+                path: ".ya",
+                message: "Key not found",
+                value: json
+            });
+
+            let json = {|{"hey":9,"ya":10}|} |> Js.Json.parseExn;
+            testBadDecode("invalid field type", record__from_json, json, {
+                path: ".hey",
+                message: "Not a string",
+                value: Js.Json.number(9.)
             });
         });
     });
@@ -375,6 +427,26 @@ describe("Ldot", () => {
             path: "",
             message: "Not a string",
             value: Js.Json.number(12.)
+        });
+    });
+});
+
+describe("long path", () => {
+    test("good", () => {
+        let v = { bigV: V([|Some(["yes"])|]) };
+        let decoded = bigR__from_json(bigR__to_json(v));
+        switch decoded {
+            | Error(_) => failwith("Decode failure")
+            | Ok(actual) => expect(actual) |> toEqual(v)
+        };
+    });
+
+    describe("bad", () => {
+        let json = {|{"bigV":["V",[null,["","",1]]]}|} |> Js.Json.parseExn;
+        testBadDecode("bad", bigR__from_json, json, {
+            path: ".bigV[0][1][2]",
+            message: "Not a string",
+            value: Js.Json.number(1.)
         });
     });
 });

@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "build": "npm run clean && bsb -make-world",
-    "watch": "bsb -make-world -w",
+    "watch": "bsb -clean-world -make-world -w",
     "clean": "rm -rf lib && bsb -clean-world && jbuilder clean",
     "build-ppx": "jbuilder build"
   },

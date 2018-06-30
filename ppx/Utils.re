@@ -14,3 +14,11 @@ let fail = (loc, message) =>
     Location.error(~loc, message)
         |> (v) => Location.Error(v)
         |> raise;
+
+let makeIdentExpr = (s) =>
+    Longident.parse(s)
+        |> Location.mknoloc
+        |> Exp.ident;
+
+let tupleOrSingleton = (tuple, l) =>
+    List.length(l) > 1 ? tuple(l) : List.hd(l);

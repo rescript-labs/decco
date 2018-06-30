@@ -71,6 +71,7 @@ package-links.json
 
 # tmp files
 /test.*
+/ast.txt
 
 # jbuilder
 *.install

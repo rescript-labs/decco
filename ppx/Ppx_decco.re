@@ -20,13 +20,7 @@ let addParams = (paramNames, expr) =>
         Exp.fun_("", None, pat, acc);
     }, paramNames, [%expr (v) => [%e expr](v)]);
 
-let updateTypeDeclStructure = (typeName, paramNames, decl, loc) => {
-    let (encoder, decoder) = switch decl {
-        | CoreType(t) => generateCodecs(t, loc);
-        | Kind(Ptype_variant(decls)) => generateVariantCodecs(decls)
-        | _ => Utils.fail(loc, "Unhandled type syntax")
-    };
-
+let updateTypeDeclStructure = (typeName, paramNames, (encoder, decoder)) => {
     let encoderPat = Pat.var(Location.mknoloc(typeName ++ Utils.encoderFuncSuffix));
     let encoderParamNames = List.map(s => encoderVarPrefix ++ s, paramNames);
 
@@ -59,22 +53,29 @@ let mapTypeDecl = (mapper, decl) => {
 
     switch matchingAttributes {
         | [] => []
-        | _ =>
-            switch (ptype_manifest, ptype_kind) {
-                | (Some(manifest), _) => updateTypeDeclStructure(typeName, paramNames, CoreType(manifest.ptyp_desc), manifest.ptyp_loc)
-                | (_, Ptype_variant(_)) => updateTypeDeclStructure(typeName, paramNames, Kind(ptype_kind), ptype_loc)
-                | _ => fail(ptype_loc, "Can't generate codecs for unspecified type")
-            }
+        | _ => switch (ptype_manifest, ptype_kind) {
+            | (None, Ptype_abstract) => fail(ptype_loc, "Can't generate codecs for unspecified type")
+            | (Some(manifest), _) => updateTypeDeclStructure(typeName, paramNames,
+                generateCodecs(manifest.ptyp_desc, manifest.ptyp_loc)
+            )
+            | (None, Ptype_variant(decls)) => updateTypeDeclStructure(typeName, paramNames,
+                generateVariantCodecs(decls)
+            )
+            | (None, Ptype_record(decls)) => updateTypeDeclStructure(typeName, paramNames,
+                Records.generateCodecs(decls)
+            )
+            | _ => fail(ptype_loc, "This syntax is not handled by decco")
+        }
     };
 };
 
 let mapStructureItem = (mapper, { pstr_desc } as structureItem) =>
     switch pstr_desc {
         /* | _ => {
-            [Longident.Lapply(Longident.Lident("one"), Longident.Lident("two"))
-                |> Location.mknoloc
-                |> Exp.ident
-                |> Ast_helper.Str.eval];
+            let constr = Type.constructor(~res=Typ.constr(Ast_convenience.lid("res"), []), Location.mknoloc("Ha"));
+            let kind = Parsetree.Ptype_open;
+            [[Type.mk(~kind, Location.mknoloc("yaya"))]
+                |> Str.type_];
         } */
 
         | Pstr_type(decls) => {

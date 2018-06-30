@@ -6,11 +6,6 @@ open Parsetree;
 open Ast_helper;
 open Utils;
 
-let makeIdentExpr = (s) =>
-    Longident.parse(s)
-        |> Location.mknoloc
-        |> Exp.ident;
-
 let rec parameterizeCodecs = (typeArgs, encoderFunc, decoderFunc) => {
     let (subEncoders, subDecoders) = typeArgs
         |> List.map(({ ptyp_desc, ptyp_loc }) => generateCodecs(ptyp_desc, ptyp_loc))

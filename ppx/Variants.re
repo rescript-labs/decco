@@ -5,6 +5,7 @@ open Ast_mapper;
 open Parsetree;
 open Ast_helper;
 open Codecs;
+open Utils;
 
 let generateVariantEncoderCase = ({ pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
     let lhsVars = switch pcd_args {
@@ -43,7 +44,7 @@ let generateVariantDecodeErrorCase = (numArgs, i, _) => {
             which === i ? [%pat? Error(e)] : [%pat? _]
         )
         |> Array.to_list
-        |> (v) => numArgs > 1 ? Pat.tuple(v) : List.hd(v),
+        |> tupleOrSingleton(Pat.tuple),
     pc_guard: None,
     pc_rhs: [%expr Error({ ...e, path: [%e indexConst(i)] ++ e.path })]
 };
@@ -56,12 +57,12 @@ let generateVariantDecodeSuccessCase = (numArgs, constructorName) => {
                 |> (p) => Pat.construct(Ast_convenience.lid("Ok"), Some(p))
         )
         |> Array.to_list
-        |> (v) => numArgs > 1 ? Pat.tuple(v) : List.hd(v),
+        |> tupleOrSingleton(Pat.tuple),
     pc_guard: None,
     pc_rhs:
         Array.init(numArgs, i => makeIdentExpr("v" ++ string_of_int(i)))
             |> Array.to_list
-            |> ((v) => numArgs > 1 ? Exp.tuple(v) : List.hd(v))
+            |> tupleOrSingleton(Exp.tuple)
             |> (v) => Some(v)
             |> Exp.construct(Ast_convenience.lid(constructorName))
             |> (v) => Some(v)
@@ -81,7 +82,7 @@ let generateVariantArgDecoder = (args, constructorName) => {
 
                 [%expr jsonArr[[%e idx]]];
             })]))
-            |> (v) => numArgs > 1 ? Exp.tuple(v) : List.hd(v)
+            |> tupleOrSingleton(Exp.tuple)
         );
 };
 
@@ -126,7 +127,7 @@ let generateVariantCodecs = (constrDecls) => {
         |> (l) => l @ [ decoderDefaultCase ]
         |> Exp.match([%expr tagged[0]]);
 
-    let decoder = [%expr  (v) =>
+    let decoder = [%expr (v) =>
         switch (Js.Json.classify(v)) {
             | Js.Json.JSONArray(jsonArr) => {
                 let tagged = Js.Array.map(Js.Json.classify, jsonArr);
