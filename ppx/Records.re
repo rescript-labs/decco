@@ -8,9 +8,10 @@ open Utils;
 
 type parsedDecl = {
     name: string,
-    str: expression,
-    field: expression,
-    codecs: (expression, expression)
+    str: expression, /* "NAME" */
+    field: expression, /* v.NAME */
+    codecs: (expression, expression),
+    default: option(expression)
 };
 
 let generateEncoder = (decls) => {
@@ -24,13 +25,22 @@ let generateEncoder = (decls) => {
         |> Exp.fun_("", None, [%pat? v]);
 };
 
-let generateDictGet = ({ str, codecs: (_, decoder) }) => {
-    [%expr
-        switch (Js.Dict.get(dict, [%e str])) {
-            | None => Decco.error("Key not found", v)
-            | Some(json) => [%e decoder](json)
-        }
-    ];
+let generateDictGet = ({ str, codecs: (_, decoder), default }) => {
+    switch default {
+        | Some(default) => [%expr
+            switch (Js.Dict.get(dict, [%e str])) {
+                | None => Js.Result.Ok([%e default])
+                | Some(json) => [%e decoder](json)
+            }
+        ];
+
+        | None => [%expr
+            switch (Js.Dict.get(dict, [%e str])) {
+                | None => Decco.error("Key not found", v)
+                | Some(json) => [%e decoder](json)
+            }
+        ];
+    };
 };
 
 let generateDictGets = (decls) => decls
@@ -77,12 +87,31 @@ let generateDecoder = (decls) => {
     ]
 };
 
-let parseDecl = ({ pld_name: { txt }, pld_loc, pld_type: { ptyp_desc } }) => {
-    name: txt,
-    str: Exp.constant(Asttypes.Const_string(txt, None)),
-    field: Ast_convenience.lid(txt)
-        |> Ast_helper.Exp.field([%expr v]),
-    codecs: Codecs.generateCodecs(ptyp_desc, pld_loc)
+let getExpressionFromPayload = (loc, payload) =>
+    switch payload {
+        | PStr([{ pstr_desc }]) => switch pstr_desc {
+            | Pstr_eval(expr, _) => expr
+            | _ => fail(loc, "Expected expression as attribute payload")
+        };
+        | _ => fail(loc, "Expected expression as attribute payload")
+    };
+
+let parseDecl = ({ pld_name: { txt }, pld_loc, pld_type: { ptyp_desc }, pld_attributes }) => {
+    let defaultDecls = List.filter((({ Location.txt }, _)) => txt == "decco.default", pld_attributes);
+    let default = switch defaultDecls {
+        | [] => None
+        | [(_, payload)] => Some(getExpressionFromPayload(pld_loc, payload))
+        | _ => fail(pld_loc, "Too many defaults specified")
+    };
+
+    {
+        name: txt,
+        str: Exp.constant(Asttypes.Const_string(txt, None)),
+        field: Ast_convenience.lid(txt)
+            |> Ast_helper.Exp.field([%expr v]),
+        codecs: Codecs.generateCodecs(ptyp_desc, pld_loc),
+        default
+    };
 };
 
 let generateCodecs = (decls) => {

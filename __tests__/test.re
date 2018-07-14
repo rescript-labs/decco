@@ -16,7 +16,7 @@ open Expect;
 [@decco] type variant = A | B(i) | C(i, s);
 [@decco] type record = {
     hey: s,
-    ya: i
+    [@decco.default None] ya: o(i)
 };
 
 module TestMod = {
@@ -42,7 +42,7 @@ let testGoodDecode = (name, decode, json, expected) =>
     test(name, () =>
         switch (decode(json)) {
             | Ok(actual) => expect(actual) |> toEqual(expected)
-            | _ => failwith("Decode error")
+            | Error({ path, message }) => failwith({j|Decode error: $message ($path)|j})
         }
     );
 
@@ -376,15 +376,20 @@ describe("variant", () => {
 
 describe("record", () => {
     test("record__to_json", () => {
-        let v = { hey: "hey", ya: 100 };
+        let v = { hey: "hey", ya: Some(100) };
         let json = record__to_json(v);
         expect(Js.Json.stringify(json))
             |> toBe({|{"hey":"hey","ya":100}|})
     });
 
     describe("record__from_json", () => {
-        let json = {|{"hey":"hey","ya":100}|} |> Js.Json.parseExn;
-        testGoodDecode("good", record__from_json, json, { hey: "hey", ya: 100 });
+        describe("good", () => {
+            let json = {|{"hey":"hey","ya":100}|} |> Js.Json.parseExn;
+            testGoodDecode("base case", record__from_json, json, { hey: "hey", ya: Some(100) });
+
+            let json = {|{"hey":"hey"}|} |> Js.Json.parseExn;
+            testGoodDecode("missing optional", record__from_json, json, { hey: "hey", ya: None });
+        });
 
         describe("bad", () => {
             testBadDecode("non-object", record__from_json, Js.Json.number(12.), {
@@ -393,9 +398,9 @@ describe("record", () => {
                 value: Js.Json.number(12.)
             });
 
-            let json = {|{"hey":"hey"}|} |> Js.Json.parseExn;
+            let json = {|{"ya":100}|} |> Js.Json.parseExn;
             testBadDecode("missing field", record__from_json, json, {
-                path: ".ya",
+                path: ".hey",
                 message: "Key not found",
                 value: json
             });
