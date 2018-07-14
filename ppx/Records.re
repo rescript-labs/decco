@@ -50,12 +50,12 @@ let generateDictGets = (decls) => decls
 let generateErrorCase = (numDecls, i, { str }) => {
     pc_lhs:
         Array.init(numDecls, which =>
-            which === i ? [%pat? Error(e)] : [%pat? _]
+            which === i ? [%pat? Js.Result.Error(e)] : [%pat? _]
         )
         |> Array.to_list
         |> tupleOrSingleton(Pat.tuple),
     pc_guard: None,
-    pc_rhs: [%expr Error({ ...e, path: "." ++ [%e str] ++ e.path })]
+    pc_rhs: [%expr Js.Result.Error({ ...e, path: "." ++ [%e str] ++ e.path })]
 };
 
 let generateSuccessCase = (decls) => {
@@ -63,15 +63,13 @@ let generateSuccessCase = (decls) => {
         |> List.map(({ name }) =>
             Location.mknoloc(name)
                 |> Pat.var
-                |> (p) => Pat.construct(Ast_convenience.lid("Ok"), Some(p))
+                |> (p) => [%pat? Js.Result.Ok([%p p])]
         )
         |> tupleOrSingleton(Pat.tuple),
     pc_guard: None,
     pc_rhs: decls
         |> List.map(({ name }) => (Ast_convenience.lid(name), makeIdentExpr(name)))
-        |> (l) => Some(Exp.record(l, None))
-        |> Exp.construct(Ast_convenience.lid("Ok"))
-
+        |> (l) => [%expr Js.Result.Ok([%e Exp.record(l, None)])]
 };
 
 let generateDecoder = (decls) => {

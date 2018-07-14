@@ -41,12 +41,12 @@ let indexConst = (i) =>
 let generateVariantDecodeErrorCase = (numArgs, i, _) => {
     pc_lhs:
         Array.init(numArgs, which =>
-            which === i ? [%pat? Error(e)] : [%pat? _]
+            which === i ? [%pat? Js.Result.Error(e)] : [%pat? _]
         )
         |> Array.to_list
         |> tupleOrSingleton(Pat.tuple),
     pc_guard: None,
-    pc_rhs: [%expr Error({ ...e, path: [%e indexConst(i)] ++ e.path })]
+    pc_rhs: [%expr Js.Result.Error({ ...e, path: [%e indexConst(i)] ++ e.path })]
 };
 
 let generateVariantDecodeSuccessCase = (numArgs, constructorName) => {
@@ -54,7 +54,7 @@ let generateVariantDecodeSuccessCase = (numArgs, constructorName) => {
         Array.init(numArgs, i =>
             Location.mknoloc("v" ++ string_of_int(i))
                 |> Pat.var
-                |> (p) => Pat.construct(Ast_convenience.lid("Ok"), Some(p))
+                |> (p) => [%pat? Js.Result.Ok([%p p])]
         )
         |> Array.to_list
         |> tupleOrSingleton(Pat.tuple),
@@ -65,8 +65,7 @@ let generateVariantDecodeSuccessCase = (numArgs, constructorName) => {
             |> tupleOrSingleton(Exp.tuple)
             |> (v) => Some(v)
             |> Exp.construct(Ast_convenience.lid(constructorName))
-            |> (v) => Some(v)
-            |> Exp.construct(Ast_convenience.lid("Ok"))
+            |> (e) => [%expr Js.Result.Ok([%e e])]
 };
 
 let generateVariantArgDecoder = (args, constructorName) => {
@@ -93,7 +92,7 @@ let generateVariantDecoderCase = ({ pcd_name: { txt: name }, pcd_args }) => {
     let decoded = switch(pcd_args) {
         | [] => {
             let ident = Longident.parse(name) |> Location.mknoloc;
-            [%expr Ok([%e Exp.construct(ident, None)])]
+            [%expr Js.Result.Ok([%e Exp.construct(ident, None)])]
         }
         | _ => generateVariantArgDecoder(pcd_args, name)
     };
