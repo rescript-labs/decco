@@ -16,7 +16,8 @@ open Expect;
 [@decco] type variant = A | B(i) | C(i, s);
 [@decco] type record = {
     hey: s,
-    [@decco.default None] ya: o(i)
+    [@decco.default None] ya: o(i),
+    opt: option(int)
 };
 
 module TestMod = {
@@ -376,19 +377,19 @@ describe("variant", () => {
 
 describe("record", () => {
     test("record__to_json", () => {
-        let v = { hey: "hey", ya: Some(100) };
+        let v = { hey: "hey", ya: Some(100), opt: Some(99) };
         let json = record__to_json(v);
         expect(Js.Json.stringify(json))
-            |> toBe({|{"hey":"hey","ya":100}|})
+            |> toBe({|{"hey":"hey","ya":100,"opt":99}|})
     });
 
     describe("record__from_json", () => {
         describe("good", () => {
-            let json = {|{"hey":"hey","ya":100}|} |> Js.Json.parseExn;
-            testGoodDecode("base case", record__from_json, json, { hey: "hey", ya: Some(100) });
+            let json = {|{"hey":"hey","ya":100,"opt":99}|} |> Js.Json.parseExn;
+            testGoodDecode("base case", record__from_json, json, { hey: "hey", ya: Some(100), opt: Some(99) });
 
             let json = {|{"hey":"hey"}|} |> Js.Json.parseExn;
-            testGoodDecode("missing optional", record__from_json, json, { hey: "hey", ya: None });
+            testGoodDecode("missing optional", record__from_json, json, { hey: "hey", ya: None, opt: None });
         });
 
         describe("bad", () => {

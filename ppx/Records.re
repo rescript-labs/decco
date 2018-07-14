@@ -96,9 +96,10 @@ let getExpressionFromPayload = (loc, payload) =>
 
 let parseDecl = ({ pld_name: { txt }, pld_loc, pld_type: { ptyp_desc }, pld_attributes }) => {
     let defaultDecls = List.filter((({ Location.txt }, _)) => txt == "decco.default", pld_attributes);
-    let default = switch defaultDecls {
-        | [] => None
-        | [(_, payload)] => Some(getExpressionFromPayload(pld_loc, payload))
+    let default = switch (defaultDecls, ptyp_desc) {
+        | ([], Ptyp_constr({ txt: Lident("option") }, _)) => Some([%expr None])
+        | ([], _) => None
+        | ([(_, payload)], _) => Some(getExpressionFromPayload(pld_loc, payload))
         | _ => fail(pld_loc, "Too many defaults specified")
     };
 
