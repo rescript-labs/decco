@@ -1,6 +1,5 @@
 open Migrate_parsetree;
 open Ast_402;
-open Ppx_tools_402;
 open Ast_mapper;
 open Parsetree;
 open Ast_helper;
@@ -33,7 +32,7 @@ let updateTypeDeclStructure = (typeName, paramNames, (encoder, decoder)) => {
     |> List.concat;
 };
 
-let mapTypeDecl = (mapper, decl) => {
+let mapTypeDecl = (decl) => {
     let { ptype_attributes, ptype_name: { txt: typeName },
           ptype_manifest, ptype_params, ptype_loc, ptype_kind } = decl;
 
@@ -79,7 +78,7 @@ let mapStructureItem = (mapper, { pstr_desc } as structureItem) =>
 
         | Pstr_type(decls) => {
             let generatedStructItems = decls
-                |> List.map(mapTypeDecl(mapper))
+                |> List.map(mapTypeDecl)
                 |> List.concat;
 
             [   mapper.structure_item(mapper, structureItem),

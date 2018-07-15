@@ -1,7 +1,6 @@
 open Migrate_parsetree;
 open Ast_402;
 open Ppx_tools_402;
-open Ast_mapper;
 open Parsetree;
 open Ast_helper;
 open Codecs;

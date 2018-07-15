@@ -7,8 +7,8 @@
     "test": "jest",
     "build": "npm run clean && bsb -make-world",
     "watch": "bsb -clean-world -make-world -w",
-    "clean": "rm -rf lib && bsb -clean-world && jbuilder clean",
-    "build-ppx": "jbuilder build"
+    "clean": "rm -rf lib && bsb -clean-world && dune clean",
+    "build-ppx": "dune build"
   },
   "keywords": [],
   "license": "MIT",

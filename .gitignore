@@ -73,5 +73,5 @@ package-links.json
 /test.*
 /ast.txt
 
-# jbuilder
+# dune
 *.install

@@ -1,9 +1,0 @@
-(jbuild_version 1)
-
-(library
- ((name ppx_decco)
-  (public_name ppx_decco)
-  (kind ppx_rewriter)
-  (libraries (ppx_tools_versioned ocaml-migrate-parsetree))
-  (preprocess (pps (ppx_tools_versioned.metaquot_402)))
-))
