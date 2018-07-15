@@ -3,7 +3,6 @@ open Ast_402;
 open Ppx_tools_402;
 open Parsetree;
 open Ast_helper;
-open Codecs;
 open Utils;
 
 let generateEncoderCase = ({ pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
@@ -20,7 +19,7 @@ let generateEncoderCase = ({ pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
     let constructorExpr = Exp.constant(Asttypes.Const_string(name, None));
 
     let rhsArray = pcd_args
-        |> List.map(({ ptyp_desc }) => generateCodecs(ptyp_desc, pcd_loc))
+        |> List.map(Codecs.generateCodecs)
         |> List.map(((encoder, _)) => encoder) /* TODO: refactor */
         |> List.mapi((i, e) => Exp.apply(~loc=pcd_loc, e, [("", makeIdentExpr("v" ++ string_of_int(i)))]))
         |> List.append([[%expr Js.Json.string([%e constructorExpr])]])
@@ -73,7 +72,7 @@ let generateArgDecoder = (args, constructorName) => {
         |> List.mapi(generateDecodeErrorCase(numArgs))
         |> List.append([generateDecodeSuccessCase(numArgs, constructorName)])
         |> Exp.match(args
-            |> List.map(({ ptyp_desc, ptyp_loc }) => generateCodecs(ptyp_desc, ptyp_loc))
+            |> List.map(Codecs.generateCodecs)
             |> List.mapi((i, (_, decoder)) => Exp.apply(decoder, [ ("", {
                 let idx = Asttypes.Const_int(i + 1) /* +1 because index 0 is the constructor */
                     |> Exp.constant;

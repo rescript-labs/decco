@@ -2,6 +2,8 @@ open Migrate_parsetree;
 open Ast_402;
 open Ast_helper;
 
+type result('a, 'b) = Ok('a) | Error('b);
+
 let encoderFuncSuffix = "__to_json";
 let decoderFuncSuffix = "__from_json";
 let encoderVarPrefix = "encoder_";
@@ -19,3 +21,14 @@ let makeIdentExpr = (s) =>
 
 let tupleOrSingleton = (tuple, l) =>
     List.length(l) > 1 ? tuple(l) : List.hd(l);
+
+let getAttributeByName = (attributes, name) => {
+    let filtered = attributes
+        |> List.filter((({ Location.txt }, _)) => txt == name);
+
+    switch filtered {
+        | [] => Ok(None)
+        | [attribute] => Ok(Some(attribute))
+        | _ => Error("Too many occurrences of \"" ++ name ++ "\" attribute")
+    };
+};

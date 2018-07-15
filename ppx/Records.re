@@ -94,15 +94,17 @@ let getExpressionFromPayload = (loc, payload) =>
         | _ => fail(loc, "Expected expression as attribute payload")
     };
 
-let parseDecl = ({ pld_name: { txt }, pld_loc, pld_type: { ptyp_desc }, pld_attributes }) => {
+let parseDecl = ({ pld_name: { txt }, pld_loc, pld_type, pld_attributes }) => {
     /* If a key is missing from the record on decode, the default (if specified) will be used */
-    let defaultDecls = List.filter((({ Location.txt }, _)) => txt == "decco.default", pld_attributes);
-    let default = switch (defaultDecls, ptyp_desc) {
+    let defaultDecls = getAttributeByName(pld_attributes, "decco.default");
+    let default = switch (defaultDecls, pld_type.ptyp_desc) {
+        | (Ok(Some((_, payload))), _) => Some(getExpressionFromPayload(pld_loc, payload))
+
         /* Set default for option to None */
-        | ([], Ptyp_constr({ txt: Lident("option") }, _)) => Some([%expr None])
-        | ([], _) => None
-        | ([(_, payload)], _) => Some(getExpressionFromPayload(pld_loc, payload))
-        | _ => fail(pld_loc, "Too many defaults specified")
+        | (Ok(None), Ptyp_constr({ txt: Lident("option") }, _)) => Some([%expr None])
+
+        | (Ok(None), _) => None
+        | (Error(s), _) => fail(pld_loc, s)
     };
 
     {
@@ -110,7 +112,7 @@ let parseDecl = ({ pld_name: { txt }, pld_loc, pld_type: { ptyp_desc }, pld_attr
         str: Exp.constant(Asttypes.Const_string(txt, None)),
         field: Ast_convenience.lid(txt)
             |> Ast_helper.Exp.field([%expr v]),
-        codecs: Codecs.generateCodecs(ptyp_desc, pld_loc),
+        codecs: Codecs.generateCodecs(pld_type),
         default
     };
 };

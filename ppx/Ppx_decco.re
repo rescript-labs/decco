@@ -36,8 +36,7 @@ let mapTypeDecl = (decl) => {
     let { ptype_attributes, ptype_name: { txt: typeName },
           ptype_manifest, ptype_params, ptype_loc, ptype_kind } = decl;
 
-    let matchingAttributes = ptype_attributes
-        |> List.filter((({ Location.txt }, _)) => txt == annotationName);
+    let matchingAttributes = getAttributeByName(ptype_attributes, annotationName);
 
     let paramNames = ptype_params
         |> List.map((({ ptyp_desc, ptyp_loc }, _)) =>
@@ -50,12 +49,12 @@ let mapTypeDecl = (decl) => {
         );
 
     switch matchingAttributes {
-        | [] => []
-        | _ => switch (ptype_manifest, ptype_kind) {
+        | Ok(None) => []
+        | Ok(_) => switch (ptype_manifest, ptype_kind) {
             | (None, Ptype_abstract) => fail(ptype_loc, "Can't generate codecs for unspecified type")
-            | (Some(manifest), _) => updateTypeDeclStructure(typeName, paramNames,
-                generateCodecs(manifest.ptyp_desc, manifest.ptyp_loc)
-            )
+
+            | (Some(manifest), _) => updateTypeDeclStructure(typeName, paramNames, generateCodecs(manifest))
+
             | (None, Ptype_variant(decls)) => updateTypeDeclStructure(typeName, paramNames,
                 Variants.generateCodecs(decls)
             )
@@ -64,6 +63,7 @@ let mapTypeDecl = (decl) => {
             )
             | _ => fail(ptype_loc, "This syntax is not handled by decco")
         }
+        | Error(s) => fail(ptype_loc, s)
     };
 };
 

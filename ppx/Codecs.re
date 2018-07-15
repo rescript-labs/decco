@@ -7,7 +7,7 @@ open Utils;
 
 let rec parameterizeCodecs = (typeArgs, encoderFunc, decoderFunc) => {
     let (subEncoders, subDecoders) = typeArgs
-        |> List.map(({ ptyp_desc, ptyp_loc }) => generateCodecs(ptyp_desc, ptyp_loc))
+        |> List.map(core_type => generateCodecs(core_type))
         |> List.split;
 
     (
@@ -20,10 +20,10 @@ let rec parameterizeCodecs = (typeArgs, encoderFunc, decoderFunc) => {
     )
 }
 
-and generateConstrCodecs = ({ Location.txt: identifier, loc }, typeArgs) => {
+and generateConstrCodecs = ({ Location.txt: identifier, loc }) => {
     open Longident;
 
-    let (encode, decode) = switch identifier {
+    switch identifier {
         | Lident("string") => ([%expr Decco.string_to_json], [%expr Decco.string_from_json])
         | Lident("int") => ([%expr Decco.int_to_json], [%expr Decco.int_from_json])
         | Lident("float") => ([%expr Decco.float_to_json], [%expr Decco.float_from_json])
@@ -46,23 +46,25 @@ and generateConstrCodecs = ({ Location.txt: identifier, loc }, typeArgs) => {
         )
         | Lapply(_, _) => fail(loc, "Lapply syntax not yet handled by decco")
     };
-
-    List.length(typeArgs) == 0 ? (encode, decode)
-    : parameterizeCodecs(typeArgs, encode, decode);
 }
 
-and generateCodecs = (typeDesc, loc) =>
-    switch typeDesc {
-        | Ptyp_any => fail(loc, "Can't generate codecs for `any` type")
-        | Ptyp_arrow(_, _, _)=> fail(loc, "Can't generate codecs for function type")
-        | Ptyp_package(_)=> fail(loc, "Can't generate codecs for module type")
+and generateCodecs = ({ ptyp_desc, ptyp_loc, ptyp_attributes }) => {
+    switch ptyp_desc {
+        | Ptyp_any => fail(ptyp_loc, "Can't generate codecs for `any` type")
+        | Ptyp_arrow(_, _, _)=> fail(ptyp_loc, "Can't generate codecs for function type")
+        | Ptyp_package(_)=> fail(ptyp_loc, "Can't generate codecs for module type")
 
         | Ptyp_var(s)=> (
             makeIdentExpr(encoderVarPrefix ++ s),
             makeIdentExpr(decoderVarPrefix ++ s),
         )
 
-        | Ptyp_constr(constr, typeArgs)=> generateConstrCodecs(constr, typeArgs)
+        | Ptyp_constr(constr, typeArgs) => {
+            let (encode, decode) = generateConstrCodecs(constr);
+            List.length(typeArgs) == 0 ? (encode, decode)
+                : parameterizeCodecs(typeArgs, encode, decode);
+        }
 
-        | _ => fail(loc, "This syntax is not yet handled by decco")
+        | _ => fail(ptyp_loc, "This syntax is not yet handled by decco")
     };
+};
