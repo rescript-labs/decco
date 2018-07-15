@@ -4,7 +4,6 @@ open Ppx_tools_402;
 open Ast_mapper;
 open Parsetree;
 open Ast_helper;
-open Variants;
 open Codecs;
 open Utils;
 
@@ -59,7 +58,7 @@ let mapTypeDecl = (mapper, decl) => {
                 generateCodecs(manifest.ptyp_desc, manifest.ptyp_loc)
             )
             | (None, Ptype_variant(decls)) => updateTypeDeclStructure(typeName, paramNames,
-                generateVariantCodecs(decls)
+                Variants.generateCodecs(decls)
             )
             | (None, Ptype_record(decls)) => updateTypeDeclStructure(typeName, paramNames,
                 Records.generateCodecs(decls)

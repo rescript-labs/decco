@@ -52,7 +52,7 @@ and generateConstrCodecs = ({ Location.txt: identifier, loc }, typeArgs) => {
     : parameterizeCodecs(typeArgs, encode, decode);
 }
 
-and generateCodecs = (typeDesc, loc) => {
+and generateCodecs = (typeDesc, loc) =>
     switch typeDesc {
         | Ptyp_any => fail(loc, "Can't generate codecs for `any` type")
         | Ptyp_arrow(_, _, _)=> fail(loc, "Can't generate codecs for function type")
@@ -67,4 +67,3 @@ and generateCodecs = (typeDesc, loc) => {
 
         | _ => fail(loc, "This syntax is not yet handled by decco")
     };
-};

@@ -7,7 +7,7 @@ open Ast_helper;
 open Codecs;
 open Utils;
 
-let generateVariantEncoderCase = ({ pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
+let generateEncoderCase = ({ pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
     let lhsVars = switch pcd_args {
         | [] => None
         | [_] => Some(Pat.var(Location.mknoloc("v0")))
@@ -38,7 +38,7 @@ let indexConst = (i) =>
     Asttypes.Const_string("[" ++ string_of_int(i) ++ "]", None)
         |> Exp.constant;
 
-let generateVariantDecodeErrorCase = (numArgs, i, _) => {
+let generateDecodeErrorCase = (numArgs, i, _) => {
     pc_lhs:
         Array.init(numArgs, which =>
             which === i ? [%pat? Js.Result.Error(e)] : [%pat? _]
@@ -49,7 +49,7 @@ let generateVariantDecodeErrorCase = (numArgs, i, _) => {
     pc_rhs: [%expr Js.Result.Error({ ...e, path: [%e indexConst(i)] ++ e.path })]
 };
 
-let generateVariantDecodeSuccessCase = (numArgs, constructorName) => {
+let generateDecodeSuccessCase = (numArgs, constructorName) => {
     pc_lhs:
         Array.init(numArgs, i =>
             Location.mknoloc("v" ++ string_of_int(i))
@@ -68,11 +68,11 @@ let generateVariantDecodeSuccessCase = (numArgs, constructorName) => {
             |> (e) => [%expr Js.Result.Ok([%e e])]
 };
 
-let generateVariantArgDecoder = (args, constructorName) => {
+let generateArgDecoder = (args, constructorName) => {
     let numArgs = List.length(args);
     args
-        |> List.mapi(generateVariantDecodeErrorCase(numArgs))
-        |> List.append([generateVariantDecodeSuccessCase(numArgs, constructorName)])
+        |> List.mapi(generateDecodeErrorCase(numArgs))
+        |> List.append([generateDecodeSuccessCase(numArgs, constructorName)])
         |> Exp.match(args
             |> List.map(({ ptyp_desc, ptyp_loc }) => generateCodecs(ptyp_desc, ptyp_loc))
             |> List.mapi((i, (_, decoder)) => Exp.apply(decoder, [ ("", {
@@ -85,7 +85,7 @@ let generateVariantArgDecoder = (args, constructorName) => {
         );
 };
 
-let generateVariantDecoderCase = ({ pcd_name: { txt: name }, pcd_args }) => {
+let generateDecoderCase = ({ pcd_name: { txt: name }, pcd_args }) => {
     let argLen = Asttypes.Const_int(List.length(pcd_args) + 1)
         |> Exp.constant;
 
@@ -94,7 +94,7 @@ let generateVariantDecoderCase = ({ pcd_name: { txt: name }, pcd_args }) => {
             let ident = Longident.parse(name) |> Location.mknoloc;
             [%expr Js.Result.Ok([%e Exp.construct(ident, None)])]
         }
-        | _ => generateVariantArgDecoder(pcd_args, name)
+        | _ => generateArgDecoder(pcd_args, name)
     };
 
     {
@@ -112,8 +112,8 @@ let generateVariantDecoderCase = ({ pcd_name: { txt: name }, pcd_args }) => {
     }
 };
 
-let generateVariantCodecs = (constrDecls) => {
-    let encoder = List.map(generateVariantEncoderCase, constrDecls)
+let generateCodecs = (constrDecls) => {
+    let encoder = List.map(generateEncoderCase, constrDecls)
         |> Exp.match([%expr v])
         |> Exp.fun_("", None, [%pat? v]);
 
@@ -122,7 +122,7 @@ let generateVariantCodecs = (constrDecls) => {
         pc_guard: None,
         pc_rhs: [%expr Decco.error("Invalid variant constructor", jsonArr[0])]
     };
-    let decoderSwitch = List.map(generateVariantDecoderCase, constrDecls)
+    let decoderSwitch = List.map(generateDecoderCase, constrDecls)
         |> (l) => l @ [ decoderDefaultCase ]
         |> Exp.match([%expr tagged[0]]);
 
