@@ -1,7 +1,7 @@
-open Decco;
 open Jest;
 open Expect;
-/* open Js.Result; //Don't open Js.Result in order to validate ppx works without it */
+/* open Decco; /* Don't open these in order to validate ppx works without it */
+open Js.Result; */
 
 [@decco] type s = string;
 [@decco] type i = int;
@@ -11,6 +11,7 @@ open Expect;
 [@decco] type a('a) = array('a);
 [@decco] type l('a) = list('a);
 [@decco] type o('a) = option('a);
+[@decco] type j = Js.Json.t;
 [@decco] type simpleVar('a) = 'a;
 [@decco] type optionList = l(o(s));
 [@decco] type variant = A | B(i) | C(i, s);
@@ -43,7 +44,7 @@ let testGoodDecode = (name, decode, json, expected) =>
     test(name, () =>
         switch (decode(json)) {
             | Js.Result.Ok(actual) => expect(actual) |> toEqual(expected)
-            | Js.Result.Error({ path, message }) => failwith({j|Decode error: $message ($path)|j})
+            | Js.Result.Error({ Decco.path, message }) => failwith({j|Decode error: $message ($path)|j})
         }
     );
 
@@ -303,6 +304,18 @@ describe("optionList", () => {
             });
         });
     });
+});
+
+describe("Js.Json.t", () => {
+    test("j__to_json", () => {
+        let v = Js.Json.string("jay");
+        let json = j__to_json(v);
+        expect(json)
+            |> toEqual(v);
+    });
+
+    let json = Js.Json.number(12.);
+    testGoodDecode("j__from_json", j__from_json, json, json);
 });
 
 describe("variant", () => {

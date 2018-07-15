@@ -33,6 +33,10 @@ and generateConstrCodecs = ({ Location.txt: identifier, loc }, typeArgs) => {
         | Lident("array") => ([%expr Decco.array_to_json], [%expr Decco.array_from_json])
         | Lident("list") => ([%expr Decco.list_to_json], [%expr Decco.list_from_json])
         | Lident("option") => ([%expr Decco.option_to_json], [%expr Decco.option_from_json])
+        | Ldot(Ldot(Lident("Js"), "Json"), "t") => (
+            [%expr (v) => v],
+            [%expr (v) => Js.Result.Ok(v)]
+        )
         | Lident(s) => (
             Exp.ident(Ast_convenience.lid(s ++ Utils.encoderFuncSuffix)),
             Exp.ident(Ast_convenience.lid(s ++ Utils.decoderFuncSuffix)),

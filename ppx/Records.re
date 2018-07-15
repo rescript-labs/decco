@@ -50,7 +50,7 @@ let generateDictGets = (decls) => decls
 let generateErrorCase = (numDecls, i, { str }) => {
     pc_lhs:
         Array.init(numDecls, which =>
-            which === i ? [%pat? Js.Result.Error(e)] : [%pat? _]
+            which === i ? [%pat? Js.Result.Error(e : Decco.decodeError)] : [%pat? _]
         )
         |> Array.to_list
         |> tupleOrSingleton(Pat.tuple),
@@ -95,8 +95,10 @@ let getExpressionFromPayload = (loc, payload) =>
     };
 
 let parseDecl = ({ pld_name: { txt }, pld_loc, pld_type: { ptyp_desc }, pld_attributes }) => {
+    /* If a key is missing from the record on decode, the default (if specified) will be used */
     let defaultDecls = List.filter((({ Location.txt }, _)) => txt == "decco.default", pld_attributes);
     let default = switch (defaultDecls, ptyp_desc) {
+        /* Set default for option to None */
         | ([], Ptyp_constr({ txt: Lident("option") }, _)) => Some([%expr None])
         | ([], _) => None
         | ([(_, payload)], _) => Some(getExpressionFromPayload(pld_loc, payload))
