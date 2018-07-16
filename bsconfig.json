@@ -1,5 +1,5 @@
 {
-    "name" : "test",
+    "name" : "decco",
     "bs-dependencies": [ "bs-result-ex" ],
     "bs-dev-dependencies": [ "@glennsl/bs-jest" ],
     "sources" : [

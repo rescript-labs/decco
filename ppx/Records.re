@@ -85,20 +85,11 @@ let generateDecoder = (decls) => {
     ]
 };
 
-let getExpressionFromPayload = (loc, payload) =>
-    switch payload {
-        | PStr([{ pstr_desc }]) => switch pstr_desc {
-            | Pstr_eval(expr, _) => expr
-            | _ => fail(loc, "Expected expression as attribute payload")
-        };
-        | _ => fail(loc, "Expected expression as attribute payload")
-    };
-
 let parseDecl = ({ pld_name: { txt }, pld_loc, pld_type, pld_attributes }) => {
     /* If a key is missing from the record on decode, the default (if specified) will be used */
     let defaultDecls = getAttributeByName(pld_attributes, "decco.default");
     let default = switch (defaultDecls, pld_type.ptyp_desc) {
-        | (Ok(Some((_, payload))), _) => Some(getExpressionFromPayload(pld_loc, payload))
+        | (Ok(Some(attribute)), _) => Some(getExpressionFromPayload(attribute))
 
         /* Set default for option to None */
         | (Ok(None), Ptyp_constr({ txt: Lident("option") }, _)) => Some([%expr None])

@@ -10,9 +10,16 @@
     "clean": "rm -rf lib && bsb -clean-world && dune clean",
     "build-ppx": "dune build"
   },
+  "bin": {
+    "ppx_decco": "./ppx/ppx_decco.sh"
+  },
   "keywords": [],
   "license": "MIT",
   "author": "Ryan Biwer",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ryb73/ppx_decco.git"
+  },
   "_": [],
   "peerDependencies": {
     "bs-platform": "^3.1.5"

@@ -60,7 +60,22 @@ and generateCodecs = ({ ptyp_desc, ptyp_loc, ptyp_attributes }) => {
         )
 
         | Ptyp_constr(constr, typeArgs) => {
-            let (encode, decode) = generateConstrCodecs(constr);
+            let customCodec = getAttributeByName(ptyp_attributes, "decco.codec");
+            let (encode, decode) = switch customCodec {
+                | Ok(None) => generateConstrCodecs(constr)
+
+                | Ok(Some(attribute)) => {
+                    /* TODO: make this smarter to avoid duplicationg expr? */
+                    let expr = getExpressionFromPayload(attribute);
+                    (
+                        [%expr { let (e, _) = [%e expr]; e }],
+                        [%expr { let (_, d) = [%e expr]; d }],
+                    )
+                }
+
+                | Error(s) => fail(ptyp_loc, s)
+            };
+
             List.length(typeArgs) == 0 ? (encode, decode)
                 : parameterizeCodecs(typeArgs, encode, decode);
         }

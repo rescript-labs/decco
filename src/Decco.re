@@ -92,5 +92,19 @@ let option_to_json = (encoder, opt) =>
 let option_from_json = (decoder, json) =>
     switch (Js.Json.classify(json)) {
         | Js.Json.JSONNull => Ok(None)
-        | _ => decoder(json) |> map(v => Some (v))
+        | _ => decoder(json) |> map(v => Some(v))
     };
+
+let encodeFalseable = (encoder, opt) =>
+    switch opt {
+        | None => Js.Json.boolean(false)
+        | Some(v) => encoder(v)
+    };
+
+let decodeFalseable = (decoder, json) =>
+    switch (Js.Json.classify(json)) {
+        | Js.Json.JSONFalse => Ok(None)
+        | _ => decoder(json) |> map(v => Some(v))
+    };
+
+let falseable = (encodeFalseable, decodeFalseable);

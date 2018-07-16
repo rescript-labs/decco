@@ -25,11 +25,10 @@ let updateTypeDeclStructure = (typeName, paramNames, (encoder, decoder)) => {
     let decoderPat = Pat.var(Location.mknoloc(typeName ++ Utils.decoderFuncSuffix));
     let decoderParamNames = List.map(s => decoderVarPrefix ++ s, paramNames);
 
-    [
-        [%str let [%p encoderPat] = [%e addParams(encoderParamNames, encoder)]],
-        [%str let [%p decoderPat] = [%e addParams(decoderParamNames, decoder)]],
-    ]
-    |> List.concat;
+    [%str let ([%p encoderPat], [%p decoderPat]) = (
+        [%e addParams(encoderParamNames, encoder)],
+        [%e addParams(decoderParamNames, decoder)]
+    )];
 };
 
 let mapTypeDecl = (decl) => {

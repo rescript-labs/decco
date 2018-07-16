@@ -21,7 +21,13 @@ open Js.Result; */
     opt: option(int)
 };
 
-module TestMod = {
+module type TestMod = {
+    type t;
+    let t__to_json : string => Js.Json.t;
+    let t__from_json : Js.Json.t => Js.Result.t(string, Decco.decodeError);
+};
+
+module TestMod : TestMod = {
     [@decco] type t = string;
 };
 
@@ -31,6 +37,8 @@ module TestMod = {
 [@decco] type bigR = {
     bigV: bigV
 };
+
+[@decco] type falseable('a) = [@decco.codec Decco.falseable] option('a);
 
 let testBadDecode = (name, decode, json, expectedError) =>
     test(name, () => {
@@ -122,13 +130,12 @@ describe("float", () => {
 });
 
 describe("bool", () => {
-    test("b__to_json", () => {
-        let json = b__to_json(true);
-        switch (Js.Json.classify(json)) {
-            | Js.Json.JSONTrue => expect(true) |> toBe(true)
-            | _ => failwith("Not JSONTrue")
-        };
-    });
+    test("b__to_json", () =>
+        b__to_json(true)
+            |> Js.Json.classify
+            |> expect
+            |> toBe(Js.Json.JSONTrue)
+    );
 
     describe("b__from_json", () => {
         testGoodDecode("good", b__from_json, Js.Json.boolean(false), false);
@@ -223,14 +230,12 @@ describe("list", () => {
 
 describe("option", () => {
     describe("o__to_json", () => {
-        test("none", () => {
-            let v = None;
-            let json = o__to_json(s__to_json, v);
-            switch (Js.Json.classify(json)) {
-                | Js.Json.JSONNull => expect(true) |> toBe(true)
-                | _ => failwith("Not a JSONNull")
-            };
-        });
+        test("none", () =>
+            o__to_json(s__to_json, None)
+                |> Js.Json.classify
+                |> expect
+                |> toBe(Js.Json.JSONNull)
+        );
 
         test("some", () => {
             let v = Some("yeah");
@@ -252,6 +257,39 @@ describe("option", () => {
             path: "",
             message: "Not a string",
             value: Js.Json.number(12.)
+        });
+    });
+});
+
+describe("falseable", () => {
+    describe("falseable__to_json", () => {
+        test("none", () =>
+            falseable__to_json(s__to_json, None)
+                |> Js.Json.classify
+                |> expect
+                |> toBe(Js.Json.JSONFalse)
+        );
+
+        test("some", () => {
+            let v = Some("yeah");
+            let json = falseable__to_json(s__to_json, v);
+            switch (Js.Json.classify(json)) {
+                | Js.Json.JSONString(v2) => expect(v2) |> toBe("yeah")
+                | _ => failwith("Not a JSONString")
+            };
+        });
+    });
+
+    describe("falseable__from_json", () => {
+        describe("good", () => {
+            testGoodDecode("false", falseable__from_json(s__from_json), Js.Json.boolean(false), None);
+            testGoodDecode("non-false", falseable__from_json(s__from_json), Js.Json.string("heyy"), Some("heyy"));
+        });
+
+        testBadDecode("bad", falseable__from_json(s__from_json), Js.Json.null, {
+            path: "",
+            message: "Not a string",
+            value: Js.Json.null
         });
     });
 });
