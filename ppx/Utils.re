@@ -5,6 +5,7 @@ open Ast_helper;
 
 type result('a, 'b) = Ok('a) | Error('b);
 
+let annotationName = "decco";
 let encoderFuncSuffix = "__to_json";
 let decoderFuncSuffix = "__from_json";
 let encoderVarPrefix = "encoder_";
@@ -42,3 +43,14 @@ let getExpressionFromPayload = (({ loc } : Location.loc('a), payload)) =>
         };
         | _ => fail(loc, "Expected expression as attribute payload")
     };
+
+let getParamNames = (params) =>
+    params
+        |> List.map((({ ptyp_desc, ptyp_loc }, _)) =>
+            switch ptyp_desc {
+                | Ptyp_var(s) => s
+                | _ => fail(ptyp_loc, "Unhandled param type")
+                    |> (v) => Location.Error(v)
+                    |> raise
+            }
+        );

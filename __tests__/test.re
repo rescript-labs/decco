@@ -11,8 +11,8 @@ open Js.Result; */
 [@decco] type a('a) = array('a);
 [@decco] type l('a) = list('a);
 [@decco] type o('a) = option('a);
-[@decco] type j = Js.Json.t;
 [@decco] type simpleVar('a) = 'a;
+[@decco] type j = Js.Json.t;
 [@decco] type optionList = l(o(s));
 [@decco] type variant = A | B(i) | C(i, s);
 [@decco] type record = {
@@ -22,13 +22,19 @@ open Js.Result; */
 };
 
 module type TestMod = {
-    type t;
-    let t__to_json : string => Js.Json.t;
-    let t__from_json : Js.Json.t => Js.Result.t(string, Decco.decodeError);
+    [@decco] type t;
+    [@decco] type varType('a, 'b);
+
+    let mkT : string => t;
+    let mkVarType : 'a => 'b => varType('a, 'b);
 };
 
 module TestMod : TestMod = {
     [@decco] type t = string;
+    [@decco] type varType('a, 'b) = { a: 'a, b: 'b };
+
+    let mkT = (s : string) : t => s;
+    let mkVarType = (a, b) => { a, b };
 };
 
 [@decco] type dependentOnTestMod = TestMod.t;
@@ -469,16 +475,16 @@ describe("record", () => {
 
 describe("Ldot", () => {
     test("dependentOnTestMod__to_json", () => {
-        let s = "yeah";
+        let s = TestMod.mkT("yeah");
         let json = dependentOnTestMod__to_json(s);
         switch (Js.Json.classify(json)) {
-            | Js.Json.JSONString(s2) => expect(s2) |> toBe(s)
+            | Js.Json.JSONString(s2) => expect(TestMod.mkT(s2)) |> toBe(s)
             | _ => failwith("Not a JSONString")
         };
     });
 
     describe("dependentOnTestMod__from_json", () => {
-        testGoodDecode("good", dependentOnTestMod__from_json, Js.Json.string("heyy"), "heyy");
+        testGoodDecode("good", dependentOnTestMod__from_json, Js.Json.string("heyy"), TestMod.mkT("heyy"));
 
         testBadDecode("bad", dependentOnTestMod__from_json, Js.Json.number(12.), {
             path: "",
@@ -486,6 +492,21 @@ describe("Ldot", () => {
             value: Js.Json.number(12.)
         });
     });
+});
+
+describe("TestMod.varType", () => {
+    test("varType__to_json", () => {
+        let s = TestMod.mkVarType(5, "yay");
+        let json = TestMod.varType__to_json(Decco.int_to_json, Decco.string_to_json, s);
+        expect(Js.Json.stringify(json))
+            |> toBe({|{"a":5,"b":"yay"}|})
+    });
+
+    let json = {|{"a":5,"b":"yay"}|} |> Js.Json.parseExn;
+    testGoodDecode("varType__from_json",
+        TestMod.varType__from_json(Decco.int_from_json, Decco.string_from_json),
+        json, TestMod.mkVarType(5, "yay")
+    );
 });
 
 describe("long path", () => {
