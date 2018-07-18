@@ -1,7 +1,7 @@
 open Jest;
 open Expect;
 /* open Decco; /* Don't open these in order to validate ppx works without it */
-open Js.Result; */
+open Belt.Result; */
 
 [@decco] type s = string;
 [@decco] type i = int;
@@ -49,7 +49,7 @@ module TestMod : TestMod = {
 let testBadDecode = (name, decode, json, expectedError) =>
     test(name, () => {
         switch (decode(json)) {
-            | Js.Result.Error(e) => expect(e) |> toEqual(expectedError)
+            | Belt.Result.Error(e) => expect(e) |> toEqual(expectedError)
             | _ => failwith("Decode erroneously succeeded")
         };
     });
@@ -57,8 +57,8 @@ let testBadDecode = (name, decode, json, expectedError) =>
 let testGoodDecode = (name, decode, json, expected) =>
     test(name, () =>
         switch (decode(json)) {
-            | Js.Result.Ok(actual) => expect(actual) |> toEqual(expected)
-            | Js.Result.Error({ Decco.path, message }) => failwith({j|Decode error: $message ($path)|j})
+            | Belt.Result.Ok(actual) => expect(actual) |> toEqual(expected)
+            | Belt.Result.Error({ Decco.path, message }) => failwith({j|Decode error: $message ($path)|j})
         }
     );
 
@@ -514,8 +514,8 @@ describe("long path", () => {
         let v = { bigV: V([|Some(["yes"])|]) };
         let decoded = bigR__from_json(bigR__to_json(v));
         switch decoded {
-            | Js.Result.Error(_) => failwith("Decode failure")
-            | Js.Result.Ok(actual) => expect(actual) |> toEqual(v)
+            | Belt.Result.Error(_) => failwith("Decode failure")
+            | Belt.Result.Ok(actual) => expect(actual) |> toEqual(v)
         };
     });
 

@@ -14,7 +14,7 @@ let rec addEncoderParams = (paramNames, resultType) =>
     };
 
 let makeResultType = (valueType) =>
-    [%type: Js.Result.t([%t valueType], Decco.decodeError)];
+    [%type: Belt.Result.t([%t valueType], Decco.decodeError)];
 
 let rec addDecoderParams = (paramNames, resultType) =>
     switch paramNames {

@@ -29,7 +29,7 @@ let generateDictGet = ({ str, codecs: (_, decoder), default }) => {
     switch default {
         | Some(default) => [%expr
             switch (Js.Dict.get(dict, [%e str])) {
-                | None => Js.Result.Ok([%e default])
+                | None => Belt.Result.Ok([%e default])
                 | Some(json) => [%e decoder](json)
             }
         ];
@@ -50,12 +50,12 @@ let generateDictGets = (decls) => decls
 let generateErrorCase = (numDecls, i, { str }) => {
     pc_lhs:
         Array.init(numDecls, which =>
-            which === i ? [%pat? Js.Result.Error(e : Decco.decodeError)] : [%pat? _]
+            which === i ? [%pat? Belt.Result.Error(e : Decco.decodeError)] : [%pat? _]
         )
         |> Array.to_list
         |> tupleOrSingleton(Pat.tuple),
     pc_guard: None,
-    pc_rhs: [%expr Js.Result.Error({ ...e, path: "." ++ [%e str] ++ e.path })]
+    pc_rhs: [%expr Belt.Result.Error({ ...e, path: "." ++ [%e str] ++ e.path })]
 };
 
 let generateSuccessCase = (decls) => {
@@ -63,13 +63,13 @@ let generateSuccessCase = (decls) => {
         |> List.map(({ name }) =>
             Location.mknoloc(name)
                 |> Pat.var
-                |> (p) => [%pat? Js.Result.Ok([%p p])]
+                |> (p) => [%pat? Belt.Result.Ok([%p p])]
         )
         |> tupleOrSingleton(Pat.tuple),
     pc_guard: None,
     pc_rhs: decls
         |> List.map(({ name }) => (Ast_convenience.lid(name), makeIdentExpr(name)))
-        |> (l) => [%expr Js.Result.Ok([%e Exp.record(l, None)])]
+        |> (l) => [%expr Belt.Result.Ok([%e Exp.record(l, None)])]
 };
 
 let generateDecoder = (decls) => {

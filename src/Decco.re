@@ -1,5 +1,4 @@
-open Js.Result;
-open ResultEx;
+open Belt.Result;
 
 type decodeError = {
     path: string,
@@ -81,7 +80,7 @@ let list_to_json = (encoder, list) =>
 let list_from_json = (decoder, json) =>
     json
         |> array_from_json(decoder)
-        |> map(Array.to_list);
+        |> map(_, Array.to_list);
 
 let option_to_json = (encoder, opt) =>
     switch opt {
@@ -92,7 +91,7 @@ let option_to_json = (encoder, opt) =>
 let option_from_json = (decoder, json) =>
     switch (Js.Json.classify(json)) {
         | Js.Json.JSONNull => Ok(None)
-        | _ => decoder(json) |> map(v => Some(v))
+        | _ => decoder(json) |> map(_, v => Some(v))
     };
 
 let encodeFalseable = (encoder, opt) =>
@@ -104,7 +103,7 @@ let encodeFalseable = (encoder, opt) =>
 let decodeFalseable = (decoder, json) =>
     switch (Js.Json.classify(json)) {
         | Js.Json.JSONFalse => Ok(None)
-        | _ => decoder(json) |> map(v => Some(v))
+        | _ => decoder(json) |> map(_, v => Some(v))
     };
 
 let falseable = (encodeFalseable, decodeFalseable);
