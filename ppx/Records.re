@@ -19,7 +19,7 @@ let generateEncoder = (decls) => {
         |> List.map(({ str, field, codecs: (encoder, _) }) =>
             [%expr ([%e str], [%e encoder]([%e field]))]
         )
-        |> Ast_helper.Exp.array;
+        |> Exp.array;
 
     [%expr [%e arrExpr] |> Js.Dict.fromArray |> Js.Json.object_]
         |> Exp.fun_("", None, [%pat? v]);
@@ -75,7 +75,7 @@ let generateSuccessCase = (decls) => {
 let generateDecoder = (decls) => {
     let resultSwitch = List.mapi(generateErrorCase(List.length(decls)), decls)
         |> List.append([generateSuccessCase(decls)])
-        |> Ast_helper.Exp.match(generateDictGets(decls));
+        |> Exp.match(generateDictGets(decls));
 
     [%expr (v) =>
         switch (Js.Json.classify(v)) {
@@ -102,7 +102,7 @@ let parseDecl = ({ pld_name: { txt }, pld_loc, pld_type, pld_attributes }) => {
         name: txt,
         str: Exp.constant(Asttypes.Const_string(txt, None)),
         field: Ast_convenience.lid(txt)
-            |> Ast_helper.Exp.field([%expr v]),
+            |> Exp.field([%expr v]),
         codecs: Codecs.generateCodecs(pld_type),
         default
     };

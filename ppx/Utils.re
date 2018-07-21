@@ -54,3 +54,7 @@ let getParamNames = (params) =>
                     |> raise
             }
         );
+
+let indexConst = (i) =>
+    Asttypes.Const_string("[" ++ string_of_int(i) ++ "]", None)
+        |> Exp.constant;

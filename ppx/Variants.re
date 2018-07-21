@@ -32,21 +32,6 @@ let generateEncoderCase = ({ pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
     }
 };
 
-let indexConst = (i) =>
-    Asttypes.Const_string("[" ++ string_of_int(i) ++ "]", None)
-        |> Exp.constant;
-
-let generateDecodeErrorCase = (numArgs, i, _) => {
-    pc_lhs:
-        Array.init(numArgs, which =>
-            which === i ? [%pat? Belt.Result.Error(e)] : [%pat? _]
-        )
-        |> Array.to_list
-        |> tupleOrSingleton(Pat.tuple),
-    pc_guard: None,
-    pc_rhs: [%expr Belt.Result.Error({ ...e, path: [%e indexConst(i)] ++ e.path })]
-};
-
 let generateDecodeSuccessCase = (numArgs, constructorName) => {
     pc_lhs:
         Array.init(numArgs, i =>
@@ -69,7 +54,7 @@ let generateDecodeSuccessCase = (numArgs, constructorName) => {
 let generateArgDecoder = (args, constructorName) => {
     let numArgs = List.length(args);
     args
-        |> List.mapi(generateDecodeErrorCase(numArgs))
+        |> List.mapi(DecodeCases.generateErrorCase(numArgs))
         |> List.append([generateDecodeSuccessCase(numArgs, constructorName)])
         |> Exp.match(args
             |> List.map(Codecs.generateCodecs)

@@ -54,7 +54,15 @@ and generateCodecs = ({ ptyp_desc, ptyp_loc, ptyp_attributes }) => {
         | Ptyp_arrow(_, _, _)=> fail(ptyp_loc, "Can't generate codecs for function type")
         | Ptyp_package(_)=> fail(ptyp_loc, "Can't generate codecs for module type")
 
-        | Ptyp_var(s)=> (
+        | Ptyp_tuple(types) => {
+            let compositeCodecs = List.map(generateCodecs, types);
+            (
+                Tuple.generateEncoder(compositeCodecs),
+                Tuple.generateDecoder(compositeCodecs)
+            );
+        }
+
+        | Ptyp_var(s) => (
             makeIdentExpr(encoderVarPrefix ++ s),
             makeIdentExpr(decoderVarPrefix ++ s),
         )

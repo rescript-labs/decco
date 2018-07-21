@@ -8,6 +8,7 @@ open Belt.Result; */
 [@decco] type f = float;
 [@decco] type b = bool;
 [@decco] type u = unit;
+[@decco] type t = (int, string);
 [@decco] type a('a) = array('a);
 [@decco] type l('a) = list('a);
 [@decco] type o('a) = option('a);
@@ -31,10 +32,10 @@ module type TestMod = {
 
 module TestMod : TestMod = {
     [@decco] type t = string;
-    [@decco] type varType('a, 'b) = { a: 'a, b: 'b };
+    [@decco] type varType('a, 'b) = ('a, 'b);
 
     let mkT = (s : string) : t => s;
-    let mkVarType = (a, b) => { a, b };
+    let mkVarType = (a, b) => (a, b);
 };
 
 [@decco] type dependentOnTestMod = TestMod.t;
@@ -164,6 +165,43 @@ describe("unit", () => {
     });
 
     testGoodDecode("u__from_json", u__from_json, Js.Json.number(0.), ());
+});
+
+describe("tuple", () => {
+    test("t__to_json", () => {
+        let v = (10, "ten");
+        let json = t__to_json(v);
+        expect(Js.Json.stringify(json))
+            |> toBe({|[10,"ten"]|})
+    });
+
+    describe("t__from_json", () => {
+        let json = {|[10,"ten"]|} |> Js.Json.parseExn;
+        testGoodDecode("good", t__from_json, json, (10, "ten"));
+
+        describe("bad", () => {
+            let json = Js.Json.number(12.);
+            testBadDecode("non-array", t__from_json, json, {
+                path: "",
+                message: "Not a tuple",
+                value: json
+            });
+
+            let json = {|[10]|} |> Js.Json.parseExn;
+            testBadDecode("non-string", t__from_json, json, {
+                path: "",
+                message: "Incorrect cardinality",
+                value: json
+            });
+
+            let json = {|[10,10]|} |> Js.Json.parseExn;
+            testBadDecode("non-string", t__from_json, json, {
+                path: "[1]",
+                message: "Not a string",
+                value: Js.Json.number(10.)
+            });
+        });
+    });
 });
 
 describe("array", () => {
@@ -499,10 +537,10 @@ describe("TestMod.varType", () => {
         let s = TestMod.mkVarType(5, "yay");
         let json = TestMod.varType__to_json(Decco.int_to_json, Decco.string_to_json, s);
         expect(Js.Json.stringify(json))
-            |> toBe({|{"a":5,"b":"yay"}|})
+            |> toBe({|[5,"yay"]|})
     });
 
-    let json = {|{"a":5,"b":"yay"}|} |> Js.Json.parseExn;
+    let json = {|[5,"yay"]|} |> Js.Json.parseExn;
     testGoodDecode("varType__from_json",
         TestMod.varType__from_json(Decco.int_from_json, Decco.string_from_json),
         json, TestMod.mkVarType(5, "yay")
