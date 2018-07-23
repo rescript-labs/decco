@@ -26,6 +26,7 @@ and generateConstrCodecs = ({ Location.txt: identifier, loc }) => {
     switch identifier {
         | Lident("string") => ([%expr Decco.string_to_json], [%expr Decco.string_from_json])
         | Lident("int") => ([%expr Decco.int_to_json], [%expr Decco.int_from_json])
+        | Lident("int64") => ([%expr Decco.int64_to_json], [%expr Decco.int64_from_json])
         | Lident("float") => ([%expr Decco.float_to_json], [%expr Decco.float_from_json])
         | Lident("bool") => ([%expr Decco.bool_to_json], [%expr Decco.bool_from_json])
         | Lident("unit") => ([%expr Decco.unit_to_json], [%expr Decco.unit_from_json])

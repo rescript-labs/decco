@@ -5,6 +5,8 @@ open Belt.Result; */
 
 [@decco] type s = string;
 [@decco] type i = int;
+[@decco] type i64 = int64;
+[@decco] type i64Unsafe = [@decco.codec Decco.int64_unsafe] int64;
 [@decco] type f = float;
 [@decco] type b = bool;
 [@decco] type u = unit;
@@ -115,6 +117,52 @@ describe("int", () => {
     });
 });
 
+describe("int64", () => {
+    describe("safe", () => {
+        let asInt64 = 0x0FFFFFFFFFFFFFFFL;
+        let asFloat = 1.2882297539194265e-231;
+        test("i64__to_json", () => {
+            let json = i64__to_json(asInt64);
+            switch (Js.Json.classify(json)) {
+                | Js.Json.JSONNumber(f) => expect(f) |> toBe(asFloat)
+                | _ => failwith("Not a JSONNumber")
+            };
+        });
+
+        describe("i64__from_json", () => {
+            testGoodDecode("good", i64__from_json, Js.Json.number(asFloat), asInt64);
+
+            let json = Js.Json.string("12.");
+            testBadDecode("bad", i64__from_json, json, {
+                path: "",
+                message: "Not a number",
+                value: json
+            });
+        });
+    });
+
+    describe("unsafe", () => {
+        let v = 11806311374010L;
+        test("i64Unsafe__to_json", () => {
+            let json = i64Unsafe__to_json(v);
+            expect(Js.Json.stringify(json))
+                |> toBe({|11806311374010|});
+        });
+
+        describe("i64Unsafe__from_json", () => {
+            let json = Js.Json.number(Int64.to_float(v));
+            testGoodDecode("good", i64Unsafe__from_json, json, v);
+
+            let json = Js.Json.string("12.");
+            testBadDecode("bad", i64Unsafe__from_json, json, {
+                path: "",
+                message: "Not a number",
+                value: json
+            });
+        });
+    });
+});
+
 describe("float", () => {
     test("f__to_json", () => {
         let v = 1.;
@@ -172,7 +220,7 @@ describe("tuple", () => {
         let v = (10, "ten");
         let json = t__to_json(v);
         expect(Js.Json.stringify(json))
-            |> toBe({|[10,"ten"]|})
+            |> toBe({|[10,"ten"]|});
     });
 
     describe("t__from_json", () => {

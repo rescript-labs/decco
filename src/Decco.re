@@ -32,6 +32,28 @@ let int_from_json = (j) =>
         | _ => Error({ path: "", message: "Not a number", value: j })
     };
 
+let int64_to_json = (i) => i
+    |> Int64.float_of_bits
+    |> Js.Json.number;
+
+let int64_from_json = (j) =>
+    switch (Js.Json.classify(j)) {
+        | Js.Json.JSONNumber(n) => Ok(Int64.bits_of_float(n))
+        | _ => error("Not a number", j)
+    };
+
+let int64_to_json_unsafe = (i) => i
+    |> Int64.to_float
+    |> Js.Json.number;
+
+let int64_from_json_unsafe = (j) =>
+    switch (Js.Json.classify(j)) {
+        | Js.Json.JSONNumber(n) => Ok(Int64.of_float(n))
+        | _ => error("Not a number", j)
+    };
+
+let int64_unsafe = (int64_to_json_unsafe, int64_from_json_unsafe);
+
 let float_to_json = (v) => v |> Js.Json.number;
 let float_from_json = (j) =>
     switch (Js.Json.classify(j)) {
