@@ -14,15 +14,15 @@ let error = (~path=?, message, value) =>{
     Error({ path, message, value });
 };
 
-let string_to_json = (s) => Js.Json.string(s);
-let string_from_json = (j) =>
+let stringToJson = (s) => Js.Json.string(s);
+let stringFromJson = (j) =>
     switch (Js.Json.classify(j)) {
         | Js.Json.JSONString(s) => Ok(s)
         | _ => Error({ path: "", message: "Not a string", value: j })
     };
 
-let int_to_json = (i) => i |> float_of_int |> Js.Json.number;
-let int_from_json = (j) =>
+let intToJson = (i) => i |> float_of_int |> Js.Json.number;
+let intFromJson = (j) =>
     switch (Js.Json.classify(j)) {
         | Js.Json.JSONNumber(f) =>
             (float_of_int(Js.Math.floor(f)) == f) ?
@@ -32,52 +32,52 @@ let int_from_json = (j) =>
         | _ => Error({ path: "", message: "Not a number", value: j })
     };
 
-let int64_to_json = (i) => i
+let int64ToJson = (i) => i
     |> Int64.float_of_bits
     |> Js.Json.number;
 
-let int64_from_json = (j) =>
+let int64FromJson = (j) =>
     switch (Js.Json.classify(j)) {
         | Js.Json.JSONNumber(n) => Ok(Int64.bits_of_float(n))
         | _ => error("Not a number", j)
     };
 
-let int64_to_json_unsafe = (i) => i
+let int64ToJsonUnsafe = (i) => i
     |> Int64.to_float
     |> Js.Json.number;
 
-let int64_from_json_unsafe = (j) =>
+let int64FromJsonUnsafe = (j) =>
     switch (Js.Json.classify(j)) {
         | Js.Json.JSONNumber(n) => Ok(Int64.of_float(n))
         | _ => error("Not a number", j)
     };
 
-let int64_unsafe = (int64_to_json_unsafe, int64_from_json_unsafe);
+let int64Unsafe = (int64ToJsonUnsafe, int64FromJsonUnsafe);
 
-let float_to_json = (v) => v |> Js.Json.number;
-let float_from_json = (j) =>
+let floatToJson = (v) => v |> Js.Json.number;
+let floatFromJson = (j) =>
     switch (Js.Json.classify(j)) {
         | Js.Json.JSONNumber(f) => Ok(f)
         | _ => Error({ path: "", message: "Not a number", value: j })
     };
 
-let bool_to_json = (v) => v |> Js.Json.boolean;
-let bool_from_json = (j) =>
+let boolToJson = (v) => v |> Js.Json.boolean;
+let boolFromJson = (j) =>
     switch (Js.Json.classify(j)) {
         | Js.Json.JSONTrue => Ok(true)
         | Js.Json.JSONFalse => Ok(false)
         | _ => Error({ path: "", message: "Not a boolean", value: j })
     };
 
-let unit_to_json = () => Js.Json.number(0.0);
-let unit_from_json = (_) => Ok(());
+let unitToJson = () => Js.Json.number(0.0);
+let unitFromJson = (_) => Ok(());
 
-let array_to_json = (encoder, arr) =>
+let arrayToJson = (encoder, arr) =>
     arr
         |> Js.Array.map(encoder)
         |> Js.Json.array;
 
-let array_from_json = (decoder, json) =>
+let arrayFromJson = (decoder, json) =>
     switch (Js.Json.classify(json)) {
         | Js.Json.JSONArray(arr) =>
             Js.Array.reducei((acc, jsonI, i) => {
@@ -94,23 +94,23 @@ let array_from_json = (decoder, json) =>
         | _ => Error({ path: "", message: "Not an array", value: json })
     };
 
-let list_to_json = (encoder, list) =>
+let listToJson = (encoder, list) =>
     list
         |> Array.of_list
-        |> array_to_json(encoder);
+        |> arrayToJson(encoder);
 
-let list_from_json = (decoder, json) =>
+let listFromJson = (decoder, json) =>
     json
-        |> array_from_json(decoder)
+        |> arrayFromJson(decoder)
         |> map(_, Array.to_list);
 
-let option_to_json = (encoder, opt) =>
+let optionToJson = (encoder, opt) =>
     switch opt {
         | Some(x) => encoder(x)
         | None => Js.Json.null
     };
 
-let option_from_json = (decoder, json) =>
+let optionFromJson = (decoder, json) =>
     switch (Js.Json.classify(json)) {
         | Js.Json.JSONNull => Ok(None)
         | _ => decoder(json) |> map(_, v => Some(v))

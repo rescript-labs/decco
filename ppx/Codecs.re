@@ -24,15 +24,15 @@ and generateConstrCodecs = ({ Location.txt: identifier, loc }) => {
     open Longident;
 
     switch identifier {
-        | Lident("string") => ([%expr Decco.string_to_json], [%expr Decco.string_from_json])
-        | Lident("int") => ([%expr Decco.int_to_json], [%expr Decco.int_from_json])
-        | Lident("int64") => ([%expr Decco.int64_to_json], [%expr Decco.int64_from_json])
-        | Lident("float") => ([%expr Decco.float_to_json], [%expr Decco.float_from_json])
-        | Lident("bool") => ([%expr Decco.bool_to_json], [%expr Decco.bool_from_json])
-        | Lident("unit") => ([%expr Decco.unit_to_json], [%expr Decco.unit_from_json])
-        | Lident("array") => ([%expr Decco.array_to_json], [%expr Decco.array_from_json])
-        | Lident("list") => ([%expr Decco.list_to_json], [%expr Decco.list_from_json])
-        | Lident("option") => ([%expr Decco.option_to_json], [%expr Decco.option_from_json])
+        | Lident("string") => ([%expr Decco.stringToJson], [%expr Decco.stringFromJson])
+        | Lident("int") => ([%expr Decco.intToJson], [%expr Decco.intFromJson])
+        | Lident("int64") => ([%expr Decco.int64ToJson], [%expr Decco.int64FromJson])
+        | Lident("float") => ([%expr Decco.floatToJson], [%expr Decco.floatFromJson])
+        | Lident("bool") => ([%expr Decco.boolToJson], [%expr Decco.boolFromJson])
+        | Lident("unit") => ([%expr Decco.unitToJson], [%expr Decco.unitFromJson])
+        | Lident("array") => ([%expr Decco.arrayToJson], [%expr Decco.arrayFromJson])
+        | Lident("list") => ([%expr Decco.listToJson], [%expr Decco.listFromJson])
+        | Lident("option") => ([%expr Decco.optionToJson], [%expr Decco.optionFromJson])
         | Ldot(Ldot(Lident("Js"), "Json"), "t") => (
             [%expr (v) => v],
             [%expr (v) => Belt.Result.Ok(v)]

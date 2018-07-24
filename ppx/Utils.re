@@ -6,8 +6,8 @@ open Ast_helper;
 type result('a, 'b) = Ok('a) | Error('b);
 
 let annotationName = "decco";
-let encoderFuncSuffix = "__to_json";
-let decoderFuncSuffix = "__from_json";
+let encoderFuncSuffix = "_encode";
+let decoderFuncSuffix = "_decode";
 let encoderVarPrefix = "encoder_";
 let decoderVarPrefix = "decoder_";
 
