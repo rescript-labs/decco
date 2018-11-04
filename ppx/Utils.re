@@ -13,13 +13,13 @@ let decoderVarPrefix = "decoder_";
 
 let fail = (loc, message) =>
     Location.error(~loc, message)
-        |> (v) => Location.Error(v)
-        |> raise;
+    |> (v) => Location.Error(v)
+    |> raise;
 
 let makeIdentExpr = (s) =>
     Longident.parse(s)
-        |> Location.mknoloc
-        |> Exp.ident;
+    |> Location.mknoloc
+    |> Exp.ident;
 
 let tupleOrSingleton = (tuple, l) =>
     List.length(l) > 1 ? tuple(l) : List.hd(l);
@@ -35,6 +35,26 @@ let getAttributeByName = (attributes, name) => {
     };
 };
 
+/* TODO: make this not suck */
+type generatorSettings = { doEncode: bool, doDecode: bool };
+let getGeneratorSettingsFromAttributes = (attributes) =>
+    switch (getAttributeByName(attributes, annotationName)) {
+        | Ok(None) =>
+            switch ((
+                getAttributeByName(attributes, annotationName ++ ".decode"),
+                getAttributeByName(attributes, annotationName ++ ".encode")))
+            {
+                | (Ok(Some(_)), Ok(Some(_))) => Ok(Some({ doEncode: true, doDecode: true }))
+                | (Ok(Some(_)), Ok(None)) => Ok(Some({ doEncode: false, doDecode: true }))
+                | (Ok(None), Ok(Some(_))) => Ok(Some({ doEncode: true, doDecode: false }))
+                | (Ok(None), Ok(None)) => Ok(None)
+                | (Error(_) as e, _) => e
+                | (_, Error(_) as e) => e
+            }
+        | Ok(Some(_)) => Ok(Some({ doEncode: true, doDecode: true }))
+        | Error(_) as e => e
+    };
+
 let getExpressionFromPayload = (({ loc } : Location.loc('a), payload)) =>
     switch payload {
         | PStr([{ pstr_desc }]) => switch pstr_desc {
@@ -46,15 +66,15 @@ let getExpressionFromPayload = (({ loc } : Location.loc('a), payload)) =>
 
 let getParamNames = (params) =>
     params
-        |> List.map((({ ptyp_desc, ptyp_loc }, _)) =>
-            switch ptyp_desc {
-                | Ptyp_var(s) => s
-                | _ => fail(ptyp_loc, "Unhandled param type")
-                    |> (v) => Location.Error(v)
-                    |> raise
-            }
-        );
+    |> List.map((({ ptyp_desc, ptyp_loc }, _)) =>
+        switch ptyp_desc {
+            | Ptyp_var(s) => s
+            | _ => fail(ptyp_loc, "Unhandled param type")
+                |> (v) => Location.Error(v)
+                |> raise
+        }
+    );
 
 let indexConst = (i) =>
     Asttypes.Const_string("[" ++ string_of_int(i) ++ "]", None)
-        |> Exp.constant;
+    |> Exp.constant;

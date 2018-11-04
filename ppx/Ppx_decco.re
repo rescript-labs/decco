@@ -4,13 +4,13 @@ open Ast_mapper;
 
 let mapStructure = (mapper, structure) =>
     structure
-        |> List.map(Structure.mapStructureItem(mapper))
-        |> List.concat;
+    |> List.map(Structure.mapStructureItem(mapper))
+    |> List.concat;
 
 let mapSignature = (mapper, signature) =>
     signature
-        |> List.map(Signature.mapSignatureItem(mapper))
-        |> List.concat;
+    |> List.map(Signature.mapSignatureItem(mapper))
+    |> List.concat;
 
 let mapper = (_, _) => {
     ...default_mapper,

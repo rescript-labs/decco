@@ -49,6 +49,28 @@ module TestMod : TestMod = {
 
 [@decco] type falseable('a) = [@decco.codec Decco.falseable] option('a);
 
+module type EncOnly = {
+    [@decco.encode] type t;
+};
+module EncOnly : EncOnly = {
+    type _t = int;
+    let _t_encode = Decco.intToJson;
+    [@decco.encode] type t = _t;
+    let _e = t_decode;
+};
+EncOnly.t_encode;
+
+module type DecOnly = {
+    [@decco.decode] type t;
+};
+module DecOnly : DecOnly = {
+    type _t = int;
+    let _t_decode = Decco.intFromJson;
+    [@decco.decode] type t = _t;
+    let _e = t_decode;
+};
+DecOnly.t_decode;
+
 let testBadDecode = (name, decode, json, expectedError) =>
     test(name, () => {
         switch (decode(json)) {

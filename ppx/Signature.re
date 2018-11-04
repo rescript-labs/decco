@@ -26,7 +26,7 @@ let rec addDecoderParams = (paramNames, resultType) =>
         }
     };
 
-let generateSigDecls = (typeName, paramNames) => {
+let generateSigDecls = ({ doEncode, doDecode }, typeName, paramNames) => {
     let encoderPat = typeName ++ Utils.encoderFuncSuffix;
     let decoderPat = typeName ++ Utils.decoderFuncSuffix;
 
@@ -34,29 +34,38 @@ let generateSigDecls = (typeName, paramNames) => {
         |> List.map(Ast_helper.Typ.var)
         |> Ast_helper.Typ.constr(Ast_convenience.lid(typeName));
 
-    [
-        [%type: [%t valueType] => Js.Json.t]
-            |> addEncoderParams(List.rev(paramNames))
-            |> Ast_helper.Val.mk(Location.mknoloc(encoderPat))
-            |> Ast_helper.Sig.value,
+    let decls = [];
 
-        [%type: Js.Json.t => [%t makeResultType(valueType)]]
-            |> addDecoderParams(List.rev(paramNames))
-            |> Ast_helper.Val.mk(Location.mknoloc(decoderPat))
-            |> Ast_helper.Sig.value
-    ];
+    let decls =
+        doEncode ?
+            decls @
+            [[%type: [%t valueType] => Js.Json.t]
+                |> addEncoderParams(List.rev(paramNames))
+                |> Ast_helper.Val.mk(Location.mknoloc(encoderPat))
+                |> Ast_helper.Sig.value]
+        : decls;
+
+    let decls =
+        doDecode ?
+            decls @
+            [[%type: Js.Json.t => [%t makeResultType(valueType)]]
+                |> addDecoderParams(List.rev(paramNames))
+                |> Ast_helper.Val.mk(Location.mknoloc(decoderPat))
+                |> Ast_helper.Sig.value]
+        : decls;
+
+    decls;
 };
 
 let mapTypeDecl = (decl) => {
     let { ptype_attributes, ptype_name: { txt: typeName },
           ptype_params, ptype_loc } = decl;
 
-    let matchingAttributes = getAttributeByName(ptype_attributes, annotationName);
-
-    switch matchingAttributes {
-        | Ok(None) => []
-        | Ok(_) => generateSigDecls(typeName, getParamNames(ptype_params))
+    switch (getGeneratorSettingsFromAttributes(ptype_attributes)) {
         | Error(s) => fail(ptype_loc, s)
+        | Ok(None) => []
+        | Ok(Some(generatorSettings)) =>
+            generateSigDecls(generatorSettings, typeName, getParamNames(ptype_params))
     };
 };
 

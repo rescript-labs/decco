@@ -10,14 +10,14 @@ type parsedDecl = {
     name: string,
     str: expression, /* "NAME" */
     field: expression, /* v.NAME */
-    codecs: (expression, expression),
+    codecs: (option(expression), option(expression)),
     default: option(expression)
 };
 
 let generateEncoder = (decls) => {
     let arrExpr = decls
         |> List.map(({ str, field, codecs: (encoder, _) }) =>
-            [%expr ([%e str], [%e encoder]([%e field]))]
+            [%expr ([%e str], [%e BatOption.get(encoder)]([%e field]))]
         )
         |> Exp.array;
 
@@ -26,6 +26,7 @@ let generateEncoder = (decls) => {
 };
 
 let generateDictGet = ({ str, codecs: (_, decoder), default }) => {
+    let decoder = BatOption.get(decoder);
     switch default {
         | Some(default) => [%expr
             switch (Js.Dict.get(dict, [%e str])) {
@@ -85,7 +86,7 @@ let generateDecoder = (decls) => {
     ]
 };
 
-let parseDecl = ({ pld_name: { txt }, pld_loc, pld_type, pld_attributes }) => {
+let parseDecl = (generatorSettings, { pld_name: { txt }, pld_loc, pld_type, pld_attributes }) => {
     /* If a key is missing from the record on decode, the default (if specified) will be used */
     let defaultDecls = getAttributeByName(pld_attributes, "decco.default");
     let default = switch (defaultDecls, pld_type.ptyp_desc) {
@@ -103,12 +104,15 @@ let parseDecl = ({ pld_name: { txt }, pld_loc, pld_type, pld_attributes }) => {
         str: Exp.constant(Asttypes.Const_string(txt, None)),
         field: Ast_convenience.lid(txt)
             |> Exp.field([%expr v]),
-        codecs: Codecs.generateCodecs(pld_type),
+        codecs: Codecs.generateCodecs(generatorSettings, pld_type),
         default
     };
 };
 
-let generateCodecs = (decls) => {
-    let parsedDecls = List.map(parseDecl, decls);
-    (generateEncoder(parsedDecls), generateDecoder(parsedDecls))
+let generateCodecs = ({ doEncode, doDecode } as generatorSettings, decls) => {
+    let parsedDecls = List.map(parseDecl(generatorSettings), decls);
+    (
+        doEncode ? Some(generateEncoder(parsedDecls)) : None,
+        doDecode ? Some(generateDecoder(parsedDecls)) : None
+    )
 };

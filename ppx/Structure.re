@@ -19,33 +19,41 @@ let generateCodecDecls = (typeName, paramNames, (encoder, decoder)) => {
     let decoderPat = Pat.var(Location.mknoloc(typeName ++ Utils.decoderFuncSuffix));
     let decoderParamNames = List.map(s => decoderVarPrefix ++ s, paramNames);
 
-    [%str let ([%p encoderPat], [%p decoderPat]) = (
-        [%e addParams(encoderParamNames, encoder)],
-        [%e addParams(decoderParamNames, decoder)]
-    )];
+    let vbs = [];
+
+    let vbs = switch encoder {
+    | None => vbs
+    | Some(encoder) => vbs @ [Vb.mk(encoderPat, addParams(encoderParamNames, encoder))]
+    };
+
+    let vbs = switch decoder {
+    | None => vbs
+    | Some(decoder) => vbs @ [Vb.mk(decoderPat, addParams(decoderParamNames, decoder))]
+    };
+
+    [Str.value(Asttypes.Nonrecursive, vbs)];
 };
 
 let mapTypeDecl = (decl) => {
     let { ptype_attributes, ptype_name: { txt: typeName },
           ptype_manifest, ptype_params, ptype_loc, ptype_kind } = decl;
 
-    let matchingAttributes = getAttributeByName(ptype_attributes, annotationName);
-
-    switch matchingAttributes {
+    switch (getGeneratorSettingsFromAttributes(ptype_attributes)) {
         | Ok(None) => []
-        | Ok(_) => switch (ptype_manifest, ptype_kind) {
+        | Ok(Some(generatorSettings)) => switch (ptype_manifest, ptype_kind) {
             | (None, Ptype_abstract) => fail(ptype_loc, "Can't generate codecs for unspecified type")
 
             | (Some(manifest), _) => generateCodecDecls(
-                typeName, getParamNames(ptype_params), generateCodecs(manifest)
+                typeName, getParamNames(ptype_params),
+                generateCodecs(generatorSettings, manifest)
             )
             | (None, Ptype_variant(decls)) => generateCodecDecls(
                 typeName, getParamNames(ptype_params),
-                Variants.generateCodecs(decls)
+                Variants.generateCodecs(generatorSettings, decls)
             )
             | (None, Ptype_record(decls)) => generateCodecDecls(
                 typeName, getParamNames(ptype_params),
-                Records.generateCodecs(decls)
+                Records.generateCodecs(generatorSettings, decls)
             )
             | _ => fail(ptype_loc, "This type is not handled by decco")
         }
