@@ -1,5 +1,7 @@
 open Belt.Result;
 
+module Codecs { include Codecs; };
+
 type decodeError = {
     path: string,
     message: string,
@@ -115,17 +117,3 @@ let optionFromJson = (decoder, json) =>
         | Js.Json.JSONNull => Ok(None)
         | _ => decoder(json) |> map(_, v => Some(v))
     };
-
-let encodeFalseable = (encoder, opt) =>
-    switch opt {
-        | None => Js.Json.boolean(false)
-        | Some(v) => encoder(v)
-    };
-
-let decodeFalseable = (decoder, json) =>
-    switch (Js.Json.classify(json)) {
-        | Js.Json.JSONFalse => Ok(None)
-        | _ => decoder(json) |> map(_, v => Some(v))
-    };
-
-let falseable = (encodeFalseable, decodeFalseable);

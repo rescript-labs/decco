@@ -47,7 +47,8 @@ module TestMod : TestMod = {
     bigV: bigV
 };
 
-[@decco] type falseable('a) = [@decco.codec Decco.falseable] option('a);
+[@decco] type falseable('a) = [@decco.codec Decco.Codecs.falseable] option('a);
+[@decco] type magic = [@decco.codec Decco.Codecs.magic] int;
 
 module type EncOnly = {
     [@decco.encode] type t;
@@ -406,6 +407,11 @@ describe("falseable", () => {
             value: Js.Json.null
         });
     });
+});
+
+describe("magic", () => {
+    let i = 24;
+    testGoodDecode("", magic_decode, magic_encode(i), i);
 });
 
 describe("simpleVar", () => {

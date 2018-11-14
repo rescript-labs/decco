@@ -2,7 +2,10 @@
     "name" : "decco",
     "bs-dev-dependencies": [ "@glennsl/bs-jest" ],
     "sources" : [
-        { "dir" : "src" },
+        {
+            "dir": "src",
+            "public": ["Decco"],
+        },
         {
             "dir": "__tests__",
             "type": "dev"
