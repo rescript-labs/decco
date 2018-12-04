@@ -8,23 +8,25 @@
     "build": "npm run clean && bsb -make-world",
     "watch": "bsb -clean-world -make-world -w",
     "clean": "rm -rf lib && bsb -clean-world && dune clean",
-    "build-ppx": "dune build"
+    "build-ppx": "dune build",
+    "postinstall": "[ ! -f package-links.json ] || ppl link-file"
   },
   "bin": {
     "ppx_decco": "./ppx/ppx_decco.sh"
   },
   "keywords": [],
   "license": "MIT",
-  "author": "Ryan Biwer",
   "repository": {
     "type": "git",
     "url": "git@github.com:ryb73/ppx_decco.git"
   },
   "_": [],
   "peerDependencies": {
-    "bs-platform": "^3.1.5"
+    "bs-platform": "^4.0.0"
   },
   "devDependencies": {
-    "@glennsl/bs-jest": "^0.4.2"
+    "@glennsl/bs-jest": "^0.4.2",
+    "bs-batteries": "0.0.14",
+    "jest": "^23.6.0"
   }
 }
