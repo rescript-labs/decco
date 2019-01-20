@@ -1,12 +1,14 @@
 open Belt.Result;
 
-module Codecs { include Codecs; };
-
 type decodeError = {
     path: string,
     message: string,
     value: Js.Json.t
 };
+
+type result('a) = Belt.Result.t('a, decodeError);
+type decoder('a) = Js.Json.t => result('a);
+type encoder('a) = 'a => Js.Json.t;
 
 let error = (~path=?, message, value) =>{
     let path = switch path {
@@ -54,8 +56,6 @@ let int64FromJsonUnsafe = (j) =>
         | _ => error("Not a number", j)
     };
 
-let int64Unsafe = (int64ToJsonUnsafe, int64FromJsonUnsafe);
-
 let floatToJson = (v) => v |> Js.Json.number;
 let floatFromJson = (j) =>
     switch (Js.Json.classify(j)) {
@@ -76,8 +76,8 @@ let unitFromJson = (_) => Ok(());
 
 let arrayToJson = (encoder, arr) =>
     arr
-        |> Js.Array.map(encoder)
-        |> Js.Json.array;
+    |> Js.Array.map(encoder)
+    |> Js.Json.array;
 
 let arrayFromJson = (decoder, json) =>
     switch (Js.Json.classify(json)) {
@@ -98,13 +98,13 @@ let arrayFromJson = (decoder, json) =>
 
 let listToJson = (encoder, list) =>
     list
-        |> Array.of_list
-        |> arrayToJson(encoder);
+    |> Array.of_list
+    |> arrayToJson(encoder);
 
 let listFromJson = (decoder, json) =>
     json
-        |> arrayFromJson(decoder)
-        |> map(_, Array.to_list);
+    |> arrayFromJson(decoder)
+    |> map(_, Array.to_list);
 
 let optionToJson = (encoder, opt) =>
     switch opt {
@@ -117,3 +117,16 @@ let optionFromJson = (decoder, json) =>
         | Js.Json.JSONNull => Ok(None)
         | _ => decoder(json) |> map(_, v => Some(v))
     };
+
+module Codecs {
+    include Codecs;
+    let string = (stringToJson, stringFromJson);
+    let int = (intToJson, intFromJson);
+    let int64Unsafe = (int64ToJsonUnsafe, int64FromJsonUnsafe);
+    let float = (floatToJson, floatFromJson);
+    let bool = (boolToJson, boolFromJson);
+    let array = (arrayToJson, arrayFromJson);
+    let list = (listToJson, listFromJson);
+    let option = (optionToJson, optionFromJson);
+    let unit = (unitToJson, unitFromJson);
+};

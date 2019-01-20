@@ -37,9 +37,10 @@ let generateDictGet = ({ str, codecs: (_, decoder), default }) => {
 
         | None => [%expr
             switch (Js.Dict.get(dict, [%e str])) {
-                | None => Decco.error("Key not found", v)
-                | Some(json) => [%e decoder](json)
+                | None => Js.Json.null
+                | Some(json) => json
             }
+            |> [%e decoder]
         ];
     };
 };
@@ -63,8 +64,8 @@ let generateSuccessCase = (decls) => {
     pc_lhs: decls
         |> List.map(({ name }) =>
             Location.mknoloc(name)
-                |> Pat.var
-                |> (p) => [%pat? Belt.Result.Ok([%p p])]
+            |> Pat.var
+            |> (p) => [%pat? Belt.Result.Ok([%p p])]
         )
         |> tupleOrSingleton(Pat.tuple),
     pc_guard: None,

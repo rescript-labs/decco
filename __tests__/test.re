@@ -6,7 +6,7 @@ open Belt.Result; */
 [@decco] type s = string;
 [@decco] type i = int;
 [@decco] type i64 = int64;
-[@decco] type i64Unsafe = [@decco.codec Decco.int64Unsafe] int64;
+[@decco] type i64Unsafe = [@decco.codec Decco.Codecs.int64Unsafe] int64;
 [@decco] type f = float;
 [@decco] type b = bool;
 [@decco] type u = unit;
@@ -573,8 +573,8 @@ describe("record", () => {
             let json = {|{"ya":100}|} |> Js.Json.parseExn;
             testBadDecode("missing field", record_decode, json, {
                 path: ".hey",
-                message: "Key not found",
-                value: json
+                message: "Not a string",
+                value: Js.Json.null
             });
 
             let json = {|{"hey":9,"ya":10}|} |> Js.Json.parseExn;
