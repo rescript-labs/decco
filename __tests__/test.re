@@ -20,8 +20,10 @@ open Belt.Result; */
 [@decco] type variant = A | B(i) | C(i, s);
 [@decco] type record = {
     hey: s,
-    [@decco.default None] ya: o(i),
-    opt: option(int)
+    opt: option(int),
+    o: o(i),
+    [@decco.default 1.0] f: float,
+    [@decco.key "other_key"] otherKey: string,
 };
 
 module type TestMod = {
@@ -548,19 +550,19 @@ describe("variant", () => {
 
 describe("record", () => {
     test("record_encode", () => {
-        let v = { hey: "hey", ya: Some(100), opt: Some(99) };
+        let v = { hey: "hey", opt: Some(100), o: Some(99), f: 1.5, otherKey: "!" };
         let json = record_encode(v);
         expect(Js.Json.stringify(json))
-            |> toBe({|{"hey":"hey","ya":100,"opt":99}|})
+            |> toBe({|{"hey":"hey","opt":100,"o":99,"f":1.5,"other_key":"!"}|})
     });
 
     describe("record_decode", () => {
         describe("good", () => {
-            let json = {|{"hey":"hey","ya":100,"opt":99}|} |> Js.Json.parseExn;
-            testGoodDecode("base case", record_decode, json, { hey: "hey", ya: Some(100), opt: Some(99) });
+            let json = {|{"hey":"hey","opt":100,"o":99,"f":1.5,"other_key":"!"}|} |> Js.Json.parseExn;
+            testGoodDecode("base case", record_decode, json, { hey: "hey", opt: Some(100), o: Some(99), f: 1.5, otherKey: "!" });
 
-            let json = {|{"hey":"hey"}|} |> Js.Json.parseExn;
-            testGoodDecode("missing optional", record_decode, json, { hey: "hey", ya: None, opt: None });
+            let json = {|{"hey":"hey","other_key":"!"}|} |> Js.Json.parseExn;
+            testGoodDecode("missing optional", record_decode, json, { hey: "hey", opt: None, o: None, f: 1.0, otherKey: "!" });
         });
 
         describe("bad", () => {

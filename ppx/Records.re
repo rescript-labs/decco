@@ -3,12 +3,11 @@ open Ast_402;
 open Ppx_tools_402;
 open Parsetree;
 open Ast_helper;
-open Longident;
 open Utils;
 
 type parsedDecl = {
     name: string,
-    str: expression, /* "NAME" */
+    key: expression, /* "NAME" */
     field: expression, /* v.NAME */
     codecs: (option(expression), option(expression)),
     default: option(expression)
@@ -16,8 +15,8 @@ type parsedDecl = {
 
 let generateEncoder = (decls) => {
     let arrExpr = decls
-        |> List.map(({ str, field, codecs: (encoder, _) }) =>
-            [%expr ([%e str], [%e BatOption.get(encoder)]([%e field]))]
+        |> List.map(({ key, field, codecs: (encoder, _) }) =>
+            [%expr ([%e key], [%e BatOption.get(encoder)]([%e field]))]
         )
         |> Exp.array;
 
@@ -25,18 +24,18 @@ let generateEncoder = (decls) => {
         |> Exp.fun_("", None, [%pat? v]);
 };
 
-let generateDictGet = ({ str, codecs: (_, decoder), default }) => {
+let generateDictGet = ({ key, codecs: (_, decoder), default }) => {
     let decoder = BatOption.get(decoder);
     switch default {
         | Some(default) => [%expr
-            switch (Js.Dict.get(dict, [%e str])) {
+            switch (Js.Dict.get(dict, [%e key])) {
                 | None => Belt.Result.Ok([%e default])
                 | Some(json) => [%e decoder](json)
             }
         ];
 
         | None => [%expr
-            switch (Js.Dict.get(dict, [%e str])) {
+            switch (Js.Dict.get(dict, [%e key])) {
                 | None => Js.Json.null
                 | Some(json) => json
             }
@@ -49,7 +48,7 @@ let generateDictGets = (decls) => decls
     |> List.map(generateDictGet)
     |> tupleOrSingleton(Exp.tuple);
 
-let generateErrorCase = (numDecls, i, { str }) => {
+let generateErrorCase = (numDecls, i, { key }) => {
     pc_lhs:
         Array.init(numDecls, which =>
             which === i ? [%pat? Belt.Result.Error(e : Decco.decodeError)] : [%pat? _]
@@ -57,7 +56,7 @@ let generateErrorCase = (numDecls, i, { str }) => {
         |> Array.to_list
         |> tupleOrSingleton(Pat.tuple),
     pc_guard: None,
-    pc_rhs: [%expr Belt.Result.Error({ ...e, path: "." ++ [%e str] ++ e.path })]
+    pc_rhs: [%expr Belt.Result.Error({ ...e, path: "." ++ [%e key] ++ e.path })]
 };
 
 let generateSuccessCase = (decls) => {
@@ -89,20 +88,21 @@ let generateDecoder = (decls) => {
 
 let parseDecl = (generatorSettings, { pld_name: { txt }, pld_loc, pld_type, pld_attributes }) => {
     /* If a key is missing from the record on decode, the default (if specified) will be used */
-    let defaultDecls = getAttributeByName(pld_attributes, "decco.default");
-    let default = switch (defaultDecls, pld_type.ptyp_desc) {
-        | (Ok(Some(attribute)), _) => Some(getExpressionFromPayload(attribute))
+    let default = switch (getAttributeByName(pld_attributes, "decco.default")) {
+        | Ok(Some(attribute)) => Some(getExpressionFromPayload(attribute))
+        | Ok(None) => None
+        | Error(s) => fail(pld_loc, s)
+    };
 
-        /* Set default for option to None */
-        | (Ok(None), Ptyp_constr({ txt: Lident("option") }, _)) => Some([%expr None])
-
-        | (Ok(None), _) => None
-        | (Error(s), _) => fail(pld_loc, s)
+    let key = switch (getAttributeByName(pld_attributes, "decco.key")) {
+        | Ok(Some(attribute)) => getExpressionFromPayload(attribute)
+        | Ok(None) => Exp.constant(Asttypes.Const_string(txt, None))
+        | Error(s) => fail(pld_loc, s)
     };
 
     {
         name: txt,
-        str: Exp.constant(Asttypes.Const_string(txt, None)),
+        key,
         field: Ast_convenience.lid(txt)
             |> Exp.field([%expr v]),
         codecs: Codecs.generateCodecs(generatorSettings, pld_type),
