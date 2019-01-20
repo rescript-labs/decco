@@ -56,23 +56,19 @@ module type EncOnly = {
     [@decco.encode] type t;
 };
 module EncOnly : EncOnly = {
-    type _t = int;
-    let _t_encode = Decco.intToJson;
-    [@decco.encode] type t = _t;
-    let _e = t_decode;
+    let t_decode = 1;
+    [@decco.encode] type t = int;
+    t_decode + 1; /** this won't typecheck if t_decode is generated  */
 };
-EncOnly.t_encode;
 
 module type DecOnly = {
     [@decco.decode] type t;
 };
 module DecOnly : DecOnly = {
-    type _t = int;
-    let _t_decode = Decco.intFromJson;
-    [@decco.decode] type t = _t;
-    let _e = t_decode;
+    let t_encode = 1;
+    [@decco.decode] type t = int;
+    t_encode + 1;
 };
-DecOnly.t_decode;
 
 let testBadDecode = (name, decode, json, expectedError) =>
     test(name, () => {
