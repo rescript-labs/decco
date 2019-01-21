@@ -15,6 +15,7 @@
     "ppx_decco": "./ppx/ppx_decco.sh"
   },
   "files": [
+    "/lib/bs/src",
     "/lib/js/src",
     "/ppx/ppx_decco.sh",
     "/_build/default/.ppx/ppx_decco/ppx.exe"
