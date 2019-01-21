@@ -1,5 +1,5 @@
 {
-    "name" : "decco",
+    "name" : "@ryb73/decco",
     "bs-dev-dependencies": [ "@glennsl/bs-jest" ],
     "sources" : [
         {
