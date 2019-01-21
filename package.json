@@ -14,6 +14,11 @@
   "bin": {
     "ppx_decco": "./ppx/ppx_decco.sh"
   },
+  "files": [
+    "/lib/js/src",
+    "/ppx/ppx_decco.sh",
+    "/_build/default/.ppx/ppx_decco/ppx.exe"
+  ],
   "keywords": [],
   "license": "MIT",
   "repository": {
@@ -26,7 +31,9 @@
   },
   "devDependencies": {
     "@glennsl/bs-jest": "^0.4.2",
-    "bs-batteries": "0.0.14",
     "jest": "^23.6.0"
+  },
+  "dependencies": {
+    "bs-batteries": "0.0.14"
   }
 }
