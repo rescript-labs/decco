@@ -457,11 +457,6 @@ browser-resolve@^1.11.3:
   dependencies:
     resolve "1.1.7"
 
-bs-batteries@0.0.14:
-  version "0.0.14"
-  resolved "https://registry.yarnpkg.com/bs-batteries/-/bs-batteries-0.0.14.tgz#51536a489615087c05774525c38ab56b4d45df4c"
-  integrity sha1-UVNqSJYVCHwFd0Ulw4q1a01F30w=
-
 bser@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/bser/-/bser-2.0.0.tgz#9ac78d3ed5d915804fd87acb158bc797147a1719"

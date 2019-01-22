@@ -33,8 +33,5 @@
   "devDependencies": {
     "@glennsl/bs-jest": "^0.4.2",
     "jest": "^23.6.0"
-  },
-  "dependencies": {
-    "bs-batteries": "0.0.14"
   }
 }
