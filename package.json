@@ -17,6 +17,7 @@
   "files": [
     "/bsconfig.json",
     "/src",
+    "/lib/js/src",
     "/ppx/ppx_decco.sh",
     "/_build/default/.ppx/ppx_decco/ppx.exe"
   ],
