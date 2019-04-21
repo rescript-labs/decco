@@ -1,0 +1,17 @@
+language: node_js
+cache: yarn
+node_js: ["11"]
+script:
+- npm i bs-platform
+- npm run build
+- npm test
+deploy:
+  skip_cleanup: true
+  provider: npm
+  email: rpbiwer@gmail.com
+  on:
+    tags: true
+    branch: master
+    repo: ryb73/ppx_decco
+  api_key:
+    secure: leWElfVlanQIy80YuNUOaAQWNpqhq4AKgoalgRPaMEk0qaNsjRyNzfc4jPoC6138dNf0i10TR3OI3BbG0cVRJ5wFYMyuSVmrSrjSmQtgZmD8xco4tfWyHZfv+owroVTucbNkCVRHz+SA+nBCoYNjzhzDG6XXA0IL2tGPBGI9+ovGtYkY1vtGUcvh9ITMNU3/Za+AQEDIWzknmlMk1bxf/rxcvhuiCfoNRdeVkhLj4gq4sWq1Q34OHz+qsDGPBIJyuUHzgp46FD3ggE8h1CHX/y+Z7F0zKhRkNZRB8mGsQool7Y7Q7LgYdkmRz134JPDyaePlEkD/1l3MhJdcaAd9kO5Ph0JUgUBjyziBWE/29gQIEoOwuWKsZTaDQs7kVYzCd5a4TY4dal/VSL8KFmofNqP+fvnTWkzoam7CIu0CMk8CatIGWmkN5N2htoWeJsq23KumhLtOvPRmWQn9AZQnjwrb6Z6/CB3OCkWuxZi2nCQJQipjeYdPEIOB5PFYKObQqu8yalhogHJp67hknpjhdB7C6XoWRSPhJRgSvjdlAm35N+6O1Qz/Xu9g4Ng1ZWk8QcAMVZ2idjkjBe39jD0sra7BoVLMW6nxmkrbb8jCZI4PygDugQHag1bw/v0zzzBPr6oJXeV4h/vniQbkIbbQCvxA2b2/g7dp8veq1ZuSxoI=
