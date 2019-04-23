@@ -18,4 +18,4 @@ let mapper = (_, _) => {
     signature: mapSignature
 };
 
-let () = Driver.register(~name="decco", Versions.ocaml_402, mapper);
+Driver.register(~name="decco", Versions.ocaml_402, mapper);

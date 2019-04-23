@@ -32,7 +32,8 @@
     "bs-platform": "^5.0.0"
   },
   "devDependencies": {
-    "@glennsl/bs-jest": "^0.4.8",
+    "@glennsl/bs-jest": "0.4.8",
+    "esy": "0.5.6",
     "jest": "^24.3.1"
   }
 }

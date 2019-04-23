@@ -3,6 +3,9 @@ cache: yarn
 node_js: ["11"]
 script:
 - npm i bs-platform
+- cd ppx
+- esy
+- cd ..
 - npm run build
 - npm test
 deploy:

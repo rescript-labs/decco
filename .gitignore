@@ -75,3 +75,5 @@ package-links.json
 
 # dune
 *.install
+
+_esy/
