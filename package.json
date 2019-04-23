@@ -8,6 +8,7 @@
     "build": "npm run clean && bsb -make-world",
     "watch": "bsb -clean-world -make-world -w",
     "clean": "rm -rf lib && bsb -clean-world && rm -rf ppx/_esy",
+    "esy": "cd ppx && esy",
     "build-ppx": "dune build",
     "postinstall": "[ ! -f package-links.json ] || ppl link-file"
   },
