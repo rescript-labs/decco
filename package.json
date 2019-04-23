@@ -7,7 +7,7 @@
     "test": "jest",
     "build": "npm run clean && bsb -make-world",
     "watch": "bsb -clean-world -make-world -w",
-    "clean": "rm -rf lib && bsb -clean-world && dune clean",
+    "clean": "rm -rf lib && bsb -clean-world && rm -rf ppx/_esy",
     "build-ppx": "dune build",
     "postinstall": "[ ! -f package-links.json ] || ppl link-file"
   },
