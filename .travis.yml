@@ -3,7 +3,6 @@ cache: yarn
 node_js: ["11"]
 script:
 - npm i bs-platform
-- npm run esy
 - npm run build
 - npm test
 deploy:
