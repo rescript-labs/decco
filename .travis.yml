@@ -2,9 +2,9 @@ language: node_js
 cache: yarn
 node_js: ["11"]
 script:
-- npm i bs-platform
-- npm run build
-- npm test
+- yarn add bs-platform
+- yarn build
+- yarn test
 deploy:
   skip_cleanup: true
   provider: npm
