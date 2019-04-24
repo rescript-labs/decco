@@ -3,7 +3,7 @@ const { spawn } = require("child_process");
 const path = require("path");
 
 const child = spawn(
-    path.resolve(__dirname, "_esy/default/build/install/default/lib/ppx_decco/ppx.exe"),
+    path.resolve(__dirname, "ppx.exe"),
     [ "--as-ppx", ...process.argv.slice(2) ],
     { stdio: "inherit" }
 );

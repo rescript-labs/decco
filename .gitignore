@@ -77,3 +77,4 @@ package-links.json
 *.install
 
 _esy/
+*.exe
