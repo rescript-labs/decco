@@ -32,13 +32,11 @@ jobs:
     script: skip
     before_deploy:
     - cd ppx
-    - echo https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-linux.exe
     - curl -OL https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-linux.exe
     - curl -OL https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-osx.exe
     - chmod +x *.exe
     - cd ..
     - yarn build-lib
-    - npm pack && tar -xvzf *.tgz && rm -rf package *.tgz
     deploy:
       skip_cleanup: true
       provider: npm
@@ -48,4 +46,4 @@ jobs:
         branch: master
         repo: ryb73/ppx_decco
       api_key:
-        secure: xxxUPE+3e+m8gQyLPHdbc6jY09mT4zgjjAyXD/SCbynN9QpboyqxLCRi+g/P/dxqlHkXpfyHpBC3AFheSJriHkbTVxpgNVtTyneBFE2fryJVhagS1wm5NgZ1x+dI4MtJ+NfnHONOBOj2xnpd+dHU+87ekUSc1j496LTkfFc89Edzn+nnZLTvhlnzWlvbe9jWRjZR1KHZ8ZpUFOptCQhpkBDJX8+YeADxwIM08pj2AD9v8eJmKCvZU6kU+Oz7ef7Qb7zKD69TVqHTMQdsTqFn+f9qDppBSTJANlw7GJkdLJsVDRzkmS1zRg/Vk4LoAEr6mTcjM1K/BbLluZi+31Wc/r5bYr1IN8ur3t8Z5f4HMWto58LtjJhUaOHqco9R/fFObLt/Wi4sRyqsD/id/U08/aWNqL5DKYpAkGegPf1gDkkA5hN3uj3jkUMLKq5AKcc6pIC6k6zFpJipwMRv6jozjVPr167RxvjlMehm9+PMDTR+IBubxfKsDXrDIXBaT2ubi67pIJZklbYKv3nKswkXv7ea3eTlWwhnLGgBCRJ0uJY/xhFBrO3GLRs2TaSzEbhRS6lIBFL0FcAexqx/qsumgqDfVfY6nDWQH0TlIgHYJ+LDFSPausXLEqBDs+5QC+ETr6Lhjc4CpTa1JIQ+XodvX/yjlLvx/EDCNK8JI3TIT/pwn4=
+        secure: UPE+3e+m8gQyLPHdbc6jY09mT4zgjjAyXD/SCbynN9QpboyqxLCRi+g/P/dxqlHkXpfyHpBC3AFheSJriHkbTVxpgNVtTyneBFE2fryJVhagS1wm5NgZ1x+dI4MtJ+NfnHONOBOj2xnpd+dHU+87ekUSc1j496LTkfFc89Edzn+nnZLTvhlnzWlvbe9jWRjZR1KHZ8ZpUFOptCQhpkBDJX8+YeADxwIM08pj2AD9v8eJmKCvZU6kU+Oz7ef7Qb7zKD69TVqHTMQdsTqFn+f9qDppBSTJANlw7GJkdLJsVDRzkmS1zRg/Vk4LoAEr6mTcjM1K/BbLluZi+31Wc/r5bYr1IN8ur3t8Z5f4HMWto58LtjJhUaOHqco9R/fFObLt/Wi4sRyqsD/id/U08/aWNqL5DKYpAkGegPf1gDkkA5hN3uj3jkUMLKq5AKcc6pIC6k6zFpJipwMRv6jozjVPr167RxvjlMehm9+PMDTR+IBubxfKsDXrDIXBaT2ubi67pIJZklbYKv3nKswkXv7ea3eTlWwhnLGgBCRJ0uJY/xhFBrO3GLRs2TaSzEbhRS6lIBFL0FcAexqx/qsumgqDfVfY6nDWQH0TlIgHYJ+LDFSPausXLEqBDs+5QC+ETr6Lhjc4CpTa1JIQ+XodvX/yjlLvx/EDCNK8JI3TIT/pwn4=
