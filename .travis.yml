@@ -2,7 +2,10 @@ language: node_js
 os:
 - linux
 - osx
-cache: yarn
+cache:
+  yarn: true
+  directories:
+    - $HOME/.esy
 node_js:
 - '11'
 install:
