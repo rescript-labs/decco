@@ -5,11 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "build": "npm run clean && npm run esy && bsb -make-world",
+    "build-lib": "bsb -clean-world -make-world",
     "watch": "bsb -clean-world -make-world -w",
     "clean": "rm -rf lib && bsb -clean-world && rm -rf ppx/_esy",
-    "esy": "cd ppx && esy && cp _esy/default/build/install/default/lib/ppx_decco/ppx.exe .",
-    "build-ppx": "dune build",
+    "build-ppx": "cd ppx && esy",
     "postinstall": "[ ! -f package-links.json ] || ppl link-file"
   },
   "bin": {
@@ -20,7 +19,8 @@
     "/src",
     "/lib/js/src",
     "/ppx/ppx_decco.sh",
-    "/ppx/ppx.exe"
+    "/ppx/ppx-linux.exe",
+    "/ppx/ppx-osx.exe"
   ],
   "keywords": [],
   "license": "MIT",

@@ -2,7 +2,6 @@ language: node_js
 os:
 - linux
 - osx
-- windows
 cache: yarn
 node_js:
 - '11'
@@ -10,18 +9,38 @@ install:
 - yarn
 - yarn add bs-platform
 script:
-- cd ppx
-- ../node_modules/.bin/esy
-- cd ..
-- yarn build
+- yarn build-ppx
+- yarn build-lib
 - yarn test
+- mv ppx/_esy/default/build/default/.ppx/ppx_decco/ppx.exe ppx/ppx-$TRAVIS_OS_NAME.exe
 deploy:
+  provider: releases
   skip_cleanup: true
-  provider: npm
-  email: rpbiwer@gmail.com
+  file_glob: true
+  file: ppx-*.exe
+  overwrite: true
+  api_key:
+    secure: lfVkpauxHUQJ8SmdykgrZZ6Dd1uC1XMR8QyN3iWZbe8hf+RFPaVEkEhLpFHy4PAupHeHfSw7LQBiXyrlE/zQCmHucpXPn34GWruIwAnsCJuMx4gSzXrdK7t+Ef3pRTedXOCt3HaBTerp71qjpy4Vfgg3YDsw/0zG/a2MthpezSinhJO/UiiuP4G1dCc3JmzT+dCjYMpRokyo8mmrOtzVi3Tj4SeMqTNr4/IpGosVGoSO87LpJ5VIJNdDP7IVR3nABRx1gbo/hhk3mTxpiJPrzT/ZVrt5IvS1foZseT9MO475dfqBpY1u6szXbDCrxllW6mw9QNuuzYoY+vgDNRI3k1kK8NVWxK0ftMWL2/31FnE87c8y0cZFV5WOCJkiHOcG9ZLkeQ3IJ878mklzMkYnUg+S0uKSu1EaeuiqwR8WAQSU7Hw0cZu4yycZPluUN9dXQ/Lv5ctm3bNvejEDphCmKSVF0isvSo8JMCf8JM3bCF6tE4rZWYM8lKOThlW8rs28UNcIkYeEIXc6HJRlsS2oRNS1DTG5T9IODcqxNk72yDTiSCwGDMEIkdRulndEkmAoRS0uA6zj943fSI1tqJdqUiQkMNK+ltyA7TDQXQWuFP64dxtg7Z48K+XU1NpiylNxdg8e4SgrUQWGZkbDYYrXMR2WajTDifQsktdWwpLRVgA=
   on:
     tags: true
-    branch: master
-    repo: ryb73/ppx_decco
-  api_key:
-    secure: UPE+3e+m8gQyLPHdbc6jY09mT4zgjjAyXD/SCbynN9QpboyqxLCRi+g/P/dxqlHkXpfyHpBC3AFheSJriHkbTVxpgNVtTyneBFE2fryJVhagS1wm5NgZ1x+dI4MtJ+NfnHONOBOj2xnpd+dHU+87ekUSc1j496LTkfFc89Edzn+nnZLTvhlnzWlvbe9jWRjZR1KHZ8ZpUFOptCQhpkBDJX8+YeADxwIM08pj2AD9v8eJmKCvZU6kU+Oz7ef7Qb7zKD69TVqHTMQdsTqFn+f9qDppBSTJANlw7GJkdLJsVDRzkmS1zRg/Vk4LoAEr6mTcjM1K/BbLluZi+31Wc/r5bYr1IN8ur3t8Z5f4HMWto58LtjJhUaOHqco9R/fFObLt/Wi4sRyqsD/id/U08/aWNqL5DKYpAkGegPf1gDkkA5hN3uj3jkUMLKq5AKcc6pIC6k6zFpJipwMRv6jozjVPr167RxvjlMehm9+PMDTR+IBubxfKsDXrDIXBaT2ubi67pIJZklbYKv3nKswkXv7ea3eTlWwhnLGgBCRJ0uJY/xhFBrO3GLRs2TaSzEbhRS6lIBFL0FcAexqx/qsumgqDfVfY6nDWQH0TlIgHYJ+LDFSPausXLEqBDs+5QC+ETr6Lhjc4CpTa1JIQ+XodvX/yjlLvx/EDCNK8JI3TIT/pwn4=
+jobs:
+  include:
+  - stage: deploy
+    script: skip
+    before_deploy:
+    - cd ppx
+    - curl -OL https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-linux.exe
+    - curl -OL https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-osx.exe
+    - cd ..
+    - yarn build-lib
+    - npm pack && tar -xvzf *.tgz && rm -rf package *.tgz
+    deploy:
+      skip_cleanup: true
+      provider: npm
+      email: rpbiwer@gmail.com
+      on:
+        tags: true
+        branch: master
+        repo: ryb73/ppx_decco
+      api_key:
+        secure: xxxUPE+3e+m8gQyLPHdbc6jY09mT4zgjjAyXD/SCbynN9QpboyqxLCRi+g/P/dxqlHkXpfyHpBC3AFheSJriHkbTVxpgNVtTyneBFE2fryJVhagS1wm5NgZ1x+dI4MtJ+NfnHONOBOj2xnpd+dHU+87ekUSc1j496LTkfFc89Edzn+nnZLTvhlnzWlvbe9jWRjZR1KHZ8ZpUFOptCQhpkBDJX8+YeADxwIM08pj2AD9v8eJmKCvZU6kU+Oz7ef7Qb7zKD69TVqHTMQdsTqFn+f9qDppBSTJANlw7GJkdLJsVDRzkmS1zRg/Vk4LoAEr6mTcjM1K/BbLluZi+31Wc/r5bYr1IN8ur3t8Z5f4HMWto58LtjJhUaOHqco9R/fFObLt/Wi4sRyqsD/id/U08/aWNqL5DKYpAkGegPf1gDkkA5hN3uj3jkUMLKq5AKcc6pIC6k6zFpJipwMRv6jozjVPr167RxvjlMehm9+PMDTR+IBubxfKsDXrDIXBaT2ubi67pIJZklbYKv3nKswkXv7ea3eTlWwhnLGgBCRJ0uJY/xhFBrO3GLRs2TaSzEbhRS6lIBFL0FcAexqx/qsumgqDfVfY6nDWQH0TlIgHYJ+LDFSPausXLEqBDs+5QC+ETr6Lhjc4CpTa1JIQ+XodvX/yjlLvx/EDCNK8JI3TIT/pwn4=
