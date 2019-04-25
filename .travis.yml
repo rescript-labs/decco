@@ -1,9 +1,15 @@
 language: node_js
+os:
+- linux
+- osx
+- windows
 cache: yarn
 node_js:
 - '11'
-script:
+install:
+- yarn
 - yarn add bs-platform
+script:
 - yarn build
 - yarn test
 deploy:
