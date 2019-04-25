@@ -10,6 +10,9 @@ install:
 - yarn
 - yarn add bs-platform
 script:
+- cd ppx
+- ../node_modules/.bin/esy
+- cd ..
 - yarn build
 - yarn test
 deploy:
