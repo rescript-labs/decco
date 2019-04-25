@@ -35,7 +35,6 @@ jobs:
     - echo https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-linux.exe
     - curl -OL https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-linux.exe
     - curl -OL https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-osx.exe
-    - ls -al
     - chmod +x *.exe
     - cd ..
     - yarn build-lib
