@@ -11,12 +11,14 @@ node_js:
 install:
 - yarn
 - npm i bs-platform --no-save
+script:
 - ls node_modules
 - ls node_modules/.bin
-script:
 - yarn build-ppx
 - yarn build-lib
-- npm test
+- ls node_modules
+- ls node_modules/.bin
+- yarn test
 - mv ppx/_esy/default/build/default/.ppx/ppx_decco/ppx.exe ppx/ppx-$TRAVIS_OS_NAME.exe
 deploy:
   provider: releases
