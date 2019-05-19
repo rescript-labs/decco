@@ -10,14 +10,15 @@ node_js:
 - '11'
 install:
 - yarn
-- yarn add bs-platform
+- npm i bs-platform --no-save
+- npm test
 script:
 - yarn build-ppx
 - yarn build-lib
 - pwd
 - ls node_modules
 - ls -l node_modules/.bin
-- ./node_modules/.bin/jest
+- npm test
 - mv ppx/_esy/default/build/default/.ppx/ppx_decco/ppx.exe ppx/ppx-$TRAVIS_OS_NAME.exe
 deploy:
   provider: releases
