@@ -10,8 +10,9 @@ node_js:
 - '11'
 install:
 - yarn
-- npm i bs-platform --no-save
-- npm test
+# Not sure why, but jest won't run if I use npm i bs-platform --no-save
+- yarn add bs-platform
+- git checkout package.json
 script:
 - yarn build-ppx
 - yarn build-lib
