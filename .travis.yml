@@ -11,7 +11,8 @@ node_js:
 install:
 - yarn
 - npm i bs-platform --no-save
-- ls
+- ls node_modules
+- ls node_modules/.bin
 script:
 - yarn build-ppx
 - yarn build-lib
