@@ -10,7 +10,8 @@ node_js:
 - '11'
 install:
 - yarn
-- npm i -g bs-platform
+- npm i bs-platform --no-save
+- ls
 script:
 - yarn build-ppx
 - yarn build-lib
