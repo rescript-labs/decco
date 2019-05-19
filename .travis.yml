@@ -16,7 +16,7 @@ install:
 script:
 - yarn build-ppx
 - yarn build-lib
-- yarn test
+- npm test
 - mv ppx/_esy/default/build/default/.ppx/ppx_decco/ppx.exe ppx/ppx-$TRAVIS_OS_NAME.exe
 deploy:
   provider: releases
