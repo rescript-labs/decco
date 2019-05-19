@@ -16,8 +16,8 @@ script:
 - yarn build-lib
 - pwd
 - ls node_modules
-- ls node_modules/.bin
-- yarn test
+- ls -l node_modules/.bin
+- ./node_modules/.bin/jest
 - mv ppx/_esy/default/build/default/.ppx/ppx_decco/ppx.exe ppx/ppx-$TRAVIS_OS_NAME.exe
 deploy:
   provider: releases
