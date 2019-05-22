@@ -65,7 +65,7 @@ let generateSuccessCase = ({ name }, successExpr) => {
     pc_rhs: successExpr
 };
 
-/** Recursively generates an expression containing nested switching, first
+/** Recursively generates an expression containing nested switches, first
  *  decoding the first record items, then (if successful) the second, etc. */
 let rec generateNestedSwitchesRecurse = (allDecls, remainingDecls) => {
     let (current, successExpr) = switch remainingDecls {
