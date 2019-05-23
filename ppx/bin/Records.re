@@ -28,17 +28,14 @@ let generateDictGet = ({ key, codecs: (_, decoder), default }) => {
     let decoder = BatOption.get(decoder);
     switch default {
         | Some(default) => [%expr
-            switch (Js.Dict.get(dict, [%e key])) {
-                | None => Belt.Result.Ok([%e default])
-                | Some(json) => [%e decoder](json)
-            }
+            Js.Dict.get(dict, [%e key])
+            -> Belt.Option.map([%e decoder])
+            -> Belt.Option.getWithDefault(Belt.Result.Ok([%e default]))
         ];
 
         | None => [%expr
-            switch (Js.Dict.get(dict, [%e key])) {
-                | None => Js.Json.null
-                | Some(json) => json
-            }
+            Js.Dict.get(dict, [%e key])
+            -> Belt.Option.getWithDefault(Js.Json.null)
             |> [%e decoder]
         ];
     };
@@ -48,39 +45,46 @@ let generateDictGets = (decls) => decls
     |> List.map(generateDictGet)
     |> tupleOrSingleton(Exp.tuple);
 
-let generateErrorCase = (numDecls, i, { key }) => {
-    pc_lhs:
-        Array.init(numDecls, which =>
-            which === i ? [%pat? Belt.Result.Error(e : Decco.decodeError)] : [%pat? _]
-        )
-        |> Array.to_list
-        |> tupleOrSingleton(Pat.tuple),
+let generateErrorCase = ({ key }) => {
+    pc_lhs: [%pat? Belt.Result.Error(e : Decco.decodeError)],
     pc_guard: None,
     pc_rhs: [%expr Belt.Result.Error({ ...e, path: "." ++ [%e key] ++ e.path })]
 };
 
-let generateSuccessCase = (decls) => {
-    pc_lhs: decls
-        |> List.map(({ name }) =>
-            Location.mknoloc(name)
-            |> Pat.var
-            |> (p) => [%pat? Belt.Result.Ok([%p p])]
-        )
-        |> tupleOrSingleton(Pat.tuple),
+let generateFinalRecordExpr = (decls) =>
+    decls
+    |> List.map(({ name }) => (Ast_convenience.lid(name), makeIdentExpr(name)))
+    |> (l) => [%expr Belt.Result.Ok([%e Exp.record(l, None)])];
+
+let generateSuccessCase = ({ name }, successExpr) => {
+    pc_lhs:
+        Location.mknoloc(name)
+        |> Pat.var
+        |> (p) => [%pat? Belt.Result.Ok([%p p])],
     pc_guard: None,
-    pc_rhs: decls
-        |> List.map(({ name }) => (Ast_convenience.lid(name), makeIdentExpr(name)))
-        |> (l) => [%expr Belt.Result.Ok([%e Exp.record(l, None)])]
+    pc_rhs: successExpr
 };
 
-let generateDecoder = (decls) => {
-    let resultSwitch = List.mapi(generateErrorCase(List.length(decls)), decls)
-        |> List.append([generateSuccessCase(decls)])
-        |> Exp.match(generateDictGets(decls));
+/** Recursively generates an expression containing nested switches, first
+ *  decoding the first record items, then (if successful) the second, etc. */
+let rec generateNestedSwitchesRecurse = (allDecls, remainingDecls) => {
+    let (current, successExpr) = switch remainingDecls {
+        | [] => failwith("Decco internal error: [] not expected")
+        | [last, ...[]] => (last, generateFinalRecordExpr(allDecls))
+        | [first, ...tail] => (first, generateNestedSwitchesRecurse(allDecls, tail))
+    };
 
+    [generateErrorCase(current)]
+    |> List.append([generateSuccessCase(current, successExpr)])
+    |> Exp.match(generateDictGet(current));
+};
+
+let generateNestedSwitches = (decls) => generateNestedSwitchesRecurse(decls, decls);
+
+let generateDecoder = (decls) => {
     [%expr (v) =>
         switch (Js.Json.classify(v)) {
-            | Js.Json.JSONObject(dict) => [%e resultSwitch]
+            | Js.Json.JSONObject(dict) => [%e generateNestedSwitches(decls)]
             | _ => Decco.error("Not an object", v)
         }
     ]
