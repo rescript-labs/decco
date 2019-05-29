@@ -62,7 +62,7 @@ npm i @ryb73/decco
 {
   ...,
   "bs-dependencies": [ "@ryb73/decco" ],
-  "ppx-flags": [ "ppx_decco" ],
+  "ppx-flags": [ "@ryb73/decco/ppx/ppx_decco.sh" ],
   ...
 }
 ```
