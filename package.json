@@ -9,6 +9,7 @@
     "watch": "bsb -clean-world -make-world -w",
     "clean": "rm -rf lib && bsb -clean-world && rm -rf ppx/_esy",
     "build-ppx": "cd ppx && esy",
+    "watch-ppx": "cd ppx && esy dune build -w",
     "postinstall": "[ ! -f package-links.json ] || ppl link-file"
   },
   "bin": {
@@ -33,8 +34,8 @@
     "bs-platform": "^5.0.0"
   },
   "devDependencies": {
-    "@glennsl/bs-jest": "0.4.8",
-    "esy": "0.5.7",
+    "@glennsl/bs-jest": "0.4.9",
+    "esy": "0.5.8",
     "jest": "^24.8.0"
   }
 }

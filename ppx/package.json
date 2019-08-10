@@ -10,9 +10,9 @@
     "release": { "bin": [ "Ppx_decco" ] }
   },
   "devDependencies": {
-    "@esy-ocaml/reason": "^3.0.0",
-    "@opam/dune": "^1.9.0",
-    "@opam/ppx_tools_versioned": "5.2.1",
+    "@esy-ocaml/reason": "^3.5.0",
+    "@opam/dune": "^1.11.0",
+    "@opam/ppx_tools_versioned": "5.2.3",
     "ocaml": "~4.2.0"
   }
 }
