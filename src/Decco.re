@@ -119,6 +119,34 @@ let optionFromJson = (decoder, json) =>
         | _ => decoder(json) |> map(_, v => Some(v))
     };
 
+let resultToJson = (okEncoder, errorEncoder, result) =>
+    switch result {
+        | Ok(v) => [| Js.Json.string("Ok"), okEncoder(v) |]
+        | Error(e) => [| Js.Json.string("Error"), errorEncoder(e) |]
+    }
+    |> Js.Json.array;
+
+let resultFromJson = (okDecoder, errorDecoder, json) =>
+    switch (Js.Json.decodeArray(json)) {
+        | Some([| variantConstructorId, payload |]) =>
+            switch (Js.Json.decodeString(variantConstructorId)) {
+                | Some("Ok") =>
+                    okDecoder(payload)
+                    -> Belt.Result.map(v => Ok(v))
+
+                | Some("Error") =>
+                    switch(errorDecoder(payload)) {
+                        | Ok(v) => Ok(Error(v))
+                        | Error(e) => Error(e)
+                    }
+
+                | Some(_) => error("Expected either \"Ok\" or \"Error\"", variantConstructorId)
+                | None => error("Not a string", variantConstructorId)
+            }
+        | Some(_) => error("Expected exactly 2 values in array", json)
+        | None => error("Not an array", json)
+    };
+
 module Codecs {
     include Codecs;
     let string = (stringToJson, stringFromJson);
