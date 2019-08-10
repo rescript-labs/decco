@@ -14,6 +14,7 @@ open Belt.Result; */
 [@decco] type a('a) = array('a);
 [@decco] type l('a) = list('a);
 [@decco] type o('a) = option('a);
+[@decco] type r('v, 'e) = Belt.Result.t('v, 'e);
 [@decco] type simpleVar('a) = 'a;
 [@decco] type j = Js.Json.t;
 [@decco] type optionList = l(o(s));
@@ -345,9 +346,9 @@ describe("option", () => {
     describe("o_encode", () => {
         test("none", () =>
             o_encode(s_encode, None)
-                |> Js.Json.classify
-                |> expect
-                |> toBe(Js.Json.JSONNull)
+            |> Js.Json.classify
+            |> expect
+            |> toBe(Js.Json.JSONNull)
         );
 
         test("some", () => {
@@ -370,6 +371,83 @@ describe("option", () => {
             path: "",
             message: "Not a string",
             value: Js.Json.number(12.)
+        });
+    });
+});
+
+describe("result", () => {
+    let enc = r_encode(s_encode, i_encode);
+    let dec = r_decode(s_decode, i_decode);
+
+    describe("r_encode", () => {
+        test("ok", () =>
+            Belt.Result.Ok("oaky")
+            |> enc
+            |> Js.Json.stringify
+            |> expect
+            |> toBe("[\"Ok\",\"oaky\"]")
+        );
+
+        test("error", () => {
+            Belt.Result.Error(404)
+            |> enc
+            |> Js.Json.stringify
+            |> expect
+            |> toBe("[\"Error\",404]")
+        });
+    });
+
+    describe("r_decode", () => {
+        describe("good", () => {
+            let json = "[\"Ok\",\"yess\"]" |> Js.Json.parseExn;
+            testGoodDecode("ok", dec, json, Ok("yess"));
+
+            let json = "[\"Error\",911]" |> Js.Json.parseExn;
+            testGoodDecode("error", dec, json, Error(911));
+        });
+
+        describe("bad", () => {
+            let json = Js.Json.number(12.);
+            testBadDecode("not an array", dec, json, {
+                path: "",
+                message: "Not an array",
+                value: json
+            });
+
+            let json = "[]" |> Js.Json.parseExn;
+            testBadDecode("length != 2", dec, json, {
+                path: "",
+                message: "Expected exactly 2 values in array",
+                value: json
+            });
+
+            let json = "[0,1]" |> Js.Json.parseExn;
+            testBadDecode("constructor not a string", dec, json, {
+                path: "",
+                message: "Not a string",
+                value: Js.Json.number(0.)
+            });
+
+            let json = "[\"bad\",1]" |> Js.Json.parseExn;
+            testBadDecode("unrecognized constructor", dec, json, {
+                path: "",
+                message: "Expected either \"Ok\" or \"Error\"",
+                value: Js.Json.string("bad")
+            });
+
+            let json = "[\"Ok\",1]" |> Js.Json.parseExn;
+            testBadDecode("bad Ok decode", dec, json, {
+                path: "",
+                message: "Not a string",
+                value: Js.Json.number(1.)
+            });
+
+            let json = "[\"Error\",null]" |> Js.Json.parseExn;
+            testBadDecode("bad Error decode", dec, json, {
+                path: "",
+                message: "Not a number",
+                value: Js.Json.null
+            });
         });
     });
 });
