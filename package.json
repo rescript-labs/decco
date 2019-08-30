@@ -36,6 +36,6 @@
   "devDependencies": {
     "@glennsl/bs-jest": "0.4.9",
     "esy": "0.5.8",
-    "jest": "^24.8.0"
+    "jest": "^24.9.0"
   }
 }

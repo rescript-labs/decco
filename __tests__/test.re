@@ -27,6 +27,14 @@ open Belt.Result; */
     [@decco.key "other_key"] otherKey: string,
 };
 
+[@decco] type bigV = V(array(option(list(string))));
+[@decco] type bigR = {
+    bigV: bigV
+};
+
+[@decco] type falseable('a) = [@decco.codec Decco.Codecs.falseable] option('a);
+[@decco] type magic = [@decco.codec Decco.Codecs.magic] int;
+
 module type TestMod = {
     [@decco] type t;
     [@decco] type varType('a, 'b);
@@ -44,14 +52,6 @@ module TestMod : TestMod = {
 };
 
 [@decco] type dependentOnTestMod = TestMod.t;
-
-[@decco] type bigV = V(array(option(list(string))));
-[@decco] type bigR = {
-    bigV: bigV
-};
-
-[@decco] type falseable('a) = [@decco.codec Decco.Codecs.falseable] option('a);
-[@decco] type magic = [@decco.codec Decco.Codecs.magic] int;
 
 module type EncOnly = {
     [@decco.encode] type t;
