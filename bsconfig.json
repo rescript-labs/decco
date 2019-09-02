@@ -7,8 +7,9 @@
             "public": ["Decco"],
         },
         {
-            "dir": "__tests__",
-            "type": "dev"
+            "dir": "test",
+            "type": "dev",
+            "subdirs": true,
         }
     ],
     "refmt": 3,

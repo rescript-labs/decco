@@ -3,8 +3,6 @@ open Ast_406;
 open Parsetree;
 open Ast_helper;
 
-type result('a, 'b) = Ok('a) | Error('b);
-
 let annotationName = "decco";
 let encoderFuncSuffix = "_encode";
 let decoderFuncSuffix = "_decode";
@@ -78,3 +76,19 @@ let getParamNames = (params) =>
 let indexConst = (i) =>
     Pconst_string("[" ++ string_of_int(i) ++ "]", None)
     |> Exp.constant;
+
+let rec isIdentifierUsedInCoreType = (typeName, {ptyp_desc, ptyp_loc}) =>
+    switch ptyp_desc {
+        | Ptyp_arrow(_, _, _) => fail(ptyp_loc, "Can't generate codecs for function type")
+        | Ptyp_any => fail(ptyp_loc, "Can't generate codecs for `any` type")
+        | Ptyp_package(_)=> fail(ptyp_loc, "Can't generate codecs for module type")
+        | Ptyp_variant(_, _, _) => fail(ptyp_loc, "Unexpected Ptyp_variant")
+        | Ptyp_var(_) => false
+        | Ptyp_tuple(childTypes) =>
+            List.exists(isIdentifierUsedInCoreType(typeName), childTypes)
+        | Ptyp_constr({txt}, childTypes) =>
+            txt == Lident(typeName)
+                ? true
+                : List.exists(isIdentifierUsedInCoreType(typeName), childTypes)
+        | _ => fail(ptyp_loc, "This syntax is not yet handled by decco")
+    };
