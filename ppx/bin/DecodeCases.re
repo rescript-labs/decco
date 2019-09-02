@@ -1,5 +1,5 @@
 open Migrate_parsetree;
-open Ast_402;
+open Ast_406;
 open Parsetree;
 open Ast_helper;
 open Utils;

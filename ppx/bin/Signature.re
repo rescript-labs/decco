@@ -1,6 +1,6 @@
 open Migrate_parsetree;
-open Ast_402;
-open Ppx_tools_402;
+open Ast_406;
+open Ppx_tools_406;
 open Ast_mapper;
 open Parsetree;
 open Utils;
@@ -71,7 +71,7 @@ let mapTypeDecl = (decl) => {
 
 let mapSignatureItem = (mapper, { psig_desc } as signatureItem) =>
     switch psig_desc {
-        | Psig_type(decls) => {
+        | Psig_type(_, decls) => {
             let generatedSigItems = decls
                 |> List.map(mapTypeDecl)
                 |> List.concat;
