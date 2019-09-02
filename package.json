@@ -31,11 +31,11 @@
   },
   "_": [],
   "peerDependencies": {
-    "bs-platform": "^5.0.0|^6.0.0"
+    "bs-platform": "^5.0.0"
   },
   "devDependencies": {
     "@glennsl/bs-jest": "0.4.9",
-    "bs-platform": "^6.0.0",
+    "bs-platform": "^5.0.6",
     "esy": "0.5.8",
     "jest": "^24.9.0"
   }
