@@ -72,3 +72,56 @@ Adding `ppx_decco` to `ppx-flags` will enable the PPX. Adding decco to `bs-depen
 ## How do I use it?
 
 See [`__tests__/test.re`](__tests__/test.re) for some examples.
+
+## Reference
+### Attributes
+#### [@decco]
+Applies to: type declarations, type signatures
+
+Indicates that an encoder and decoder should be generated for the given type.
+
+#### [@decco.encode]
+Applies to: type declarations, type signatures
+
+Indicates than an encoder (but no decoder) should be generated for the given type.
+
+#### [@decco.decode]
+Applies to: type declarations, type signatures
+
+Indicates than an decoder (but no encoder) should be generated for the given type.
+
+#### [@decco.codec]
+Applies to: type expressions
+
+Specifies custom encoders and decoders for the type. Note that both an encoder and decoder must be specified, even if the type expression is within a type for which [@decco.encode] or [@decco.decode] was specified.
+
+```reason
+[@decco] type t = [@decco.codec (fancyEncoder, fancyDecoder)] fancyType;
+```
+
+#### [@decco.key]
+Applies to: record fields
+
+By default, Reason record fields map to JS object fields of the same name. Use [@decco.key] to specify a custom JS field name. Useful if the JS field name is invalid as a Reason record field name.
+
+```reason
+[@decco]
+type record = {
+    [@decco.key "other_key"] otherKey: string,
+};
+```
+
+#### [@decco.default]
+Applies to: record fields
+Default: `Js.Json.null`
+
+When decoding a record, the default value will be used for keys that are missing from the JSON object being decoded.
+
+```reason
+[@decco] type record = {
+    [@decco.default "def"] s: string,
+};
+
+let {s} = Js.Json.parseExn("{}") |> record_decode |> Belt.Result.getExn;
+Js.log(s); /* def */
+```
