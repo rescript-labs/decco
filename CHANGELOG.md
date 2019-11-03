@@ -1,6 +1,6 @@
 ## v0.2.0
 ### Added
-* Support for `bs-platform` ^6.0.0
+* **BREAKING CHANGE:** Support for `bs-platform` ^6.0.0, dropped support for ^5.0.0
 
 ## v0.1.0
 ### Added
