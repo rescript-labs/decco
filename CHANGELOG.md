@@ -1,4 +1,4 @@
-## Unreleased version
+## v0.2.0
 ### Added
 * Support for `bs-platform` ^6.0.0
 
