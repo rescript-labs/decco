@@ -1,5 +1,5 @@
 open Migrate_parsetree;
-open Ast_402;
+open Ast_406;
 open Parsetree;
 open Ast_helper;
 
@@ -76,5 +76,5 @@ let getParamNames = (params) =>
     );
 
 let indexConst = (i) =>
-    Asttypes.Const_string("[" ++ string_of_int(i) ++ "]", None)
+    Pconst_string("[" ++ string_of_int(i) ++ "]", None)
     |> Exp.constant;

@@ -1,6 +1,6 @@
 open Migrate_parsetree;
-open Ast_402;
-open Ppx_tools_402;
+open Ast_406;
+open Ppx_tools_406;
 open Parsetree;
 open Ast_helper;
 open Utils;
@@ -15,7 +15,7 @@ let rec parameterizeCodecs = (typeArgs, encoderFunc, decoderFunc, generatorSetti
         | None => None
         | Some(encoderFunc) =>
             subEncoders
-            |> List.map(e => ("", BatOption.get(e)))
+            |> List.map(e => (Asttypes.Nolabel, BatOption.get(e)))
             |> Exp.apply(encoderFunc)
             |> BatOption.some
         },
@@ -24,7 +24,7 @@ let rec parameterizeCodecs = (typeArgs, encoderFunc, decoderFunc, generatorSetti
         | None => None
         | Some(decoderFunc) =>
             subDecoders
-            |> List.map(e => ("", BatOption.get(e)))
+            |> List.map(e => (Asttypes.Nolabel, BatOption.get(e)))
             |> Exp.apply(decoderFunc)
             |> BatOption.some
         }

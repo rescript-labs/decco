@@ -1,6 +1,6 @@
 open Migrate_parsetree;
-open Ast_402;
-open Ppx_tools_402;
+open Ast_406;
+open Ppx_tools_406;
 open Parsetree;
 open Ast_helper;
 open Utils;
@@ -21,7 +21,7 @@ let generateEncoder = (decls) => {
         |> Exp.array;
 
     [%expr [%e arrExpr] |> Js.Dict.fromArray |> Js.Json.object_]
-        |> Exp.fun_("", None, [%pat? v]);
+    |> Exp.fun_(Asttypes.Nolabel, None, [%pat? v]);
 };
 
 let generateDictGet = ({ key, codecs: (_, decoder), default }) => {
@@ -100,7 +100,7 @@ let parseDecl = (generatorSettings, { pld_name: { txt }, pld_loc, pld_type, pld_
 
     let key = switch (getAttributeByName(pld_attributes, "decco.key")) {
         | Ok(Some(attribute)) => getExpressionFromPayload(attribute)
-        | Ok(None) => Exp.constant(Asttypes.Const_string(txt, None))
+        | Ok(None) => Exp.constant(Pconst_string(txt, None))
         | Error(s) => fail(pld_loc, s)
     };
 

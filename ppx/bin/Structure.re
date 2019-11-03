@@ -1,5 +1,5 @@
 open Migrate_parsetree;
-open Ast_402;
+open Ast_406;
 open Ast_mapper;
 open Parsetree;
 open Ast_helper;
@@ -9,7 +9,7 @@ open Utils;
 let addParams = (paramNames, expr) =>
     List.fold_right((s, acc) => {
         let pat = Pat.var(Location.mknoloc(s));
-        Exp.fun_("", None, pat, acc);
+        Exp.fun_(Asttypes.Nolabel, None, pat, acc);
     }, paramNames, [%expr (v) => [%e expr](v)]);
 
 let generateCodecDecls = (typeName, paramNames, (encoder, decoder)) => {
@@ -63,7 +63,7 @@ let mapTypeDecl = (decl) => {
 
 let mapStructureItem = (mapper, { pstr_desc } as structureItem) =>
     switch pstr_desc {
-        | Pstr_type(decls) => {
+        | Pstr_type(_, decls) => {
             let generatedStructItems = decls
                 |> List.map(mapTypeDecl)
                 |> List.concat;

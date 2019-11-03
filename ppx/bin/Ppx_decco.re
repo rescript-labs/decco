@@ -1,5 +1,5 @@
 open Migrate_parsetree;
-open Ast_402;
+open Ast_406;
 open Ast_mapper;
 
 let mapStructure = (mapper, structure) =>
@@ -18,4 +18,4 @@ let mapper = (_, _) => {
     signature: mapSignature
 };
 
-Driver.register(~name="decco", Versions.ocaml_402, mapper);
+Driver.register(~name="decco", Versions.ocaml_406, mapper);
