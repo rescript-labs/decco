@@ -1,5 +1,8 @@
 # ppx_decco
 
+## Latest version: v0.2.0
+**decco has been updated to support BS6!** If you need to use decco with BS5, install version ^0.1.0.
+
 ## What is it?
 
 Bucklescript PPX which generates JSON serializers and deserializers for user-defined types.
