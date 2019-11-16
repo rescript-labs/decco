@@ -1,4 +1,4 @@
-## Unreleased version
+## v0.2.1
 ### Added
 * Support for recursive types
 
