@@ -12,7 +12,7 @@ let addParams = (paramNames, expr) =>
         Exp.fun_(Asttypes.Nolabel, None, pat, acc);
     }, paramNames, [%expr (v) => [%e expr](v)]);
 
-let generateCodecDecls = (typeName, paramNames, (encoder, decoder)) => {
+let generateCodecDecls = (typeName, paramNames, (encoder, decoder), isRecursive) => {
     let encoderPat = Pat.var(Location.mknoloc(typeName ++ Utils.encoderFuncSuffix));
     let encoderParamNames = List.map(s => encoderVarPrefix ++ s, paramNames);
 
@@ -31,10 +31,10 @@ let generateCodecDecls = (typeName, paramNames, (encoder, decoder)) => {
     | Some(decoder) => vbs @ [Vb.mk(decoderPat, addParams(decoderParamNames, decoder))]
     };
 
-    [Str.value(Asttypes.Nonrecursive, vbs)];
+    [Str.value(isRecursive ? Asttypes.Recursive : Asttypes.Nonrecursive, vbs)];
 };
 
-let mapTypeDecl = (decl) => {
+let mapTypeDecl = (recFlag, decl) => {
     let { ptype_attributes, ptype_name: { txt: typeName },
           ptype_manifest, ptype_params, ptype_loc, ptype_kind } = decl;
 
@@ -45,15 +45,22 @@ let mapTypeDecl = (decl) => {
 
             | (Some(manifest), _) => generateCodecDecls(
                 typeName, getParamNames(ptype_params),
-                generateCodecs(generatorSettings, manifest)
+                generateCodecs(generatorSettings, manifest),
+                false
             )
             | (None, Ptype_variant(decls)) => generateCodecDecls(
                 typeName, getParamNames(ptype_params),
-                Variants.generateCodecs(generatorSettings, decls)
+                Variants.generateCodecs(generatorSettings, decls),
+                recFlag === Asttypes.Nonrecursive
+                    ? false
+                    : Variants.isRecursive(typeName, decls)
             )
             | (None, Ptype_record(decls)) => generateCodecDecls(
                 typeName, getParamNames(ptype_params),
-                Records.generateCodecs(generatorSettings, decls)
+                Records.generateCodecs(generatorSettings, decls),
+                recFlag === Asttypes.Nonrecursive
+                    ? false
+                    : Records.isRecursive(typeName, decls)
             )
             | _ => fail(ptype_loc, "This type is not handled by decco")
         }
@@ -63,9 +70,9 @@ let mapTypeDecl = (decl) => {
 
 let mapStructureItem = (mapper, { pstr_desc } as structureItem) =>
     switch pstr_desc {
-        | Pstr_type(_, decls) => {
+        | Pstr_type(recFlag, decls) => {
             let generatedStructItems = decls
-                |> List.map(mapTypeDecl)
+                |> List.map(mapTypeDecl(recFlag))
                 |> List.concat;
 
             [   mapper.structure_item(mapper, structureItem),

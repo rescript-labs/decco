@@ -13,6 +13,10 @@ type parsedDecl = {
     default: option(expression)
 };
 
+let isRecursive = (typeName, decls) =>
+    decls
+    |> List.exists(({pld_type}) => isIdentifierUsedInCoreType(typeName, pld_type));
+
 let generateEncoder = (decls) => {
     let arrExpr = decls
         |> List.map(({ key, field, codecs: (encoder, _) }) =>
