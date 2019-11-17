@@ -1,6 +1,6 @@
 # ppx_decco
 
-## Latest version: v0.2.0
+## Latest version: v0.2
 **decco has been updated to support BS6!** If you need to use decco with BS5, install version ^0.1.0.
 
 ## What is it?
