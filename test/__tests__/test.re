@@ -542,6 +542,13 @@ describe("variant", () => {
                 value: json
             });
 
+            let json = {|[]|} |> Js.Json.parseExn;
+            testBadDecode("no arguments", variant_decode, json, {
+                path: "",
+                message: "Expected variant, found empty array",
+                value: json
+            });
+
             let json = {|["B"]|} |> Js.Json.parseExn;
             testBadDecode("not enough arguments", variant_decode, json, {
                 path: "",

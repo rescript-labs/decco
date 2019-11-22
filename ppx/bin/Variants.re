@@ -86,7 +86,7 @@ let generateArgDecoder = (generatorSettings, args, constructorName) => {
                     let idx = Pconst_integer(string_of_int(i + 1), None)
                         |> Exp.constant;
 
-                    [%expr jsonArr[[%e idx]]];
+                    [%expr Belt.Array.getExn(jsonArr, [%e idx])];
                 }
             )])
         )
@@ -139,7 +139,7 @@ let generateCodecs = ({ doEncode, doDecode } as generatorSettings, constrDecls) 
     let decoderDefaultCase = {
         pc_lhs: [%pat? _],
         pc_guard: None,
-        pc_rhs: [%expr Decco.error("Invalid variant constructor", jsonArr[0])]
+        pc_rhs: [%expr Decco.error("Invalid variant constructor", Belt.Array.getExn(jsonArr, 0))]
     };
 
     let decoder =
@@ -149,14 +149,18 @@ let generateCodecs = ({ doEncode, doDecode } as generatorSettings, constrDecls) 
                 let decoderSwitch =
                     List.map(generateDecoderCase(generatorSettings), constrDecls)
                     |> (l) => l @ [ decoderDefaultCase ]
-                    |> Exp.match([%expr tagged[0]]);
+                    |> Exp.match([%expr Belt.Array.getExn(tagged, 0)]);
 
                 Some([%expr (v) =>
                     switch (Js.Json.classify(v)) {
+                        | Js.Json.JSONArray([||]) =>
+                            Decco.error("Expected variant, found empty array", v)
+
                         | Js.Json.JSONArray(jsonArr) => {
                             let tagged = Js.Array.map(Js.Json.classify, jsonArr);
                             [%e decoderSwitch]
                         }
+
                         | _ => Decco.error("Not a variant", v)
                     }
                 ]);
