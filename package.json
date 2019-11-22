@@ -18,7 +18,6 @@
   "files": [
     "/bsconfig.json",
     "/src",
-    "/lib/js/src",
     "/ppx/ppx_decco.sh",
     "/ppx/ppx-linux.exe",
     "/ppx/ppx-osx.exe"
@@ -35,6 +34,7 @@
   },
   "devDependencies": {
     "@glennsl/bs-jest": "0.4.9",
+    "bs-platform": "^5.2.1",
     "esy": "0.5.8",
     "jest": "^24.8.0"
   }
