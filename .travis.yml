@@ -23,7 +23,6 @@ deploy:
     secure: bdGQZDGtl3W+ShGIvpNKQXTnRX7MnYDWPlZcGR1Ko4nuSO757X+y8CW2S4EJDtpIFNuyLn8RL4z9Rzb2IRTUvuKLYe9j8feWqxnsKqDG79QdvL0OoGF7tYABqQFHVQng5+ujesVRfAyvVOBwKzBPYUqUMrqozqdHMvzuu3GIAj+19N6nqmaVJbI+dGTxX/o9L1C8N0rXIWPhsUYbaDny9lYyRpYIuHf6jI1bQObxsPJRv0Khxt3GK+gwguYv/hEZ3L8DGbFWczvpDukE+9ilgptS4F1HE4d15KrY3fx014uudPgdWNimlEiGPdaFzQ7HSp6TWtKi8y/pB5b9Tv/aiKWuE7S+0qlCs79JFTZwMdlMv/dar2FUbXWszS3dFMr6MSX0xIeEXdvhCVIQeLcBioLOnpqejSF2gJH5ywrVJdsE6Je7FG3sYvrbpgJEZBl6XUh80g6rsJ9y+bhLBoWoYb40LKCSqU4rz25MNA/1BE4rq5g/PtlOXMuO0HZRCdyX2h79blonJ4mqO7wPbcpkRM61eo/2w7+2ltABZgHTUFACnRNTIjwJJEf2cxJfuE/LVsykYxQrq7njTEv8wnuesICAz5B/tVQMyadg2gVKxynXpwEf2iZM9rklGWIV/CsFkpmdqq5NSIlT+luolGmzr1JrdvbTO+hWnP7ZEra8VeM=
   on:
     tags: true
-    branch: master
 jobs:
   include:
   - stage: deploy
@@ -41,6 +40,5 @@ jobs:
       email: rpbiwer@gmail.com
       on:
         tags: true
-        branch: master
       api_key:
         secure: UPE+3e+m8gQyLPHdbc6jY09mT4zgjjAyXD/SCbynN9QpboyqxLCRi+g/P/dxqlHkXpfyHpBC3AFheSJriHkbTVxpgNVtTyneBFE2fryJVhagS1wm5NgZ1x+dI4MtJ+NfnHONOBOj2xnpd+dHU+87ekUSc1j496LTkfFc89Edzn+nnZLTvhlnzWlvbe9jWRjZR1KHZ8ZpUFOptCQhpkBDJX8+YeADxwIM08pj2AD9v8eJmKCvZU6kU+Oz7ef7Qb7zKD69TVqHTMQdsTqFn+f9qDppBSTJANlw7GJkdLJsVDRzkmS1zRg/Vk4LoAEr6mTcjM1K/BbLluZi+31Wc/r5bYr1IN8ur3t8Z5f4HMWto58LtjJhUaOHqco9R/fFObLt/Wi4sRyqsD/id/U08/aWNqL5DKYpAkGegPf1gDkkA5hN3uj3jkUMLKq5AKcc6pIC6k6zFpJipwMRv6jozjVPr167RxvjlMehm9+PMDTR+IBubxfKsDXrDIXBaT2ubi67pIJZklbYKv3nKswkXv7ea3eTlWwhnLGgBCRJ0uJY/xhFBrO3GLRs2TaSzEbhRS6lIBFL0FcAexqx/qsumgqDfVfY6nDWQH0TlIgHYJ+LDFSPausXLEqBDs+5QC+ETr6Lhjc4CpTa1JIQ+XodvX/yjlLvx/EDCNK8JI3TIT/pwn4=
