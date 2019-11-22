@@ -74,7 +74,7 @@ Adding `ppx_decco` to `ppx-flags` will enable the PPX. Adding decco to `bs-depen
 
 ## How do I use it?
 
-See [`__tests__/test.re`](__tests__/test.re) for some examples.
+See [`test.re`](test/__tests__/test.re) for some examples.
 
 ## Reference
 ### Attributes
