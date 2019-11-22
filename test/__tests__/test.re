@@ -1,5 +1,6 @@
 open Jest;
 open Expect;
+open TestUtils;
 /* open Decco; /* Don't open these in order to validate ppx works without it */
 open Belt.Result; */
 
@@ -27,6 +28,14 @@ open Belt.Result; */
     [@decco.key "other_key"] otherKey: string,
 };
 
+[@decco] type bigV = V(array(option(list(string))));
+[@decco] type bigR = {
+    bigV: bigV
+};
+
+[@decco] type falseable('a) = [@decco.codec Decco.Codecs.falseable] option('a);
+[@decco] type magic = [@decco.codec Decco.Codecs.magic] int;
+
 module type TestMod = {
     [@decco] type t;
     [@decco] type varType('a, 'b);
@@ -45,14 +54,6 @@ module TestMod : TestMod = {
 
 [@decco] type dependentOnTestMod = TestMod.t;
 
-[@decco] type bigV = V(array(option(list(string))));
-[@decco] type bigR = {
-    bigV: bigV
-};
-
-[@decco] type falseable('a) = [@decco.codec Decco.Codecs.falseable] option('a);
-[@decco] type magic = [@decco.codec Decco.Codecs.magic] int;
-
 module type EncOnly = {
     [@decco.encode] type t;
 };
@@ -70,22 +71,6 @@ module DecOnly : DecOnly = {
     [@decco.decode] type t = int;
     t_encode + 1;
 };
-
-let testBadDecode = (name, decode, json, expectedError) =>
-    test(name, () => {
-        switch (decode(json)) {
-            | Belt.Result.Error(e) => expect(e) |> toEqual(expectedError)
-            | _ => failwith("Decode erroneously succeeded")
-        };
-    });
-
-let testGoodDecode = (name, decode, json, expected) =>
-    test(name, () =>
-        switch (decode(json)) {
-            | Belt.Result.Ok(actual) => expect(actual) |> toEqual(expected)
-            | Belt.Result.Error({ Decco.path, message }) => failwith({j|Decode error: $message ($path)|j})
-        }
-    );
 
 describe("string", () => {
     test("s_encode", () => {
@@ -165,11 +150,8 @@ describe("int64", () => {
 
     describe("unsafe", () => {
         let v = 11806311374010L;
-        test("i64Unsafe_encode", () => {
-            let json = i64Unsafe_encode(v);
-            expect(Js.Json.stringify(json))
-                |> toBe({|11806311374010|});
-        });
+
+        testEncode("i64Unsafe_encode", v, i64Unsafe_encode, "11806311374010");
 
         describe("i64Unsafe_decode", () => {
             let json = Js.Json.number(Int64.to_float(v));
@@ -238,12 +220,7 @@ describe("unit", () => {
 });
 
 describe("tuple", () => {
-    test("t_encode", () => {
-        let v = (10, "ten");
-        let json = t_encode(v);
-        expect(Js.Json.stringify(json))
-            |> toBe({|[10,"ten"]|});
-    });
+    testEncode("t_encode", (10, "ten"), t_encode, {|[10,"ten"]|});
 
     describe("t_decode", () => {
         let json = {|[10,"ten"]|} |> Js.Json.parseExn;
@@ -275,12 +252,7 @@ describe("tuple", () => {
 });
 
 describe("array", () => {
-    test("a_encode", () => {
-        let a : a(s) = [|"10", "20"|];
-        let json = a_encode(s_encode, a);
-        expect(Js.Json.stringify(json))
-            |> toBe({|["10","20"]|})
-    });
+    testEncode("a_encode", [|"10", "20"|], a_encode(s_encode), {|["10","20"]|});
 
     describe("a_decode", () => {
         let json = [|"10","20"|]
@@ -309,12 +281,7 @@ describe("array", () => {
 });
 
 describe("list", () => {
-    test("l_encode", () => {
-        let v = ["10", "20"];
-        let json = l_encode(s_encode, v);
-        expect(Js.Json.stringify(json))
-            |> toBe({|["10","20"]|})
-    });
+    testEncode("l_encode", ["10", "20"], l_encode(s_encode), {|["10","20"]|});
 
     describe("l_decode", () => {
         let json = [|"10", "20"|]
@@ -380,21 +347,8 @@ describe("result", () => {
     let dec = r_decode(s_decode, i_decode);
 
     describe("r_encode", () => {
-        test("ok", () =>
-            Belt.Result.Ok("oaky")
-            |> enc
-            |> Js.Json.stringify
-            |> expect
-            |> toBe("[\"Ok\",\"oaky\"]")
-        );
-
-        test("error", () => {
-            Belt.Result.Error(404)
-            |> enc
-            |> Js.Json.stringify
-            |> expect
-            |> toBe("[\"Error\",404]")
-        });
+        testEncode("ok", Belt.Result.Ok("oaky"), enc, {|["Ok","oaky"]|});
+        testEncode("error", Belt.Result.Error(404), enc, {|["Error",404]|});
     });
 
     describe("r_decode", () => {
@@ -512,12 +466,10 @@ describe("simpleVar", () => {
 });
 
 describe("optionList", () => {
-    test("optionList_encode", () => {
-        let v = [ Some("a"), None, Some("b") ];
-        let json = optionList_encode(v);
-        expect(Js.Json.stringify(json))
-            |> toBe({|["a",null,"b"]|})
-    });
+    testEncode(
+        "optionList_encode", [ Some("a"), None, Some("b") ],
+        optionList_encode, {|["a",null,"b"]|}
+    );
 
     describe("optionList_decode", () => {
         let json = {|["a",null,"b"]|} |> Js.Json.parseExn;
@@ -554,24 +506,9 @@ describe("Js.Json.t", () => {
 
 describe("variant", () => {
     describe("variant_encode", () => {
-        test("A", () => {
-            let v = A;
-            let json = variant_encode(v);
-            expect(Js.Json.stringify(json))
-                |> toBe({|["A"]|})
-        });
-        test("B", () => {
-            let v = B(5);
-            let json = variant_encode(v);
-            expect(Js.Json.stringify(json))
-                |> toBe({|["B",5]|})
-        });
-        test("C", () => {
-            let v = C(7, "8");
-            let json = variant_encode(v);
-            expect(Js.Json.stringify(json))
-                |> toBe({|["C",7,"8"]|})
-        });
+        testEncode("A", A, variant_encode, {|["A"]|});
+        testEncode("B", B(5), variant_encode, {|["B",5]|});
+        testEncode("C", C(7, "8"), variant_encode, {|["C",7,"8"]|});
     });
 
     describe("variant_decode", () => {
@@ -623,12 +560,11 @@ describe("variant", () => {
 });
 
 describe("record", () => {
-    test("record_encode", () => {
-        let v = { hey: "hey", opt: Some(100), o: Some(99), f: 1.5, otherKey: "!" };
-        let json = record_encode(v);
-        expect(Js.Json.stringify(json))
-            |> toBe({|{"hey":"hey","opt":100,"o":99,"f":1.5,"other_key":"!"}|})
-    });
+    testEncode(
+        "record_encode",
+        { hey: "hey", opt: Some(100), o: Some(99), f: 1.5, otherKey: "!" },
+        record_encode, {|{"hey":"hey","opt":100,"o":99,"f":1.5,"other_key":"!"}|}
+    );
 
     describe("record_decode", () => {
         describe("good", () => {
@@ -685,12 +621,10 @@ describe("Ldot", () => {
 });
 
 describe("TestMod.varType", () => {
-    test("varType_encode", () => {
-        let s = TestMod.mkVarType(5, "yay");
-        let json = TestMod.varType_encode(Decco.intToJson, Decco.stringToJson, s);
-        expect(Js.Json.stringify(json))
-            |> toBe({|[5,"yay"]|})
-    });
+    testEncode(
+        "varType_encode", TestMod.mkVarType(5, "yay"),
+        TestMod.varType_encode(Decco.intToJson, Decco.stringToJson), {|[5,"yay"]|}
+    );
 
     let json = {|[5,"yay"]|} |> Js.Json.parseExn;
     testGoodDecode("varType_decode",
