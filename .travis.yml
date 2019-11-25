@@ -12,12 +12,12 @@ script:
 - yarn build-ppx
 - yarn build-lib
 - npm test
-- mv ppx/_esy/default/build/default/.ppx/ppx_decco/ppx.exe ppx/ppx-$TRAVIS_OS_NAME.exe
+- mv ppx_src/_esy/default/build/default/.ppx/ppx_decco/ppx.exe ppx_src/ppx-$TRAVIS_OS_NAME.exe
 deploy:
   provider: releases
   skip_cleanup: true
   file_glob: true
-  file: ppx/ppx-*.exe
+  file: ppx_src/ppx-*.exe
   overwrite: true
   api_key:
     secure: bdGQZDGtl3W+ShGIvpNKQXTnRX7MnYDWPlZcGR1Ko4nuSO757X+y8CW2S4EJDtpIFNuyLn8RL4z9Rzb2IRTUvuKLYe9j8feWqxnsKqDG79QdvL0OoGF7tYABqQFHVQng5+ujesVRfAyvVOBwKzBPYUqUMrqozqdHMvzuu3GIAj+19N6nqmaVJbI+dGTxX/o9L1C8N0rXIWPhsUYbaDny9lYyRpYIuHf6jI1bQObxsPJRv0Khxt3GK+gwguYv/hEZ3L8DGbFWczvpDukE+9ilgptS4F1HE4d15KrY3fx014uudPgdWNimlEiGPdaFzQ7HSp6TWtKi8y/pB5b9Tv/aiKWuE7S+0qlCs79JFTZwMdlMv/dar2FUbXWszS3dFMr6MSX0xIeEXdvhCVIQeLcBioLOnpqejSF2gJH5ywrVJdsE6Je7FG3sYvrbpgJEZBl6XUh80g6rsJ9y+bhLBoWoYb40LKCSqU4rz25MNA/1BE4rq5g/PtlOXMuO0HZRCdyX2h79blonJ4mqO7wPbcpkRM61eo/2w7+2ltABZgHTUFACnRNTIjwJJEf2cxJfuE/LVsykYxQrq7njTEv8wnuesICAz5B/tVQMyadg2gVKxynXpwEf2iZM9rklGWIV/CsFkpmdqq5NSIlT+luolGmzr1JrdvbTO+hWnP7ZEra8VeM=
@@ -29,11 +29,9 @@ jobs:
   - stage: deploy
     script: skip
     before_deploy:
-    - cd ppx
     - curl -OL https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-linux.exe
     - curl -OL https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-osx.exe
     - chmod +x *.exe
-    - cd ..
     - yarn build-lib
     deploy:
       skip_cleanup: true
