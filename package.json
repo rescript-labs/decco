@@ -1,7 +1,7 @@
 {
   "name": "decco",
   "version": "0.2.2",
-  "description": "ReasonML / OCaml PPX which generates JSON (de)serializers for user-defined types",
+  "description": "Bucklescript PPX which generates JSON (de)serializers for user-defined types",
   "main": "index.js",
   "scripts": {
     "test": "jest",
@@ -12,14 +12,10 @@
     "watch-ppx": "cd ppx && esy dune build -w",
     "postinstall": "[ ! -f package-links.json ] || ppl link-file"
   },
-  "bin": {
-    "ppx": "./ppx"
-  },
   "files": [
     "/bsconfig.json",
     "/src",
     "/ppx",
-    "/ppx_decco.sh",
     "/ppx-linux.exe",
     "/ppx-osx.exe"
   ],

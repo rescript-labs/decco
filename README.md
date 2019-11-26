@@ -5,7 +5,7 @@
 
 ## What is it?
 
-A ReasonML / OCaml PPX which generates JSON serializers and deserializers for user-defined types.
+A Bucklescript PPX which generates JSON serializers and deserializers for user-defined types.
 
 Example:
 
@@ -52,7 +52,7 @@ let { s, i, o, complex, f, otherKey, magic } =
 ```
 
 ## What state is it in?
-I've been using it for personal projects for a while, but it's never been used for anything important, so YMMV.
+Working fine in active production code.
 
 ## How do I install it?
 1. Install package
