@@ -1,3 +1,9 @@
+## Unreleased Version
+### Changed
+* Change package name from `@ryb73/decco` to `decco`
+* **BREAKING CHANGE:** Move ppx executable from `ppx/ppx_decco.sh` to `ppx`
+    * Migration: in `bsconfig.json`, change `"ppx-flags": [ "@ryb73/decco/ppx/ppx_decco.sh" ]"` to `"ppx-flags": [ "decco/ppx" ]`
+
 ## v0.2.2 / v0.1.1
 ### Fixed
 * Fix error that occurs when Belt is open
