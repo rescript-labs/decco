@@ -1,7 +1,9 @@
 # Decco
 
-## Latest version: v0.2
-**decco has been updated to support BS6!** If you need to use decco with BS5, install version ^0.1.0.
+## Latest version: v1.0
+**The latest version of Decco only works with BS6 and above!**
+
+If you need to use decco with BS5, install version ^0.1.0 by [following the old ReadMe here](https://github.com/reasonml-labs/decco/blob/0452fc42fa4cd4230d394c718e7f62a0384ce045/README.md).
 
 ## What is it?
 
