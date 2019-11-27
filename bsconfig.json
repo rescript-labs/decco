@@ -1,20 +1,20 @@
 {
-    "name" : "@ryb73/decco",
+    "name" : "decco",
     "bs-dev-dependencies": [ "@glennsl/bs-jest" ],
     "sources" : [
         {
             "dir": "src",
-            "public": ["Decco"],
+            "public": ["Decco"]
         },
         {
             "dir": "test",
             "type": "dev",
-            "subdirs": true,
+            "subdirs": true
         }
     ],
     "refmt": 3,
     "ppx-flags": [
-        "./ppx/ppx_decco.sh"
+        "./ppx"
     ],
     "warnings": {
         "number": "+A-4-9-40-42"
