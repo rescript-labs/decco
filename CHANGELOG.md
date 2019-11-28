@@ -1,4 +1,4 @@
-## Unreleased Version
+## v1.0.0
 ### Changed
 * Change package name from `@ryb73/decco` to `decco`
 * **BREAKING CHANGE:** Move ppx executable from `ppx/ppx_decco.sh` to `ppx`
