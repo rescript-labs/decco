@@ -146,7 +146,7 @@ let resultFromJson = (okDecoder, errorDecoder, json) =>
     };
 
 module Codecs {
-    include Codecs;
+    include Decco_Codecs;
     let string = (stringToJson, stringFromJson);
     let int = (intToJson, intFromJson);
     let int64Unsafe = (int64ToJsonUnsafe, int64FromJsonUnsafe);
