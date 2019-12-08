@@ -1,4 +1,4 @@
-## Unreleased version
+## v1.1.0
 ### Added
 * Added support for BuckleScript v7
 
