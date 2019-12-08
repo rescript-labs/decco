@@ -1,3 +1,10 @@
+## Unreleased version
+### Added
+* Added support for BuckleScript v7
+
+### Fixed
+* Namespaced `Codecs.re` so as not to conflict with users' `Codecs.re` ([#25](https://github.com/reasonml-labs/decco/issues/25)/[#35](https://github.com/reasonml-labs/decco/pull/35))
+
 ## v1.0.0
 ### Changed
 * Change package name from `@ryb73/decco` to `decco`
