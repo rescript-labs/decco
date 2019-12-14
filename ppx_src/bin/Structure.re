@@ -28,7 +28,15 @@ let generateCodecDecls = (typeName, paramNames, (encoder, decoder), isRecursive)
 
     let vbs = switch decoder {
     | None => vbs
-    | Some(decoder) => vbs @ [Vb.mk(decoderPat, addParams(decoderParamNames, decoder))]
+    | Some(decoder) =>
+      vbs
+      @ [
+        Vb.mk(
+          ~attrs=[attrWarning([%expr "-4"])],
+          decoderPat,
+          addParams(decoderParamNames, decoder),
+        ),
+      ]
     };
 
     [Str.value(isRecursive ? Asttypes.Recursive : Asttypes.Nonrecursive, vbs)];

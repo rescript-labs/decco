@@ -92,3 +92,11 @@ let rec isIdentifierUsedInCoreType = (typeName, {ptyp_desc, ptyp_loc}) =>
                 : List.exists(isIdentifierUsedInCoreType(typeName), childTypes)
         | _ => fail(ptyp_loc, "This syntax is not yet handled by decco")
     };
+
+let attrWarning = expr => {
+  let loc = default_loc^;
+  (
+    {Location.txt: "ocaml.warning", loc},
+    PStr([{pstr_desc: Pstr_eval(expr, []), pstr_loc: loc}]),
+  );
+};
