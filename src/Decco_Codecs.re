@@ -4,8 +4,8 @@ let falseableEncode = (encoder, opt) =>
         | Some(v) => encoder(v)
     };
 let falseableDecode = (decoder, json) =>
-    switch (Js.Json.classify(json)) {
-        | Js.Json.JSONFalse => Belt.Result.Ok(None)
+    switch (Js.Json.decodeBoolean(json)) {
+        | Some(false) => Belt.Result.Ok(None)
         | _ =>
             decoder(json)
             |> Belt.Result.map(_, v => Some(v))

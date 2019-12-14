@@ -17,7 +17,7 @@
         "./ppx"
     ],
     "warnings": {
-        "number": "+A-4-9-40-42"
+        "number": "+A-9-40-42"
     },
     "bsc-flags": [ "-bs-super-errors" ]
 }

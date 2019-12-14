@@ -5,7 +5,7 @@ let testBadDecode = (name, decode, json, expectedError) =>
     test(name, () => {
         switch (decode(json)) {
             | Belt.Result.Error(e) => expect(e) |> toEqual(expectedError)
-            | _ => failwith("Decode erroneously succeeded")
+            | Ok(_) => failwith("Decode erroneously succeeded")
         };
     });
 

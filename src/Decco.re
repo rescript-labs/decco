@@ -19,15 +19,15 @@ let error = (~path=?, message, value) =>{
 
 let stringToJson = (s) => Js.Json.string(s);
 let stringFromJson = (j) =>
-    switch (Js.Json.classify(j)) {
-        | Js.Json.JSONString(s) => Belt.Result.Ok(s)
-        | _ => Belt.Result.Error({ path: "", message: "Not a string", value: j })
+    switch (Js.Json.decodeString(j)) {
+        | Some(s) => Belt.Result.Ok(s)
+        | None => Belt.Result.Error({ path: "", message: "Not a string", value: j })
     };
 
 let intToJson = (i) => i |> float_of_int |> Js.Json.number;
 let intFromJson = (j) =>
-    switch (Js.Json.classify(j)) {
-        | Js.Json.JSONNumber(f) =>
+    switch (Js.Json.decodeNumber(j)) {
+        | Some(f) =>
             (float_of_int(Js.Math.floor(f)) == f) ?
                 Belt.Result.Ok(Js.Math.floor(f))
             : Belt.Result.Error({ path: "", message: "Not an integer", value: j })
@@ -40,9 +40,9 @@ let int64ToJson = (i) => i
     |> Js.Json.number;
 
 let int64FromJson = (j) =>
-    switch (Js.Json.classify(j)) {
-        | Js.Json.JSONNumber(n) => Belt.Result.Ok(Int64.bits_of_float(n))
-        | _ => error("Not a number", j)
+    switch (Js.Json.decodeNumber(j)) {
+        | Some(n) => Belt.Result.Ok(Int64.bits_of_float(n))
+        | None => error("Not a number", j)
     };
 
 let int64ToJsonUnsafe = (i) => i
@@ -50,24 +50,23 @@ let int64ToJsonUnsafe = (i) => i
     |> Js.Json.number;
 
 let int64FromJsonUnsafe = (j) =>
-    switch (Js.Json.classify(j)) {
-        | Js.Json.JSONNumber(n) => Belt.Result.Ok(Int64.of_float(n))
-        | _ => error("Not a number", j)
+    switch (Js.Json.decodeNumber(j)) {
+        | Some(n) => Belt.Result.Ok(Int64.of_float(n))
+        | None => error("Not a number", j)
     };
 
 let floatToJson = (v) => v |> Js.Json.number;
 let floatFromJson = (j) =>
-    switch (Js.Json.classify(j)) {
-        | Js.Json.JSONNumber(f) => Belt.Result.Ok(f)
-        | _ => Belt.Result.Error({ path: "", message: "Not a number", value: j })
+    switch (Js.Json.decodeNumber(j)) {
+        | Some(f) => Belt.Result.Ok(f)
+        | None => Belt.Result.Error({ path: "", message: "Not a number", value: j })
     };
 
 let boolToJson = (v) => v |> Js.Json.boolean;
 let boolFromJson = (j) =>
-    switch (Js.Json.classify(j)) {
-        | Js.Json.JSONTrue => Belt.Result.Ok(true)
-        | Js.Json.JSONFalse => Belt.Result.Ok(false)
-        | _ => Belt.Result.Error({ path: "", message: "Not a boolean", value: j })
+    switch (Js.Json.decodeBoolean(j)) {
+        | Some(b) => Belt.Result.Ok(b)
+        | None => Belt.Result.Error({ path: "", message: "Not a boolean", value: j })
     };
 
 let unitToJson = () => Js.Json.number(0.0);
@@ -79,8 +78,8 @@ let arrayToJson = (encoder, arr) =>
     |> Js.Json.array;
 
 let arrayFromJson = (decoder, json) =>
-    switch (Js.Json.classify(json)) {
-        | Js.Json.JSONArray(arr) =>
+    switch (Js.Json.decodeArray(json)) {
+        | Some(arr) =>
             Js.Array.reducei((acc, jsonI, i) => {
                 switch (acc, decoder(jsonI)) {
                     | (Belt.Result.Error(_), _) => acc
@@ -92,7 +91,7 @@ let arrayFromJson = (decoder, json) =>
                 };
             }, Belt.Result.Ok([||]), arr)
 
-        | _ => Belt.Result.Error({ path: "", message: "Not an array", value: json })
+        | None => Belt.Result.Error({ path: "", message: "Not an array", value: json })
     };
 
 let listToJson = (encoder, list) =>
@@ -112,9 +111,9 @@ let optionToJson = (encoder, opt) =>
     };
 
 let optionFromJson = (decoder, json) =>
-    switch (Js.Json.classify(json)) {
-        | Js.Json.JSONNull => Belt.Result.Ok(None)
-        | _ => decoder(json) |> Belt.Result.map(_, v => Some(v))
+    switch (Js.Json.decodeNull(json)) {
+        | Some(_) => Belt.Result.Ok(None)
+        | None => decoder(json) |> Belt.Result.map(_, v => Some(v))
     };
 
 let resultToJson = (okEncoder, errorEncoder, result) =>

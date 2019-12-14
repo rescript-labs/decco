@@ -76,6 +76,8 @@ describe("string", () => {
     test("s_encode", () => {
         let s = "yeah";
         let json = s_encode(s);
+
+        [@ocaml.warning "-4"]
         switch (Js.Json.classify(json)) {
             | Js.Json.JSONString(s2) => expect(s2) |> toBe(s)
             | _ => failwith("Not a JSONString")
@@ -97,6 +99,8 @@ describe("int", () => {
     test("i_encode", () => {
         let i = 24;
         let json = i_encode(i);
+
+        [@ocaml.warning "-4"]
         switch (Js.Json.classify(json)) {
             | Js.Json.JSONNumber(i2) => expect(i2) |> toBe(float_of_int(i))
             | _ => failwith("Not a JSONNumber")
@@ -130,6 +134,8 @@ describe("int64", () => {
         let asFloat = 1.2882297539194265e-231;
         test("i64_encode", () => {
             let json = i64_encode(asInt64);
+
+            [@ocaml.warning "-4"]
             switch (Js.Json.classify(json)) {
                 | Js.Json.JSONNumber(f) => expect(f) |> toBe(asFloat)
                 | _ => failwith("Not a JSONNumber")
@@ -171,6 +177,8 @@ describe("float", () => {
     test("f_encode", () => {
         let v = 1.;
         let json = f_encode(v);
+
+        [@ocaml.warning "-4"]
         switch (Js.Json.classify(json)) {
             | Js.Json.JSONNumber(v2) => expect(v2) |> toBe(v)
             | _ => failwith("Not a JSONNumber")
@@ -210,6 +218,8 @@ describe("bool", () => {
 describe("unit", () => {
     test("u_encode", () => {
         let json = u_encode();
+
+        [@ocaml.warning "-4"]
         switch (Js.Json.classify(json)) {
             | Js.Json.JSONNumber(n) => expect(n) |> toBe(0.)
             | _ => failwith("Not a JSONNumber")
@@ -321,6 +331,8 @@ describe("option", () => {
         test("some", () => {
             let v = Some("yeah");
             let json = o_encode(s_encode, v);
+
+            [@ocaml.warning "-4"]
             switch (Js.Json.classify(json)) {
                 | Js.Json.JSONString(v2) => expect(v2) |> toBe("yeah")
                 | _ => failwith("Not a JSONString")
@@ -418,6 +430,8 @@ describe("falseable", () => {
         test("some", () => {
             let v = Some("yeah");
             let json = falseable_encode(s_encode, v);
+
+            [@ocaml.warning "-4"]
             switch (Js.Json.classify(json)) {
                 | Js.Json.JSONString(v2) => expect(v2) |> toBe("yeah")
                 | _ => failwith("Not a JSONString")
@@ -448,6 +462,8 @@ describe("simpleVar", () => {
     test("simpleVar_encode", () => {
         let v : simpleVar(string) = "yeah";
         let json = simpleVar_encode(s_encode, v);
+
+        [@ocaml.warning "-4"]
         switch (Js.Json.classify(json)) {
             | Js.Json.JSONString(v2) => expect(v2) |> toBe("yeah")
             | _ => failwith("Not a JSONString")
@@ -610,6 +626,8 @@ describe("Ldot", () => {
     test("dependentOnTestMod_encode", () => {
         let s = TestMod.mkT("yeah");
         let json = dependentOnTestMod_encode(s);
+
+        [@ocaml.warning "-4"]
         switch (Js.Json.classify(json)) {
             | Js.Json.JSONString(s2) => expect(TestMod.mkT(s2)) |> toBe(s)
             | _ => failwith("Not a JSONString")
