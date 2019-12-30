@@ -5,15 +5,6 @@ open Parsetree;
 open Ast_helper;
 open Utils;
 
-let isRecursive = (typeName, decls) =>
-    decls
-    |> List.exists(({pcd_args, pcd_loc}) =>
-        switch pcd_args {
-            | Pcstr_tuple(args) => List.exists(isIdentifierUsedInCoreType(typeName), args)
-            | Pcstr_record(_) => fail(pcd_loc, "This syntax is not yet handled by decco.")
-        }
-    );
-
 let generateEncoderCase = (generatorSettings, { pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
     switch pcd_args {
         | Pcstr_tuple(args) => {

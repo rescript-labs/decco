@@ -15,6 +15,15 @@ module Rec: Rec = {
     [@decco] type record = { r: option(record) };
 };
 
+[@decco] type inttree =
+  | Empty
+  | Node(node)
+[@decco] and node = {
+  value: int,
+  left: inttree,
+  right: inttree,
+};
+
 [@decco] type nonRecVariant = int;
 [@decco] type nonRecRecord = int;
 
