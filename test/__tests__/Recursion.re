@@ -19,7 +19,7 @@ module MutuallyRec = {
     [@decco] type inttree =
         | Empty
         | Node(node)
-    and node = {
+    [@decco] and node = {
         value: int,
         left: inttree,
         right: inttree,
