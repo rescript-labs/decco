@@ -16,6 +16,7 @@ open Belt.Result; */
 [@decco] type l('a) = list('a);
 [@decco] type o('a) = option('a);
 [@decco] type r('v, 'e) = Belt.Result.t('v, 'e);
+[@decco] type d('v) = Js.Dict.t('v);
 [@decco] type simpleVar('a) = 'a;
 [@decco] type j = Js.Json.t;
 [@decco] type optionList = l(o(s));

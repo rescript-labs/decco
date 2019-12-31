@@ -144,6 +144,26 @@ let resultFromJson = (okDecoder, errorDecoder, json) =>
         | None => error("Not an array", json)
     };
 
+let dictToJson = (encoder, dict) =>
+    dict->Js.Dict.map((. a) => encoder(a), _)->Js.Json.object_;
+
+let dictFromJson = (decoder, json) =>
+    switch (Js.Json.decodeObject(json)) {
+    | Some(dict) =>
+        dict
+        ->Js.Dict.entries
+        ->Belt.Array.reduce(Ok([]), (acc, (key, value)) =>
+            switch (acc, decoder(value)) {
+                | (Error(_), _) => acc
+            
+                | (_, Error({ path } as error)) => Error({...error, path: "{" ++ key ++ "}" ++ path})
+            
+                | (Ok(prev), Ok(newVal)) => prev->Belt.List.add((key, newVal))->Ok;
+            }
+        )->Belt.Result.map(Belt.List.toArray)->Belt.Result.map(Js.Dict.fromArray);
+    | None => Error({path: "", message: "Not a dict", value: json})
+};
+
 module Codecs {
     include Decco_Codecs;
     let string = (stringToJson, stringFromJson);
