@@ -156,7 +156,7 @@ let dictFromJson = (decoder, json) =>
             switch (acc, decoder(value)) {
                 | (Error(_), _) => acc
             
-                | (_, Error({ path } as error)) => Error({...error, path: "{" ++ key ++ "}" ++ path})
+                | (_, Error({ path } as error)) => Error({...error, path: "." ++ key ++ path})
             
                 | (Ok(prev), Ok(newVal)) => prev->Belt.List.add((key, newVal))->Ok;
             }
