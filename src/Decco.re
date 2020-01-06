@@ -152,15 +152,17 @@ let dictFromJson = (decoder, json) =>
     | Some(dict) =>
         dict
         ->Js.Dict.entries
-        ->Belt.Array.reduce(Ok([]), (acc, (key, value)) =>
+        ->Belt.Array.reduce(Ok(Js.Dict.empty()), (acc, (key, value)) =>
             switch (acc, decoder(value)) {
                 | (Error(_), _) => acc
             
                 | (_, Error({ path } as error)) => Error({...error, path: "." ++ key ++ path})
             
-                | (Ok(prev), Ok(newVal)) => prev->Belt.List.add((key, newVal))->Ok;
+                | (Ok(prev), Ok(newVal)) => 
+                    let () = prev->Js.Dict.set(key, newVal);
+                    Ok(prev);
             }
-        )->Belt.Result.map(Belt.List.toArray)->Belt.Result.map(Js.Dict.fromArray);
+        );
     | None => Error({path: "", message: "Not a dict", value: json})
 };
 
