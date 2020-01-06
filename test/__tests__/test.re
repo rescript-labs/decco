@@ -523,7 +523,7 @@ describe("dictInt", () => {
         describe("bad", () => {
             let badDict = {|{"foo":1,"bar":"baz"}|} |> Js.Json.parseExn;
             testBadDecode("mixed types", dictInt_decode, badDict, {
-                path: "{bar}",
+                path: ".bar",
                 message: "Not a number",
                 value: Js.Json.string("baz")
             });
