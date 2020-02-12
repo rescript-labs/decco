@@ -75,6 +75,10 @@ and generateConstrCodecs = ({ doEncode, doDecode }, { Location.txt: identifier, 
             doEncode ? Some([%expr Decco.resultToJson]) : None,
             doDecode ? Some([%expr Decco.resultFromJson]) : None
         )
+        | Ldot(Ldot(Lident("Js"), "Dict"), "t") => (
+            doEncode ? Some([%expr Decco.dictToJson]) : None,
+            doDecode ? Some([%expr Decco.dictFromJson]) : None
+        )
         | Ldot(Ldot(Lident("Js"), "Json"), "t") => (
             doEncode ? Some([%expr (v) => v]) : None,
             doDecode ? Some([%expr (v) => Belt.Result.Ok(v)]) : None,

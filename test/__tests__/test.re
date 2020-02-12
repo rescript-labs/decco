@@ -16,9 +16,11 @@ open Belt.Result; */
 [@decco] type l('a) = list('a);
 [@decco] type o('a) = option('a);
 [@decco] type r('v, 'e) = Belt.Result.t('v, 'e);
+[@decco] type d('v) = Js.Dict.t('v);
 [@decco] type simpleVar('a) = 'a;
 [@decco] type j = Js.Json.t;
 [@decco] type optionList = l(o(s));
+[@decco] type dictInt = d(int);
 [@decco] type variant = A | B(i) | C(i, s);
 [@decco] type record = {
     hey: s,
@@ -503,6 +505,27 @@ describe("optionList", () => {
                 path: "[1]",
                 message: "Not a string",
                 value: Js.Json.number(3.)
+            });
+        });
+    });
+});
+
+describe("dictInt", () => {
+    testEncode(
+        "dictInt_encode", Js.Dict.fromArray([|("foo", 1), ("bar", 2)|]),
+        dictInt_encode, {|{"foo":1,"bar":2}|}
+    );
+
+    describe("dictInt_decode", () => {
+        let json = {|{"foo":1,"bar":2}|} |> Js.Json.parseExn;
+        testGoodDecode("good", dictInt_decode, json, Js.Dict.fromArray([|("foo", 1), ("bar", 2)|]));
+
+        describe("bad", () => {
+            let badDict = {|{"foo":1,"bar":"baz"}|} |> Js.Json.parseExn;
+            testBadDecode("mixed types", dictInt_decode, badDict, {
+                path: ".bar",
+                message: "Not a number",
+                value: Js.Json.string("baz")
             });
         });
     });
