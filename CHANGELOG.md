@@ -1,3 +1,7 @@
+## Unreleased version
+### Added
+* Support for Js.Dict.t ([#48](https://github.com/reasonml-labs/decco/pull/48))
+
 ## v1.1.1
 ### Fixed
 * Generated codecs no longer emit warning 4 ([#41](https://github.com/reasonml-labs/decco/issues/41)/[#42](https://github.com/reasonml-labs/decco/pull/42))
