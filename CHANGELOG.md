@@ -1,4 +1,4 @@
-## Unreleased version
+## v1.2.0
 ### Added
 * Support for Js.Dict.t ([#48](https://github.com/reasonml-labs/decco/pull/48))
 
