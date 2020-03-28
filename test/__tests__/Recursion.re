@@ -90,3 +90,37 @@ describe("record", () => {
         testGoodDecode("decode", NonRec.nonRecRecord_decode, Js.Json.parseExn(jsonStr), v);
     });
 });
+
+describe("mutually recursive", () => {
+    describe("basic", () => {
+        let v = MutuallyRec.Node({
+            value: 0,
+            left: Empty,
+            right: Empty,
+        });
+        let jsonStr = {|["Node",{"value":0,"left":["Empty"],"right":["Empty"]}]|};
+
+        testEncode("encode", v, MutuallyRec.inttree_encode, jsonStr);
+        testGoodDecode("decode", MutuallyRec.inttree_decode, Js.Json.parseExn(jsonStr), v);
+    });
+
+    describe("nested", () => {
+        let v = MutuallyRec.Node({
+            value: 0,
+            left: Node({
+                value: 1,
+                left: Empty,
+                right: Empty,
+            }),
+            right: Node({
+                value: 2,
+                left: Empty,
+                right: Empty,
+            }),
+        });
+        let jsonStr = {|["Node",{"value":0,"left":["Node",{"value":1,"left":["Empty"],"right":["Empty"]}],"right":["Node",{"value":2,"left":["Empty"],"right":["Empty"]}]}]|};
+
+        testEncode("encode", v, MutuallyRec.inttree_encode, jsonStr);
+        testGoodDecode("decode", MutuallyRec.inttree_decode, Js.Json.parseExn(jsonStr), v);
+    });
+});
