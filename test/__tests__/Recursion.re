@@ -15,6 +15,17 @@ module Rec: Rec = {
     [@decco] type record = { r: option(record) };
 };
 
+module MutuallyRec = {
+    [@decco] type inttree =
+        | Empty
+        | Node(node)
+    [@decco] and node = {
+        value: int,
+        left: inttree,
+        right: inttree,
+    };
+};
+
 [@decco] type nonRecVariant = int;
 [@decco] type nonRecRecord = int;
 
@@ -77,5 +88,39 @@ describe("record", () => {
 
         testEncode("encode", v, NonRec.nonRecRecord_encode, jsonStr);
         testGoodDecode("decode", NonRec.nonRecRecord_decode, Js.Json.parseExn(jsonStr), v);
+    });
+});
+
+describe("mutually recursive", () => {
+    describe("basic", () => {
+        let v = MutuallyRec.Node({
+            value: 0,
+            left: Empty,
+            right: Empty,
+        });
+        let jsonStr = {|["Node",{"value":0,"left":["Empty"],"right":["Empty"]}]|};
+
+        testEncode("encode", v, MutuallyRec.inttree_encode, jsonStr);
+        testGoodDecode("decode", MutuallyRec.inttree_decode, Js.Json.parseExn(jsonStr), v);
+    });
+
+    describe("nested", () => {
+        let v = MutuallyRec.Node({
+            value: 0,
+            left: Node({
+                value: 1,
+                left: Empty,
+                right: Empty,
+            }),
+            right: Node({
+                value: 2,
+                left: Empty,
+                right: Empty,
+            }),
+        });
+        let jsonStr = {|["Node",{"value":0,"left":["Node",{"value":1,"left":["Empty"],"right":["Empty"]}],"right":["Node",{"value":2,"left":["Empty"],"right":["Empty"]}]}]|};
+
+        testEncode("encode", v, MutuallyRec.inttree_encode, jsonStr);
+        testGoodDecode("decode", MutuallyRec.inttree_decode, Js.Json.parseExn(jsonStr), v);
     });
 });
