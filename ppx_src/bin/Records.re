@@ -46,9 +46,9 @@ let generateDictGets = (decls) => decls
     |> tupleOrSingleton(Exp.tuple);
 
 let generateErrorCase = ({ key }) => {
-    pc_lhs: [%pat? Belt.Result.Error(e : Decco.decodeError)],
+    pc_lhs: [%pat? Belt.Result.Error((e: Decco.decodeError))],
     pc_guard: None,
-    pc_rhs: [%expr Belt.Result.Error({ ...e, path: "." ++ [%e key] ++ e.path })]
+    pc_rhs: [%expr Belt.Result.Error({ ...e, path: "." ++ [%e key] ++ " " ++ e.path })],
 };
 
 let generateFinalRecordExpr = (decls) =>
@@ -85,7 +85,7 @@ let generateDecoder = (decls) => {
     [%expr (v) =>
         switch (Js.Json.classify(v)) {
             | Js.Json.JSONObject(dict) => [%e generateNestedSwitches(decls)]
-            | _ => Decco.error("Not an object", v)
+            | _ => Decco.error({ path: Pervasives.__LOC__, message: "Not an object", value: v })
         }
     ]
 };

@@ -37,23 +37,23 @@ and generateConstrCodecs = ({ doEncode, doDecode }, { Location.txt: identifier, 
     switch identifier {
         | Lident("string") => (
             doEncode ? Some([%expr Decco.stringToJson]) : None,
-            doDecode ? Some([%expr Decco.stringFromJson]) : None
+            doDecode ? Some([%expr Decco.stringFromJson(Pervasives.__LOC__)]) : None
         )
         | Lident("int") => (
             doEncode ? Some([%expr Decco.intToJson]) : None,
-            doDecode ? Some([%expr Decco.intFromJson]) : None
+            doDecode ? Some([%expr Decco.intFromJson(Pervasives.__LOC__)]) : None
         )
         | Lident("int64") => (
             doEncode ? Some([%expr Decco.int64ToJson]) : None,
-            doDecode ? Some([%expr Decco.int64FromJson]) : None
+            doDecode ? Some([%expr Decco.int64FromJson(Pervasives.__LOC__)]) : None
         )
         | Lident("float") => (
             doEncode ? Some([%expr Decco.floatToJson]) : None,
-            doDecode ? Some([%expr Decco.floatFromJson]) : None
+            doDecode ? Some([%expr Decco.floatFromJson(Pervasives.__LOC__)]) : None
         )
         | Lident("bool") => (
             doEncode ? Some([%expr Decco.boolToJson]) : None,
-            doDecode ? Some([%expr Decco.boolFromJson]) : None
+            doDecode ? Some([%expr Decco.boolFromJson(Pervasives.__LOC__)]) : None
         )
         | Lident("unit") => (
             doEncode ? Some([%expr Decco.unitToJson]) : None,
@@ -61,11 +61,11 @@ and generateConstrCodecs = ({ doEncode, doDecode }, { Location.txt: identifier, 
         )
         | Lident("array") => (
             doEncode ? Some([%expr Decco.arrayToJson]) : None,
-            doDecode ? Some([%expr Decco.arrayFromJson]) : None
+            doDecode ? Some([%expr Decco.arrayFromJson(Pervasives.__LOC__)]) : None
         )
         | Lident("list") => (
             doEncode ? Some([%expr Decco.listToJson]) : None,
-            doDecode ? Some([%expr Decco.listFromJson]) : None
+            doDecode ? Some([%expr Decco.listFromJson(Pervasives.__LOC__)]) : None
         )
         | Lident("option") => (
             doEncode ? Some([%expr Decco.optionToJson]) : None,
@@ -73,11 +73,11 @@ and generateConstrCodecs = ({ doEncode, doDecode }, { Location.txt: identifier, 
         )
         | Ldot(Ldot(Lident("Belt"), "Result"), "t") => (
             doEncode ? Some([%expr Decco.resultToJson]) : None,
-            doDecode ? Some([%expr Decco.resultFromJson]) : None
+            doDecode ? Some([%expr Decco.resultFromJson(Pervasives.__LOC__)]) : None
         )
         | Ldot(Ldot(Lident("Js"), "Dict"), "t") => (
             doEncode ? Some([%expr Decco.dictToJson]) : None,
-            doDecode ? Some([%expr Decco.dictFromJson]) : None
+            doDecode ? Some([%expr Decco.dictFromJson(Pervasives.__LOC__)]) : None
         )
         | Ldot(Ldot(Lident("Js"), "Json"), "t") => (
             doEncode ? Some([%expr (v) => v]) : None,

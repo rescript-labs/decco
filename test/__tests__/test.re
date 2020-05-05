@@ -7,7 +7,7 @@ open Belt.Result; */
 [@decco] type s = string;
 [@decco] type i = int;
 [@decco] type i64 = int64;
-[@decco] type i64Unsafe = [@decco.codec Decco.Codecs.int64Unsafe] int64;
+[@decco] type i64Unsafe = [@decco.codec Decco.Codecs.int64Unsafe(Pervasives.__LOC__)] int64;
 [@decco] type f = float;
 [@decco] type b = bool;
 [@decco] type u = unit;
@@ -676,7 +676,7 @@ describe("TestMod.varType", () => {
 
     let json = {|[5,"yay"]|} |> Js.Json.parseExn;
     testGoodDecode("varType_decode",
-        TestMod.varType_decode(Decco.intFromJson, Decco.stringFromJson),
+        TestMod.varType_decode(Decco.intFromJson(Pervasives.__LOC__), Decco.stringFromJson(Pervasives.__LOC__)),
         json, TestMod.mkVarType(5, "yay")
     );
 });

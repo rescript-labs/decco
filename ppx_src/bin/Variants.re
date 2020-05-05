@@ -108,7 +108,7 @@ let generateDecoderCase = (generatorSettings, { pcd_name: { txt: name }, pcd_arg
                 pc_guard: None,
                 pc_rhs: [%expr
                     (Js.Array.length(tagged) !== [%e argLen]) ?
-                        Decco.error("Invalid number of arguments to variant constructor", v)
+                        Decco.error({ path: Pervasives.__LOC__, message: "Invalid number of arguments to variant constructor", value: v })
                     :
                         [%e decoded]
                 ]
@@ -130,7 +130,7 @@ let generateCodecs = ({ doEncode, doDecode } as generatorSettings, constrDecls) 
     let decoderDefaultCase = {
         pc_lhs: [%pat? _],
         pc_guard: None,
-        pc_rhs: [%expr Decco.error("Invalid variant constructor", Belt.Array.getExn(jsonArr, 0))]
+        pc_rhs: [%expr Decco.error({ path: Pervasives.__LOC__, message: "Invalid variant constructor", value: Belt.Array.getExn(jsonArr, 0) })]
     };
 
     let decoder =
@@ -145,14 +145,14 @@ let generateCodecs = ({ doEncode, doDecode } as generatorSettings, constrDecls) 
                 Some([%expr (v) =>
                     switch (Js.Json.classify(v)) {
                         | Js.Json.JSONArray([||]) =>
-                            Decco.error("Expected variant, found empty array", v)
+                            Decco.error({ path: Pervasives.__LOC__, message: "Expected variant, found empty array", value: v })
 
                         | Js.Json.JSONArray(jsonArr) => {
                             let tagged = Js.Array.map(Js.Json.classify, jsonArr);
                             [%e decoderSwitch]
                         }
 
-                        | _ => Decco.error("Not a variant", v)
+                        | _ => Decco.error({ path: Pervasives.__LOC__, message: "Not a variant", value: v })
                     }
                 ]);
             }
