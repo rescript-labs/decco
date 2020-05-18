@@ -53,7 +53,7 @@ let generateDecodeSwitch = (compositeDecoders) => {
     |> Exp.match(decodeExpr);
 };
 
-let generateDecoder = (compositeDecoders) => {
+let generateDecoder = (loc: Location.t, compositeDecoders) => {
     let matchArrPattern = compositeDecoders
         |> List.mapi((i, _) => Pat.var(Location.mknoloc("v" ++ string_of_int(i))))
         |> Pat.array;
@@ -62,8 +62,8 @@ let generateDecoder = (compositeDecoders) => {
 
     let outerSwitch = Exp.match([%expr Js.Json.classify(json)], [
         Exp.case(matchPattern, generateDecodeSwitch(compositeDecoders)),
-        Exp.case([%pat? Js.Json.JSONArray(_)], [%expr Decco.error({ path: Pervasives.__LOC__, message: "Incorrect cardinality", value: json })]),
-        Exp.case([%pat? _], [%expr Decco.error({ path: Pervasives.__LOC__, message: "Not a tuple", value: json })])
+        Exp.case([%pat? Js.Json.JSONArray(_)], [%expr Decco.error({ path: [%e locToString(loc)], message: "Incorrect cardinality", value: json })]),
+        Exp.case([%pat? _], [%expr Decco.error({ path: [%e locToString(loc)], message: "Not a tuple", value: json })])
     ]);
 
     [%expr (json) => [%e outerSwitch]];

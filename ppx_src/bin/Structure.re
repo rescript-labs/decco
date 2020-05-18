@@ -50,7 +50,7 @@ let generateCodecDecls = (typeName, paramNames, (encoder, decoder)) => {
     vbs;
 };
 
-let mapTypeDecl = (decl) => {
+let mapTypeDecl: type_declaration => list(value_binding)  = (decl) => {
     let { ptype_attributes, ptype_name: { txt: typeName },
           ptype_manifest, ptype_params, ptype_loc, ptype_kind } = decl;
 
@@ -65,11 +65,11 @@ let mapTypeDecl = (decl) => {
             )
             | (None, Ptype_variant(decls)) => generateCodecDecls(
                 typeName, getParamNames(ptype_params),
-                Variants.generateCodecs(generatorSettings, decls)
+                Variants.generateCodecs(ptype_loc, generatorSettings, decls)
             )
             | (None, Ptype_record(decls)) => generateCodecDecls(
                 typeName, getParamNames(ptype_params),
-                Records.generateCodecs(generatorSettings, decls)
+                Records.generateCodecs(ptype_loc, generatorSettings, decls)
             )
             | _ => fail(ptype_loc, "This type is not handled by decco")
         }

@@ -1,0 +1,7 @@
+set -e
+
+yarn build-ppx
+
+yarn build-lib
+
+yarn test

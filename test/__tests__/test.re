@@ -90,7 +90,7 @@ describe("string", () => {
         testGoodDecode("good", s_decode, Js.Json.string("heyy"), "heyy");
 
         testBadDecode("bad", s_decode, Js.Json.number(12.), {
-            path: "",
+            path: "File \"test.re\", line 7, characters 18 - 24",
             message: "Not a string",
             value: Js.Json.number(12.)
         });
@@ -115,14 +115,14 @@ describe("int", () => {
         describe("bad", () => {
             let json = Js.Json.string("12.");
             testBadDecode("not a number", i_decode, json, {
-                path: "",
+                path: "File \"test.re\", line 8, characters 18 - 21",
                 message: "Not a number",
                 value: json
             });
 
             let json = Js.Json.number(5.1);
             testBadDecode("not an int", i_decode, json, {
-                path: "",
+                path: "File \"test.re\", line 8, characters 18 - 21",
                 message: "Not an integer",
                 value: json
             });
@@ -149,7 +149,7 @@ describe("int64", () => {
 
             let json = Js.Json.string("12.");
             testBadDecode("bad", i64_decode, json, {
-                path: "",
+                path: "File \"test.re\", line 9, characters 20 - 25",
                 message: "Not a number",
                 value: json
             });
@@ -167,7 +167,7 @@ describe("int64", () => {
 
             let json = Js.Json.string("12.");
             testBadDecode("bad", i64Unsafe_decode, json, {
-                path: "",
+                path: "File \"test.re\", line 10, characters 65-83",
                 message: "Not a number",
                 value: json
             });
@@ -191,7 +191,7 @@ describe("float", () => {
         testGoodDecode("good", f_decode, Js.Json.number(12.), 12.);
 
         testBadDecode("bad", f_decode, Js.Json.string("12."), {
-            path: "",
+            path: "File \"test.re\", line 11, characters 18 - 23",
             message: "Not a number",
             value: Js.Json.string("12.")
         });
@@ -210,7 +210,7 @@ describe("bool", () => {
         testGoodDecode("good", b_decode, Js.Json.boolean(false), false);
 
         testBadDecode("bad", b_decode, Js.Json.string("12."), {
-            path: "",
+            path: "File \"test.re\", line 12, characters 18 - 22",
             message: "Not a boolean",
             value: Js.Json.string("12.")
         });
@@ -241,21 +241,21 @@ describe("tuple", () => {
         describe("bad", () => {
             let json = Js.Json.number(12.);
             testBadDecode("non-array", t_decode, json, {
-                path: "",
+                path: "File \"test.re\", line 14, characters 18 - 31",
                 message: "Not a tuple",
                 value: json
             });
 
             let json = {|[10]|} |> Js.Json.parseExn;
             testBadDecode("non-string", t_decode, json, {
-                path: "",
+                path: "File \"test.re\", line 14, characters 18 - 31",
                 message: "Incorrect cardinality",
                 value: json
             });
 
             let json = {|[10,10]|} |> Js.Json.parseExn;
             testBadDecode("non-string", t_decode, json, {
-                path: "[1]",
+                path: "[1]File \"test.re\", line 14, characters 24 - 30",
                 message: "Not a string",
                 value: Js.Json.number(10.)
             });
@@ -275,7 +275,7 @@ describe("array", () => {
         describe("bad", () => {
             testBadDecode("non-array", a_decode(s_decode), Js.Json.number(12.), {
                 message: "Not an array",
-                path: "",
+                path: "File \"test.re\", line 15, characters 22 - 27",
                 value: Js.Json.number(12.),
             });
 
@@ -284,7 +284,7 @@ describe("array", () => {
                     Js.Json.string("str"), Js.Json.number(123.)
                 |]), {
                     message: "Not a string",
-                    path: "[1]",
+                    path: "[1]File \"test.re\", line 7, characters 18 - 24",
                     value: Js.Json.number(123.),
                 }
             );
@@ -302,9 +302,9 @@ describe("list", () => {
         testGoodDecode("good", l_decode(s_decode), json, ["10", "20"]);
 
         describe("bad", () => {
-            testBadDecode("non-array", l_decode(s_decode), Js.Json.number(12.), {
+            testBadDecode("non-list", l_decode(s_decode), Js.Json.number(12.), {
                 message: "Not an array",
-                path: "",
+                path: "File \"test.re\", line 16, characters 22 - 26",
                 value: Js.Json.number(12.),
             });
 
@@ -313,7 +313,7 @@ describe("list", () => {
                     Js.Json.string("str"), Js.Json.number(123.)
                 |]), {
                     message: "Not a string",
-                    path: "[1]",
+                    path: "[1]File \"test.re\", line 7, characters 18 - 24",
                     value: Js.Json.number(123.),
                 }
             );
@@ -349,7 +349,7 @@ describe("option", () => {
         });
 
         testBadDecode("bad", o_decode(s_decode), Js.Json.number(12.), {
-            path: "",
+            path: "File \"test.re\", line 7, characters 18 - 24",
             message: "Not a string",
             value: Js.Json.number(12.)
         });
@@ -377,42 +377,42 @@ describe("result", () => {
         describe("bad", () => {
             let json = Js.Json.number(12.);
             testBadDecode("not an array", dec, json, {
-                path: "",
+                path: "File \"test.re\", line 18, characters 26 - 39",
                 message: "Not an array",
                 value: json
             });
 
             let json = "[]" |> Js.Json.parseExn;
             testBadDecode("length != 2", dec, json, {
-                path: "",
+                path: "File \"test.re\", line 18, characters 26 - 39",
                 message: "Expected exactly 2 values in array",
                 value: json
             });
 
             let json = "[0,1]" |> Js.Json.parseExn;
             testBadDecode("constructor not a string", dec, json, {
-                path: "",
+                path: "File \"test.re\", line 18, characters 26 - 39",
                 message: "Not a string",
                 value: Js.Json.number(0.)
             });
 
             let json = "[\"bad\",1]" |> Js.Json.parseExn;
             testBadDecode("unrecognized constructor", dec, json, {
-                path: "",
+                path: "File \"test.re\", line 18, characters 26 - 39",
                 message: "Expected either \"Ok\" or \"Error\"",
                 value: Js.Json.string("bad")
             });
 
             let json = "[\"Ok\",1]" |> Js.Json.parseExn;
             testBadDecode("bad Ok decode", dec, json, {
-                path: "",
+                path: "File \"test.re\", line 7, characters 18 - 24",
                 message: "Not a string",
                 value: Js.Json.number(1.)
             });
 
             let json = "[\"Error\",null]" |> Js.Json.parseExn;
             testBadDecode("bad Error decode", dec, json, {
-                path: "",
+                path: "File \"test.re\", line 8, characters 18 - 21",
                 message: "Not a number",
                 value: Js.Json.null
             });
@@ -448,7 +448,7 @@ describe("falseable", () => {
         });
 
         testBadDecode("bad", falseable_decode(s_decode), Js.Json.null, {
-            path: "",
+            path: "File \"test.re\", line 7, characters 18 - 24",
             message: "Not a string",
             value: Js.Json.null
         });
@@ -476,7 +476,7 @@ describe("simpleVar", () => {
         testGoodDecode("good", simpleVar_decode(s_decode), Js.Json.string("yeah"), "yeah");
 
         testBadDecode("bad", simpleVar_decode(s_decode), Js.Json.number(12.), {
-            path: "",
+            path: "File \"test.re\", line 7, characters 18 - 24",
             message: "Not a string",
             value: Js.Json.number(12.)
         });
@@ -495,14 +495,14 @@ describe("optionList", () => {
 
         describe("bad", () => {
             testBadDecode("non-array", optionList_decode, Js.Json.number(12.), {
-                path: "",
+                path: "File \"test.re\", line 16, characters 22 - 26",
                 message: "Not an array",
                 value: Js.Json.number(12.)
             });
 
             let json = {|[null, 3]|} |> Js.Json.parseExn;
             testBadDecode("non-string", optionList_decode, json, {
-                path: "[1]",
+                path: "[1]File \"test.re\", line 7, characters 18 - 24",
                 message: "Not a string",
                 value: Js.Json.number(3.)
             });
@@ -523,7 +523,7 @@ describe("dictInt", () => {
         describe("bad", () => {
             let badDict = {|{"foo":1,"bar":"baz"}|} |> Js.Json.parseExn;
             testBadDecode("mixed types", dictInt_decode, badDict, {
-                path: ".bar",
+                path: ".barFile \"test.re\", line 23, characters 26 - 29",
                 message: "Not a number",
                 value: Js.Json.string("baz")
             });
@@ -562,42 +562,42 @@ describe("variant", () => {
 
         describe("bad", () => {
             testBadDecode("non-variant", variant_decode, Js.Json.number(12.), {
-                path: "",
+                path: "File \"test.re\", line 24, characters 9 - 42",
                 message: "Not a variant",
                 value: Js.Json.number(12.)
             });
 
             let json = {|["D"]|} |> Js.Json.parseExn;
             testBadDecode("bad constructor", variant_decode, json, {
-                path: "",
+                path: "File \"test.re\", line 24, characters 9 - 42",
                 message: "Invalid variant constructor",
                 value: Js.Json.string("D")
             });
 
             let json = {|["A",1]|} |> Js.Json.parseExn;
             testBadDecode("too many arguments", variant_decode, json, {
-                path: "",
+                path: "File \"test.re\", line 24, characters 24 - 25",
                 message: "Invalid number of arguments to variant constructor",
                 value: json
             });
 
             let json = {|[]|} |> Js.Json.parseExn;
             testBadDecode("no arguments", variant_decode, json, {
-                path: "",
+                path: "File \"test.re\", line 24, characters 9 - 42",
                 message: "Expected variant, found empty array",
                 value: json
             });
 
             let json = {|["B"]|} |> Js.Json.parseExn;
             testBadDecode("not enough arguments", variant_decode, json, {
-                path: "",
+                path: "File \"test.re\", line 24, characters 28 - 32",
                 message: "Invalid number of arguments to variant constructor",
                 value: json
             });
 
             let json = {|["B","oh"]|} |> Js.Json.parseExn;
             testBadDecode("invalid argument", variant_decode, json, {
-                path: "[0]",
+                path: "[0]File \"test.re\", line 8, characters 18 - 21",
                 message: "Not a number",
                 value: Js.Json.string("oh")
             });
@@ -623,21 +623,21 @@ describe("record", () => {
 
         describe("bad", () => {
             testBadDecode("non-object", record_decode, Js.Json.number(12.), {
-                path: "",
+                path: "File \"test.re\", lines 25 - 31, characters 9 - 1",
                 message: "Not an object",
                 value: Js.Json.number(12.)
             });
 
             let json = {|{"ya":100}|} |> Js.Json.parseExn;
             testBadDecode("missing field", record_decode, json, {
-                path: ".hey",
+                path: ".hey File \"test.re\", line 7, characters 18 - 24",
                 message: "Not a string",
                 value: Js.Json.null
             });
 
             let json = {|{"hey":9,"ya":10}|} |> Js.Json.parseExn;
             testBadDecode("invalid field type", record_decode, json, {
-                path: ".hey",
+                path: ".hey File \"test.re\", line 7, characters 18 - 24",
                 message: "Not a string",
                 value: Js.Json.number(9.)
             });
@@ -661,7 +661,7 @@ describe("Ldot", () => {
         testGoodDecode("good", dependentOnTestMod_decode, Js.Json.string("heyy"), TestMod.mkT("heyy"));
 
         testBadDecode("bad", dependentOnTestMod_decode, Js.Json.number(12.), {
-            path: "",
+            path: "File \"test.re\", line 50, characters 22 - 28",
             message: "Not a string",
             value: Js.Json.number(12.)
         });
@@ -694,7 +694,7 @@ describe("long path", () => {
     describe("bad", () => {
         let json = {|{"bigV":["V",[null,["","",1]]]}|} |> Js.Json.parseExn;
         testBadDecode("bad", bigR_decode, json, {
-            path: ".bigV[0][1][2]",
+            path: ".bigV [0][1][2]File \"test.re\", line 33, characters 41 - 47",
             message: "Not a string",
             value: Js.Json.number(1.)
         });

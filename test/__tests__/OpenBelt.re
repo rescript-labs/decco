@@ -25,42 +25,42 @@ describe("variant", () => {
 
         describe("bad", () => {
             testBadDecode("non-variant", variant_decode, Js.Json.number(12.), {
-                path: "",
+                path: "File \"OpenBelt.re\", line 7, characters 9 - 51",
                 message: "Not a variant",
                 value: Js.Json.number(12.)
             });
 
             let json = {|["D"]|} |> Js.Json.parseExn;
             testBadDecode("bad constructor", variant_decode, json, {
-                path: "",
+                path: "File \"OpenBelt.re\", line 7, characters 9 - 51",
                 message: "Invalid variant constructor",
                 value: Js.Json.string("D")
             });
 
             let json = {|["A",1]|} |> Js.Json.parseExn;
             testBadDecode("too many arguments", variant_decode, json, {
-                path: "",
+                path: "File \"OpenBelt.re\", line 7, characters 24 - 25",
                 message: "Invalid number of arguments to variant constructor",
                 value: json
             });
 
             let json = {|[]|} |> Js.Json.parseExn;
             testBadDecode("no arguments", variant_decode, json, {
-                path: "",
+                path: "File \"OpenBelt.re\", line 7, characters 9 - 51",
                 message: "Expected variant, found empty array",
                 value: json
             });
 
             let json = {|["B"]|} |> Js.Json.parseExn;
             testBadDecode("not enough arguments", variant_decode, json, {
-                path: "",
+                path: "File \"OpenBelt.re\", line 7, characters 28 - 34",
                 message: "Invalid number of arguments to variant constructor",
                 value: json
             });
 
             let json = {|["B","oh"]|} |> Js.Json.parseExn;
             testBadDecode("invalid argument", variant_decode, json, {
-                path: "[0]",
+                path: "[0]File \"OpenBelt.re\", line 7, characters 30 - 33",
                 message: "Not a number",
                 value: Js.Json.string("oh")
             });

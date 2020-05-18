@@ -31,29 +31,29 @@ let rec parameterizeCodecs = (typeArgs, encoderFunc, decoderFunc, generatorSetti
     )
 }
 
-and generateConstrCodecs = ({ doEncode, doDecode }, { Location.txt: identifier, loc }) => {
+and generateConstrCodecs: (generatorSettings, Location.loc(Longident.t)) => (option(expression), option(expression)) = ({ doEncode, doDecode }, { Location.txt: identifier, loc }) => {
     open Longident;
 
     switch identifier {
         | Lident("string") => (
             doEncode ? Some([%expr Decco.stringToJson]) : None,
-            doDecode ? Some([%expr Decco.stringFromJson(Pervasives.__LOC__)]) : None
+            doDecode ? Some([%expr Decco.stringFromJson([%e locToString(loc)])]) : None
         )
         | Lident("int") => (
             doEncode ? Some([%expr Decco.intToJson]) : None,
-            doDecode ? Some([%expr Decco.intFromJson(Pervasives.__LOC__)]) : None
+            doDecode ? Some([%expr Decco.intFromJson([%e locToString(loc)])]) : None
         )
         | Lident("int64") => (
             doEncode ? Some([%expr Decco.int64ToJson]) : None,
-            doDecode ? Some([%expr Decco.int64FromJson(Pervasives.__LOC__)]) : None
+            doDecode ? Some([%expr Decco.int64FromJson([%e locToString(loc)])]) : None
         )
         | Lident("float") => (
             doEncode ? Some([%expr Decco.floatToJson]) : None,
-            doDecode ? Some([%expr Decco.floatFromJson(Pervasives.__LOC__)]) : None
+            doDecode ? Some([%expr Decco.floatFromJson([%e locToString(loc)])]) : None
         )
         | Lident("bool") => (
             doEncode ? Some([%expr Decco.boolToJson]) : None,
-            doDecode ? Some([%expr Decco.boolFromJson(Pervasives.__LOC__)]) : None
+            doDecode ? Some([%expr Decco.boolFromJson([%e locToString(loc)])]) : None
         )
         | Lident("unit") => (
             doEncode ? Some([%expr Decco.unitToJson]) : None,
@@ -61,11 +61,11 @@ and generateConstrCodecs = ({ doEncode, doDecode }, { Location.txt: identifier, 
         )
         | Lident("array") => (
             doEncode ? Some([%expr Decco.arrayToJson]) : None,
-            doDecode ? Some([%expr Decco.arrayFromJson(Pervasives.__LOC__)]) : None
+            doDecode ? Some([%expr Decco.arrayFromJson([%e locToString(loc)])]) : None
         )
         | Lident("list") => (
             doEncode ? Some([%expr Decco.listToJson]) : None,
-            doDecode ? Some([%expr Decco.listFromJson(Pervasives.__LOC__)]) : None
+            doDecode ? Some([%expr Decco.listFromJson([%e locToString(loc)])]) : None
         )
         | Lident("option") => (
             doEncode ? Some([%expr Decco.optionToJson]) : None,
@@ -73,11 +73,11 @@ and generateConstrCodecs = ({ doEncode, doDecode }, { Location.txt: identifier, 
         )
         | Ldot(Ldot(Lident("Belt"), "Result"), "t") => (
             doEncode ? Some([%expr Decco.resultToJson]) : None,
-            doDecode ? Some([%expr Decco.resultFromJson(Pervasives.__LOC__)]) : None
+            doDecode ? Some([%expr Decco.resultFromJson([%e locToString(loc)])]) : None
         )
         | Ldot(Ldot(Lident("Js"), "Dict"), "t") => (
             doEncode ? Some([%expr Decco.dictToJson]) : None,
-            doDecode ? Some([%expr Decco.dictFromJson(Pervasives.__LOC__)]) : None
+            doDecode ? Some([%expr Decco.dictFromJson([%e locToString(loc)])]) : None
         )
         | Ldot(Ldot(Lident("Js"), "Json"), "t") => (
             doEncode ? Some([%expr (v) => v]) : None,
@@ -116,7 +116,7 @@ and generateCodecs = (
                 doDecode ? Some(
                     compositeCodecs
                     |> List.map(((_, d)) => BatOption.get(d))
-                    |> Tuple.generateDecoder)
+                    |> Tuple.generateDecoder(ptyp_loc))
                 : None
             );
         }

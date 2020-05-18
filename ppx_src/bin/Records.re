@@ -45,7 +45,7 @@ let generateDictGets = (decls) => decls
     |> List.map(generateDictGet)
     |> tupleOrSingleton(Exp.tuple);
 
-let generateErrorCase = ({ key }) => {
+let generateErrorCase: parsedDecl => case = ({ key }) => {
     pc_lhs: [%pat? Belt.Result.Error((e: Decco.decodeError))],
     pc_guard: None,
     pc_rhs: [%expr Belt.Result.Error({ ...e, path: "." ++ [%e key] ++ " " ++ e.path })],
@@ -81,11 +81,11 @@ let rec generateNestedSwitchesRecurse = (allDecls, remainingDecls) => {
 
 let generateNestedSwitches = (decls) => generateNestedSwitchesRecurse(decls, decls);
 
-let generateDecoder = (decls) => {
+let generateDecoder: (Location.t, list(parsedDecl)) => expression = (loc, decls) => {
     [%expr (v) =>
         switch (Js.Json.classify(v)) {
             | Js.Json.JSONObject(dict) => [%e generateNestedSwitches(decls)]
-            | _ => Decco.error({ path: Pervasives.__LOC__, message: "Not an object", value: v })
+            | _ => Decco.error({ path: [%e locToString(loc)], message: "Not an object", value: v })
         }
     ]
 };
@@ -114,10 +114,10 @@ let parseDecl = (generatorSettings, { pld_name: { txt }, pld_loc, pld_type, pld_
     };
 };
 
-let generateCodecs = ({ doEncode, doDecode } as generatorSettings, decls) => {
+let generateCodecs: (Location.t, generatorSettings, list(label_declaration)) => (option(expression), option(expression)) = (loc, { doEncode, doDecode } as generatorSettings, decls) => {
     let parsedDecls = List.map(parseDecl(generatorSettings), decls);
     (
         doEncode ? Some(generateEncoder(parsedDecls)) : None,
-        doDecode ? Some(generateDecoder(parsedDecls)) : None
+        doDecode ? Some(generateDecoder(loc, parsedDecls)) : None
     )
 };

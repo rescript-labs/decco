@@ -100,3 +100,25 @@ let attrWarning = expr => {
     PStr([{pstr_desc: Pstr_eval(expr, []), pstr_loc: loc}]),
   );
 };
+
+let locToString = (loc: Location.t): expression => {
+  let line =
+    loc.loc_start.pos_lnum == loc.loc_end.pos_lnum
+      ? "line " ++ string_of_int(loc.loc_start.pos_lnum)
+      : "lines "
+        ++ string_of_int(loc.loc_start.pos_lnum)
+        ++ " - "
+        ++ string_of_int(loc.loc_end.pos_lnum);
+  Ast_convenience_406.str(
+    ~loc,
+    "File \""
+    ++ Filename.basename(loc.loc_start.pos_fname)
+    ++ "\", "
+    ++ line
+    ++ ", characters "
+    ++ string_of_int(loc.loc_start.pos_cnum - loc.loc_start.pos_bol)
+    ++ " - "
+    ++ string_of_int(loc.loc_end.pos_cnum - loc.loc_end.pos_bol),
+  );
+}
+
