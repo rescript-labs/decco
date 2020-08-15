@@ -271,6 +271,11 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
+"@esy-ocaml/esy-opam@0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@esy-ocaml/esy-opam/-/esy-opam-0.0.15.tgz#97656c8e5774cf84692a680319784cb833cc5b70"
+  integrity sha512-s3gEaDMCSJwxxz+vjVYAVYWOMqJC+lIckT20A9sB2nYLQ8qGkkm8nIHd7LvgCFPUGxmETOy0etGMLA+K6v6WZw==
+
 "@glennsl/bs-jest@0.5.1":
   version "0.5.1"
   resolved "https://registry.yarnpkg.com/@glennsl/bs-jest/-/bs-jest-0.5.1.tgz#2e16ad94268fc1e5ba0af978c141db1684556a55"
@@ -1219,11 +1224,12 @@ esy-solve-cudf@^0.1.10:
   resolved "https://registry.yarnpkg.com/esy-solve-cudf/-/esy-solve-cudf-0.1.10.tgz#2cd48af78183ae8f06c035a398beb65673c2d77d"
   integrity sha512-/MrZOBH0wuJndvZN8pl+S3Mg3zJaK70PH9ZZwqDeJHulghEWROEZxpmenNiS9pqAaxyUVhTZJBt2/vL9jKCJbg==
 
-esy@0.6.6:
-  version "0.6.6"
-  resolved "https://registry.yarnpkg.com/esy/-/esy-0.6.6.tgz#5c8dafd1ba717ee9f2d5121065a5101ae51ebb39"
-  integrity sha512-moR72ovr80fRZ7XKtt4oOtecrRUdfOGlz/+BO6TxOMK1oD2Y3q65wBH4ofQbni3g1b2KGmsXawMw+KHC5gmFLQ==
+esy@0.5.8:
+  version "0.5.8"
+  resolved "https://registry.yarnpkg.com/esy/-/esy-0.5.8.tgz#09698649cdd0310836ca278b827860aadc3140eb"
+  integrity sha512-LT5d/uAoIoAsaGg133y0U/8DkCgoldu2TO66qQG5Iq/kI1zjbMCDpwcp3yrhQSro0uS6+bYeuVupqrboPcYKyQ==
   dependencies:
+    "@esy-ocaml/esy-opam" "0.0.15"
     esy-solve-cudf "^0.1.10"
 
 exec-sh@^0.3.2:
