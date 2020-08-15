@@ -1,3 +1,7 @@
+## Unreleased
+### Added
+* bs-platform@8 to peer dependency
+
 ## v1.2.1
 ### Fixed
 * Mutual recursion ([#46](https://github.com/reasonml-labs/decco/pull/46))
