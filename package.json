@@ -9,8 +9,7 @@
     "watch": "bsb -clean-world -make-world -w",
     "clean": "rm -rf lib && bsb -clean-world && rm -rf ppx_src/_esy",
     "build-ppx": "cd ppx_src && esy",
-    "watch-ppx": "cd ppx_src && esy dune build -w",
-    "postinstall": "[ ! -f package-links.json ] || ppl link-file"
+    "watch-ppx": "cd ppx_src && esy dune build -w"
   },
   "files": [
     "/bsconfig.json",
