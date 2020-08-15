@@ -3,7 +3,6 @@ open Ast_406;
 open Ast_mapper;
 open Parsetree;
 open Ast_helper;
-open Codecs;
 open Utils;
 
 let addParams = (paramNames, expr) =>
@@ -61,12 +60,13 @@ let mapTypeDecl = (decl) => {
 
             | (Some(manifest), _) => generateCodecDecls(
                 typeName, getParamNames(ptype_params),
-                generateCodecs(generatorSettings, manifest)
+                Codecs.generateCodecs(generatorSettings, manifest)
             )
-            | (None, Ptype_variant(decls)) => generateCodecDecls(
-                typeName, getParamNames(ptype_params),
-                Variants.generateCodecs(generatorSettings, decls)
-            )
+            | (None, Ptype_variant(decls)) =>
+                generateCodecDecls(
+                    typeName, getParamNames(ptype_params),
+                    Variants.generateCodecs(generatorSettings, decls)
+                )
             | (None, Ptype_record(decls)) => generateCodecDecls(
                 typeName, getParamNames(ptype_params),
                 Records.generateCodecs(generatorSettings, decls)
@@ -85,7 +85,7 @@ let mapStructureItem = (mapper, { pstr_desc } as structureItem) =>
                 |> List.concat;
 
             [   mapper.structure_item(mapper, structureItem)]
-            @ (List.length(valueBindings) > 0 ? 
+            @ (List.length(valueBindings) > 0 ?
                 [ Str.value(recFlag, valueBindings) ]
                 : []);
         }

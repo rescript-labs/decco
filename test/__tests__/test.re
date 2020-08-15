@@ -22,6 +22,7 @@ open Belt.Result; */
 [@decco] type optionList = l(o(s));
 [@decco] type dictInt = d(int);
 [@decco] type variant = A | B(i) | C(i, s);
+[@decco] type polyVariant = [ | `A | `B(i) | `C(i, s)];
 [@decco] type record = {
     hey: s,
     opt: option(int),

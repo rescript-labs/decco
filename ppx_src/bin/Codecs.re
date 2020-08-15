@@ -149,6 +149,8 @@ and generateCodecs = (
                 parameterizeCodecs(typeArgs, encode, decode, generatorSettings);
         }
 
+        | Ptyp_variant(_row_field_list, _closed_flag, _label_list) => fail(ptyp_loc, "Ptyp_variant")
+
         | _ => fail(ptyp_loc, "This syntax is not yet handled by decco")
     };
 };
