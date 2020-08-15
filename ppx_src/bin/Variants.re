@@ -5,7 +5,7 @@ open Parsetree;
 open Ast_helper;
 open Utils;
 
-let generateEncoderCase = (generatorSettings, { pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
+let generateEncoderCase = (generatorSettings, unboxed, { pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
     switch pcd_args {
         | Pcstr_tuple(args) => {
             let lhsVars = switch args {
@@ -21,7 +21,7 @@ let generateEncoderCase = (generatorSettings, { pcd_name: { txt: name }, pcd_arg
 
             let constructorExpr = Exp.constant(Pconst_string(name, None));
 
-            let rhsArray = args
+            let rhsList = args
                 |> List.map(Codecs.generateCodecs(generatorSettings))
                 |> List.map(((encoder, _)) => BatOption.get(encoder)) /* TODO: refactor */
                 |> List.mapi((i, e) =>
@@ -30,16 +30,17 @@ let generateEncoderCase = (generatorSettings, { pcd_name: { txt: name }, pcd_arg
                         [(Asttypes.Nolabel, makeIdentExpr("v" ++ string_of_int(i)))]
                     )
                 )
-                |> List.append([[%expr Js.Json.string([%e constructorExpr])]])
-                |> Exp.array;
+                |> List.append([[%expr Js.Json.string([%e constructorExpr])]]);
 
             {
                 pc_lhs: Pat.construct(Ast_convenience.lid(name), lhsVars),
                 pc_guard: None,
-                pc_rhs: [%expr Js.Json.array([%e rhsArray])]
+                pc_rhs: unboxed
+                  ? List.tl(rhsList) |> List.hd
+                  : [%expr Js.Json.array([%e rhsList |> Exp.array])]
             }
         }
-        | Pcstr_record(_) => failwith("not implemented")
+        | Pcstr_record(_) => fail(pcd_loc, "This syntax is not yet implemented by decco")
     }
 };
 
@@ -85,7 +86,7 @@ let generateArgDecoder = (generatorSettings, args, constructorName) => {
     );
 };
 
-let generateDecoderCase = (generatorSettings, { pcd_name: { txt: name }, pcd_args }) => {
+let generateDecoderCase = (generatorSettings, { pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
     switch pcd_args {
         | Pcstr_tuple(args) => {
             let argLen =
@@ -114,14 +115,41 @@ let generateDecoderCase = (generatorSettings, { pcd_name: { txt: name }, pcd_arg
                 ]
             }
         }
-        | Pcstr_record(_) => failwith("not implemented")
+        | Pcstr_record(_) => fail(pcd_loc, "This syntax is not yet implemented by decco")
     }
 };
 
-let generateCodecs = ({ doEncode, doDecode } as generatorSettings, constrDecls) => {
+let generateUnboxedDecode = (generatorSettings, { pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
+    switch pcd_args {
+        | Pcstr_tuple(args) => {
+            switch args {
+                | [a] => {
+                    let (_, d) = Codecs.generateCodecs(generatorSettings, a);
+                    switch d {
+                        | Some(d) => {
+                            let constructor = Exp.construct(
+                                Ast_convenience.lid(name), Some([%expr v])
+                            );
+
+                            Some([%expr (v) =>
+                                [%e d](v)
+                                -> Belt.Result.map(v => [%e constructor])
+                            ])
+                        }
+                        | None => None
+                    }
+                }
+                | _ => fail(pcd_loc, "Expected exactly one type argument")
+            }
+        }
+        | Pcstr_record(_) => fail(pcd_loc, "This syntax is not yet implemented by decco")
+    }
+};
+
+let generateCodecs = ({ doEncode, doDecode } as generatorSettings, constrDecls, unboxed) => {
     let encoder =
         doEncode ?
-            List.map(generateEncoderCase(generatorSettings), constrDecls)
+            List.map(generateEncoderCase(generatorSettings, unboxed), constrDecls)
             |> Exp.match([%expr v])
             |> Exp.fun_(Asttypes.Nolabel, None, [%pat? v])
             |> BatOption.some
@@ -133,30 +161,31 @@ let generateCodecs = ({ doEncode, doDecode } as generatorSettings, constrDecls) 
         pc_rhs: [%expr Decco.error("Invalid variant constructor", Belt.Array.getExn(jsonArr, 0))]
     };
 
-    let decoder =
-        switch doDecode {
-            | false => None
-            | true => {
-                let decoderSwitch =
-                    List.map(generateDecoderCase(generatorSettings), constrDecls)
-                    |> (l) => l @ [ decoderDefaultCase ]
-                    |> Exp.match([%expr Belt.Array.getExn(tagged, 0)]);
+    let decoder = !doDecode
+        ? None
+        :
+            unboxed
+                ? generateUnboxedDecode(generatorSettings, List.hd(constrDecls))
+                : {
+                    let decoderSwitch =
+                        List.map(generateDecoderCase(generatorSettings), constrDecls)
+                        |> (l) => l @ [ decoderDefaultCase ]
+                        |> Exp.match([%expr Belt.Array.getExn(tagged, 0)]);
 
-                Some([%expr (v) =>
-                    switch (Js.Json.classify(v)) {
-                        | Js.Json.JSONArray([||]) =>
-                            Decco.error("Expected variant, found empty array", v)
+                    Some([%expr (v) =>
+                        switch (Js.Json.classify(v)) {
+                            | Js.Json.JSONArray([||]) =>
+                                Decco.error("Expected variant, found empty array", v)
 
-                        | Js.Json.JSONArray(jsonArr) => {
-                            let tagged = Js.Array.map(Js.Json.classify, jsonArr);
-                            [%e decoderSwitch]
+                            | Js.Json.JSONArray(jsonArr) => {
+                                let tagged = Js.Array.map(Js.Json.classify, jsonArr);
+                                [%e decoderSwitch]
+                            }
+
+                            | _ => Decco.error("Not a variant", v)
                         }
-
-                        | _ => Decco.error("Not a variant", v)
-                    }
-                ]);
-            }
-        };
+                    ]);
+                };
 
     (encoder, decoder);
 };

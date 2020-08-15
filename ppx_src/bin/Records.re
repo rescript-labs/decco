@@ -13,15 +13,22 @@ type parsedDecl = {
     default: option(expression)
 };
 
-let generateEncoder = (decls) => {
-    let arrExpr = decls
-        |> List.map(({ key, field, codecs: (encoder, _) }) =>
-            [%expr ([%e key], [%e BatOption.get(encoder)]([%e field]))]
-        )
-        |> Exp.array;
-
-    [%expr [%e arrExpr] |> Js.Dict.fromArray |> Js.Json.object_]
-    |> Exp.fun_(Asttypes.Nolabel, None, [%pat? v]);
+let generateEncoder = (decls, unboxed) => {
+    unboxed
+        ? {
+            let { codecs, field } = List.hd(decls);
+            let (e, _) = codecs;
+            [%expr (v) => [%e BatOption.get(e)]([%e field])]
+        } : {
+            let arrExpr =
+                decls
+                |> List.map(({ key, field, codecs: (encoder, _) }) =>
+                    [%expr ([%e key], [%e BatOption.get(encoder)]([%e field]))]
+                )
+                |> Exp.array;
+            [%expr [%e arrExpr] |> Js.Dict.fromArray |> Js.Json.object_]
+            |> Exp.fun_(Asttypes.Nolabel, None, [%pat? v])
+        }
 };
 
 let generateDictGet = ({ key, codecs: (_, decoder), default }) => {
@@ -81,13 +88,27 @@ let rec generateNestedSwitchesRecurse = (allDecls, remainingDecls) => {
 
 let generateNestedSwitches = (decls) => generateNestedSwitchesRecurse(decls, decls);
 
-let generateDecoder = (decls) => {
-    [%expr (v) =>
-        switch (Js.Json.classify(v)) {
-            | Js.Json.JSONObject(dict) => [%e generateNestedSwitches(decls)]
-            | _ => Decco.error("Not an object", v)
-        }
-    ]
+let generateDecoder = (decls, unboxed) => {
+    unboxed
+        ? {
+            let { codecs, name } = List.hd(decls);
+            let (_, d) = codecs;
+
+            let recordExpr =
+                [(Ast_convenience.lid(name), makeIdentExpr("v"))]
+                |> Exp.record(_, None);
+
+            [%expr (v) =>
+                [%e BatOption.get(d)](v)
+                -> Belt.Result.map(v => [%e recordExpr])
+            ]
+        } :
+            [%expr (v) =>
+                switch (Js.Json.classify(v)) {
+                    | Js.Json.JSONObject(dict) => [%e generateNestedSwitches(decls)]
+                    | _ => Decco.error("Not an object", v)
+                }
+            ]
 };
 
 let parseDecl = (generatorSettings, { pld_name: { txt }, pld_loc, pld_type, pld_attributes }) => {
@@ -114,10 +135,10 @@ let parseDecl = (generatorSettings, { pld_name: { txt }, pld_loc, pld_type, pld_
     };
 };
 
-let generateCodecs = ({ doEncode, doDecode } as generatorSettings, decls) => {
+let generateCodecs = ({ doEncode, doDecode } as generatorSettings, decls, unboxed) => {
     let parsedDecls = List.map(parseDecl(generatorSettings), decls);
     (
-        doEncode ? Some(generateEncoder(parsedDecls)) : None,
-        doDecode ? Some(generateDecoder(parsedDecls)) : None
+        doEncode ? Some(generateEncoder(parsedDecls, unboxed)) : None,
+        doDecode ? Some(generateDecoder(parsedDecls, unboxed)) : None
     )
 };

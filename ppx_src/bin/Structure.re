@@ -54,6 +54,11 @@ let mapTypeDecl = (decl) => {
     let { ptype_attributes, ptype_name: { txt: typeName },
           ptype_manifest, ptype_params, ptype_loc, ptype_kind } = decl;
 
+    let isUnboxed = switch (Utils.getAttributeByName(ptype_attributes, "unboxed")) {
+        | Ok(Some(_)) => true
+        | _ => false
+    };
+
     switch (getGeneratorSettingsFromAttributes(ptype_attributes)) {
         | Ok(None) => []
         | Ok(Some(generatorSettings)) => switch (ptype_manifest, ptype_kind) {
@@ -65,11 +70,11 @@ let mapTypeDecl = (decl) => {
             )
             | (None, Ptype_variant(decls)) => generateCodecDecls(
                 typeName, getParamNames(ptype_params),
-                Variants.generateCodecs(generatorSettings, decls)
+                Variants.generateCodecs(generatorSettings, decls, isUnboxed)
             )
             | (None, Ptype_record(decls)) => generateCodecDecls(
                 typeName, getParamNames(ptype_params),
-                Records.generateCodecs(generatorSettings, decls)
+                Records.generateCodecs(generatorSettings, decls, isUnboxed)
             )
             | _ => fail(ptype_loc, "This type is not handled by decco")
         }
@@ -85,7 +90,7 @@ let mapStructureItem = (mapper, { pstr_desc } as structureItem) =>
                 |> List.concat;
 
             [   mapper.structure_item(mapper, structureItem)]
-            @ (List.length(valueBindings) > 0 ? 
+            @ (List.length(valueBindings) > 0 ?
                 [ Str.value(recFlag, valueBindings) ]
                 : []);
         }
