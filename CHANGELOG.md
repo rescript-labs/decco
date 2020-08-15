@@ -1,6 +1,9 @@
 ## Unreleased
 ### Added
-* bs-platform@8 to peer dependency
+* bs-platform@8 to peer dependency ([#58](https://github.com/reasonml-labs/decco/pull/58))
+
+### Fixed
+* Remove unnecessary postinstall hook ([#59](https://github.com/reasonml-labs/decco/pull/59))
 
 ## v1.2.1
 ### Fixed
