@@ -1,4 +1,4 @@
-## Unreleased
+## v1.3.0
 ### Added
 * bs-platform@8 to peer dependency ([#58](https://github.com/reasonml-labs/decco/pull/58))
 * Support for \[@unboxed\]([#60](https://github.com/reasonml-labs/decco/pull/60))
