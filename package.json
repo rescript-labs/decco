@@ -1,6 +1,6 @@
 {
   "name": "decco",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Bucklescript PPX which generates JSON (de)serializers for user-defined types",
   "main": "index.js",
   "scripts": {
