@@ -19,6 +19,7 @@ open Belt.Result; */
 [@decco] type d('v) = Js.Dict.t('v);
 [@decco] type simpleVar('a) = 'a;
 [@decco] type j = Js.Json.t;
+[@decco] type date = Js.Date.t;
 [@decco] type optionList = l(o(s));
 [@decco] type dictInt = d(int);
 [@decco] type variant = A | B(i) | C(i, s);
@@ -230,6 +231,35 @@ describe("unit", () => {
 
     testGoodDecode("u_decode", u_decode, Js.Json.number(0.), ());
 });
+
+describe("date", () => {
+  let asString = "2020-09-23T02:44:48.787Z";
+  let asDate = Js.Date.fromString(asString);
+
+  test("date_encode", () => {
+    let json = date_encode(asDate);
+
+    [@ocaml.warning "-4"]
+    (
+      switch (Js.Json.classify(json)) {
+      | Js.Json.JSONString(s) => expect(s) |> toBe(asString)
+      | _ => failwith("Not a JSONString")
+      }
+    );
+  });
+
+  describe("date_decode", () => {
+    testGoodDecode("good", date_decode, Js.Json.string(asString), asDate);
+
+    testBadDecode(
+      "bad",
+      date_decode,
+      Js.Json.string("heyy"),
+      {path: "", message: "Not a date", value: Js.Json.string("heyy")},
+    );
+  });
+});
+
 
 describe("tuple", () => {
     testEncode("t_encode", (10, "ten"), t_encode, {|[10,"ten"]|});

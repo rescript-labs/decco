@@ -83,6 +83,10 @@ and generateConstrCodecs = ({ doEncode, doDecode }, { Location.txt: identifier, 
             doEncode ? Some([%expr (v) => v]) : None,
             doDecode ? Some([%expr (v) => Belt.Result.Ok(v)]) : None,
         )
+        | Ldot(Ldot(Lident("Js"), "Date"), "t") => (
+            doEncode ? Some([%expr Decco.jsDateToJson]) : None,
+            doDecode ? Some([%expr Decco.jsDateFromJson]) : None
+        )
         | Lident(s) => (
             doEncode ? Some(Exp.ident(Ast_convenience.lid(s ++ Utils.encoderFuncSuffix))) : None,
             doDecode ? Some(Exp.ident(Ast_convenience.lid(s ++ Utils.decoderFuncSuffix))) : None,

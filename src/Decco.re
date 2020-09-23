@@ -72,6 +72,24 @@ let boolFromJson = (j) =>
 let unitToJson = () => Js.Json.number(0.0);
 let unitFromJson = (_) => Belt.Result.Ok(());
 
+let jsDateToJson = (v: Js.Date.t) =>
+  Js.Date.toJSONUnsafe(v) |> Js.Json.string;
+let jsDateFromJson = j =>
+  try(
+    {
+      let date =
+        Js.Json.decodeString(j)->Belt.Option.getExn->Js.Date.fromString;
+      if (Js.Float.isNaN(Js.Date.getTime(date))) {
+        failwith("NaN");
+      } else {
+        Belt.Result.Ok(date);
+      };
+    }
+  ) {
+  | _ => Belt.Result.Error({path: "", message: "Not a date", value: j})
+  };
+
+
 let arrayToJson = (encoder, arr) =>
     arr
     |> Js.Array.map(encoder)
@@ -177,4 +195,5 @@ module Codecs {
     let list = (listToJson, listFromJson);
     let option = (optionToJson, optionFromJson);
     let unit = (unitToJson, unitFromJson);
+    let jsDate = (jsDateToJson, jsDateFromJson);
 };
