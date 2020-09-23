@@ -1,3 +1,7 @@
+## v1.5.0
+### Added
+* windows support ([#20](https://github.com/reasonml-labs/decco/pull/20))
+
 ## v1.4.0
 ### Added
 * Support for Polyvariants ([#64](https://github.com/reasonml-labs/decco/pull/64))

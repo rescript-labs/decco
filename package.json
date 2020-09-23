@@ -17,8 +17,10 @@
     "/postinstall.js",
     "/src",
     "/ppx",
+    "/ppx.cmd",
     "/ppx-linux.exe",
-    "/ppx-osx.exe"
+    "/ppx-osx.exe",
+    "/ppx-windows.exe"
   ],
   "keywords": [],
   "license": "MIT",
