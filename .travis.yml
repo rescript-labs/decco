@@ -2,6 +2,7 @@ language: node_js
 os:
 - linux
 - osx
+- windows
 osx_image: xcode12
 cache:
   yarn: true
@@ -32,6 +33,7 @@ jobs:
     before_deploy:
     - curl -OL https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-linux.exe
     - curl -OL https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-osx.exe
+    - curl -OL https://github.com/ryb73/ppx_decco/releases/download/$TRAVIS_TAG/ppx-windows.exe
     - chmod +x *.exe
     - yarn build-lib
     deploy:
