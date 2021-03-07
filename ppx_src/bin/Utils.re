@@ -81,7 +81,7 @@ let rec isIdentifierUsedInCoreType = (typeName, {ptyp_desc, ptyp_loc}) =>
     switch ptyp_desc {
         | Ptyp_arrow(_, _, _) => fail(ptyp_loc, "Can't generate codecs for function type")
         | Ptyp_any => fail(ptyp_loc, "Can't generate codecs for `any` type")
-        | Ptyp_package(_)=> fail(ptyp_loc, "Can't generate codecs for module type")
+        | Ptyp_package(_) => fail(ptyp_loc, "Can't generate codecs for module type")
         | Ptyp_variant(_, _, _) => fail(ptyp_loc, "Unexpected Ptyp_variant")
         | Ptyp_var(_) => false
         | Ptyp_tuple(childTypes) =>

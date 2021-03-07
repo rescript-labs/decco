@@ -117,7 +117,7 @@ describe("polyvariant", () => {
       testEncode("B", `B(5), polyvariant_encode, {|["B",5]|});
       testEncode("C", `C((7, "8")), polyvariant_encode, {|["C",7,"8"]|});
     })
-    /* describe("polyvariant_decode", () => {
+    describe("polyvariant_decode", () => {
        describe("good", () => {
          let json = {|["A"]|} |> Js.Json.parseExn;
          testGoodDecode("A", polyvariant_decode, json, `A);
@@ -125,7 +125,7 @@ describe("polyvariant", () => {
          testGoodDecode("B", polyvariant_decode, json, `B(5));
          let json = {|["C",7,"8"]|} |> Js.Json.parseExn;
          testGoodDecode("C", polyvariant_decode, json, `C((7, "8")));
-       }); */
+       });
     /*     describe("bad", () => {
                testBadDecode(
                  "non-polyvariant",

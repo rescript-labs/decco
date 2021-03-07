@@ -42,42 +42,6 @@ let generateEncoderCase = (generatorSettings, unboxed, row) => {
       /* We don't have enough information to generate a encoder */
       | Rinherit(coreType) => fail(coreType.ptyp_loc, "This syntax is not yet implemented by decco")
     };
-    /* switch pcd_args {
-        | Pcstr_tuple(args) => {
-            let lhsVars = switch args {
-                | [] => None
-                | [_] => Some(Pat.var(Location.mknoloc("v0")))
-                | _ =>
-                    args
-                    |> List.mapi((i, _) =>
-                        Location.mkloc("v" ++ string_of_int(i), pcd_loc) |> Pat.var)
-                    |> Pat.tuple
-                    |> (v) => Some(v)
-            };
-
-            let constructorExpr = Exp.constant(Pconst_string(name, None));
-
-            let rhsList = args
-                |> List.map(Codecs.generateCodecs(generatorSettings))
-                |> List.map(((encoder, _)) => BatOption.get(encoder)) /* TODO: refactor */
-                |> List.mapi((i, e) =>
-                    Exp.apply(
-                        ~loc=pcd_loc, e,
-                        [(Asttypes.Nolabel, makeIdentExpr("v" ++ string_of_int(i)))]
-                    )
-                )
-                |> List.append([[%expr Js.Json.string([%e constructorExpr])]]);
-
-            {
-                pc_lhs: Pat.construct(Ast_convenience.lid(name), lhsVars),
-                pc_guard: None,
-                pc_rhs: unboxed
-                  ? List.tl(rhsList) |> List.hd
-                  : [%expr Js.Json.array([%e rhsList |> Exp.array])]
-            }
-        }
-        | Pcstr_record(_) => fail(pcd_loc, "This syntax is not yet implemented by decco")
-    } */
 };
 
 let generateDecodeSuccessCase = (numArgs, constructorName) => {
@@ -95,7 +59,7 @@ let generateDecodeSuccessCase = (numArgs, constructorName) => {
         |> Array.to_list
         |> tupleOrSingleton(Exp.tuple)
         |> (v) => Some(v)
-        |> Exp.construct(Ast_convenience.lid(constructorName))
+        |> Exp.variant(constructorName)
         |> (e) => [%expr Belt.Result.Ok([%e e])]
 };
 
@@ -122,49 +86,49 @@ let generateArgDecoder = (generatorSettings, args, constructorName) => {
     );
 };
 
-let generateDecoderCase = (generatorSettings, { pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
-    switch pcd_args {
-        | Pcstr_tuple(args) => {
-            let argLen =
-                Pconst_integer(string_of_int(List.length(args) + 1), None)
-                |> Exp.constant;
+let generateDecoderCase = (generatorSettings, row) => {
+    switch (row) {
+      | Rtag({ txt }, _, _, args) => {
+        let argLen =
+          Pconst_integer(string_of_int(List.length(args) + 1), None)
+          |> Exp.constant;
 
-            let decoded = switch(args) {
+        let decoded = switch(args) {
                 | [] => {
-                    let ident = Longident.parse(name) |> Location.mknoloc;
-                    [%expr Belt.Result.Ok([%e Exp.construct(ident, None)])]
+                    let resultantExp = Exp.variant(txt, None);
+                    [%expr Belt.Result.Ok([%e resultantExp])]
                 }
-                | _ => generateArgDecoder(generatorSettings, args, name)
+                | _ => generateArgDecoder(generatorSettings, args, txt)
             };
 
-            {
-                pc_lhs: Pconst_string(name, None)
-                    |> Pat.constant
-                    |> (v) => Some(v)
-                    |> Pat.construct(Ast_convenience.lid("Js.Json.JSONString")),
-                pc_guard: None,
-                pc_rhs: [%expr
-                    (Js.Array.length(tagged) !== [%e argLen]) ?
-                        Decco.error("Invalid number of arguments to variant constructor", v)
-                    :
-                        [%e decoded]
-                ]
-            }
+        {
+            pc_lhs: Pconst_string(txt, None)
+                |> Pat.constant
+                |> (v) => Some(v)
+                |> Pat.construct(Ast_convenience.lid("Js.Json.JSONString")),
+            pc_guard: None,
+            pc_rhs: [%expr
+                (Js.Array.length(tagged) !== [%e argLen]) ?
+                    Decco.error("Invalid number of arguments to variant constructor", v)
+                :
+                    [%e decoded]
+            ]
         }
-        | Pcstr_record(_) => fail(pcd_loc, "This syntax is not yet implemented by decco")
-    }
+      }
+      | Rinherit(coreType) => fail(coreType.ptyp_loc, "This syntax is not yet implemented by decco")
+    };
 };
 
-let generateUnboxedDecode = (generatorSettings, { pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
-    switch pcd_args {
-        | Pcstr_tuple(args) => {
+let generateUnboxedDecode = (generatorSettings, row) => {
+    switch (row) {
+      | Rtag({ txt, loc }, _, _, args) => {
             switch args {
                 | [a] => {
                     let (_, d) = Codecs.generateCodecs(generatorSettings, a);
                     switch d {
                         | Some(d) => {
                             let constructor = Exp.construct(
-                                Ast_convenience.lid(name), Some([%expr v])
+                                Ast_convenience.lid(txt), Some([%expr v])
                             );
 
                             Some([%expr (v) =>
@@ -175,15 +139,14 @@ let generateUnboxedDecode = (generatorSettings, { pcd_name: { txt: name }, pcd_a
                         | None => None
                     }
                 }
-                | _ => fail(pcd_loc, "Expected exactly one type argument")
+                | _ => fail(loc, "Expected exactly one type argument")
             }
         }
-        | Pcstr_record(_) => fail(pcd_loc, "This syntax is not yet implemented by decco")
+      | Rinherit(coreType) => fail(coreType.ptyp_loc, "This syntax is not yet implemented by decco")
     }
 };
 
 let generateCodecs = ({ doEncode, doDecode } as generatorSettings, rowFields, unboxed) => {
-    let _a = doDecode;
     let encoder =
         doEncode ?
             List.map(generateEncoderCase(generatorSettings, unboxed), rowFields)
@@ -192,37 +155,37 @@ let generateCodecs = ({ doEncode, doDecode } as generatorSettings, rowFields, un
             |> BatOption.some
         : None;
 
-/*     let decoderDefaultCase = {
+     let decoderDefaultCase = {
         pc_lhs: [%pat? _],
         pc_guard: None,
-        pc_rhs: [%expr Decco.error("Invalid variant constructor", Belt.Array.getExn(jsonArr, 0))]
+        pc_rhs: [%expr Decco.error("Invalid polyvariant constructor", Belt.Array.getExn(jsonArr, 0))]
     };
- */
-    /* let decoder = !doDecode
+
+    let decoder = !doDecode
         ? None
-        :
-            unboxed
-                ? generateUnboxedDecode(generatorSettings, List.hd(constrDecls))
-                : {
-                    let decoderSwitch =
-                        List.map(generateDecoderCase(generatorSettings), constrDecls)
-                        |> (l) => l @ [ decoderDefaultCase ]
-                        |> Exp.match([%expr Belt.Array.getExn(tagged, 0)]);
+        : false
+            ? generateUnboxedDecode(generatorSettings, List.hd(rowFields))
+            : {
+              let decoderSwitch =
+                  rowFields
+                  |>  List.map(generateDecoderCase(generatorSettings))
+                  |> (l) => l @ [ decoderDefaultCase ]
+                  |> Exp.match([%expr Belt.Array.getExn(tagged, 0)]);
 
-                    Some([%expr (v) =>
-                        switch (Js.Json.classify(v)) {
-                            | Js.Json.JSONArray([||]) =>
-                                Decco.error("Expected variant, found empty array", v)
+              Some([%expr (v) =>
+                  switch (Js.Json.classify(v)) {
+                      | Js.Json.JSONArray([||]) =>
+                          Decco.error("Expected polyvariant, found empty array", v)
 
-                            | Js.Json.JSONArray(jsonArr) => {
-                                let tagged = Js.Array.map(Js.Json.classify, jsonArr);
-                                [%e decoderSwitch]
-                            }
+                      | Js.Json.JSONArray(jsonArr) => {
+                          let tagged = Js.Array.map(Js.Json.classify, jsonArr);
+                          [%e decoderSwitch]
+                      }
 
-                            | _ => Decco.error("Not a variant", v)
-                        }
-                    ]);
-                };
- */
-    (encoder, None);
+                      | _ => Decco.error("Not a polyvariant", v)
+                  }
+              ]);
+          };
+
+    (encoder, decoder);
 };

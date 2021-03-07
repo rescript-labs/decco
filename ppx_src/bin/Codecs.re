@@ -102,8 +102,8 @@ and generateCodecs = (
 => {
     switch ptyp_desc {
         | Ptyp_any => fail(ptyp_loc, "Can't generate codecs for `any` type")
-        | Ptyp_arrow(_, _, _)=> fail(ptyp_loc, "Can't generate codecs for function type")
-        | Ptyp_package(_)=> fail(ptyp_loc, "Can't generate codecs for module type")
+        | Ptyp_arrow(_, _, _) => fail(ptyp_loc, "Can't generate codecs for function type")
+        | Ptyp_package(_) => fail(ptyp_loc, "Can't generate codecs for module type")
 
         | Ptyp_tuple(types) => {
             let compositeCodecs = List.map(generateCodecs(generatorSettings), types);
@@ -149,10 +149,6 @@ and generateCodecs = (
                 parameterizeCodecs(typeArgs, encode, decode, generatorSettings);
         }
 
-        | Ptyp_variant(_rowFields, _, _) => (
-            doEncode ? Some(makeIdentExpr(encoderVarPrefix ++ "wASSA")) : None,
-            doDecode ? Some(makeIdentExpr(decoderVarPrefix ++ "wASSA")) : None,
-        );
         | _ => fail(ptyp_loc, "This syntax is not yet handled by decco")
     };
 };
