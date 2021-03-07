@@ -149,7 +149,10 @@ and generateCodecs = (
                 parameterizeCodecs(typeArgs, encode, decode, generatorSettings);
         }
 
-        | Ptyp_variant(_rowFields, _, _) => (None, None);
+        | Ptyp_variant(_rowFields, _, _) => (
+            doEncode ? Some(makeIdentExpr(encoderVarPrefix ++ "wASSA")) : None,
+            doDecode ? Some(makeIdentExpr(decoderVarPrefix ++ "wASSA")) : None,
+        );
         | _ => fail(ptyp_loc, "This syntax is not yet handled by decco")
     };
 };

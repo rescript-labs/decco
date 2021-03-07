@@ -7,8 +7,18 @@ open Utils;
 
 let generateEncoderCase = (generatorSettings, unboxed, row) => {
     switch (row) {
-      | Rtag({ txt: name, loc }, _attributes, _dontKnowYet, coreTypes) => {
+      | Rtag({ txt: name, loc }, _attributes, _, coreTypes) => {
         let constructorExpr = Exp.constant(Pconst_string(name, None));
+        let lhsVars = switch coreTypes {
+            | [] => None
+            | [_] => Some(Pat.var(Location.mknoloc("v0")))
+            | _ =>
+                coreTypes
+                |> List.mapi((i, _) =>
+                    Location.mkloc("v" ++ string_of_int(i), loc) |> Pat.var)
+                |> Pat.tuple
+                |> (v) => Some(v)
+        };
 
         let rhsList = coreTypes
           |> List.map(Codecs.generateCodecs(generatorSettings))
@@ -22,36 +32,15 @@ let generateEncoderCase = (generatorSettings, unboxed, row) => {
           |> List.append([[%expr Js.Json.string([%e constructorExpr])]]);
 
         {
-          pc_lhs: Pat.variant(name, None),
+          pc_lhs: Pat.variant(name, lhsVars),
           pc_guard: None,
           pc_rhs: unboxed
             ? List.tl(rhsList) |> List.hd
             : [%expr Js.Json.array([%e rhsList |> Exp.array])]
         }
       }
-      | Rinherit(coreType) => {
-        let name = "Unknown";
-        let constructorExpr = Exp.constant(Pconst_string(name, None));
-
-        let rhsList = [coreType]
-          |> List.map(Codecs.generateCodecs(generatorSettings))
-          |> List.map(((encoder, _)) => BatOption.get(encoder)) /* TODO: refactor */
-          |> List.mapi((i, e) =>
-              Exp.apply(
-                  ~loc=Location.none, e,
-                  [(Asttypes.Nolabel, makeIdentExpr("v" ++ string_of_int(i)))]
-              )
-          )
-          |> List.append([[%expr Js.Json.string([%e constructorExpr])]]);
-
-        {
-          pc_lhs: Pat.variant(name, None),
-          pc_guard: None,
-          pc_rhs: unboxed
-            ? List.tl(rhsList) |> List.hd
-            : [%expr Js.Json.array([%e rhsList |> Exp.array])]
-        }
-      }
+      /* We don't have enough information to generate a encoder */
+      | Rinherit(coreType) => fail(coreType.ptyp_loc, "This syntax is not yet implemented by decco")
     };
     /* switch pcd_args {
         | Pcstr_tuple(args) => {
