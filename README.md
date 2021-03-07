@@ -127,3 +127,7 @@ When decoding a record, the default value will be used for keys that are missing
 let {s} = Js.Json.parseExn("{}") |> record_decode |> Belt.Result.getExn;
 Js.log(s); /* def */
 ```
+
+# Contributing
+
+Please read the [CONTRIBUTE]
