@@ -63,7 +63,11 @@ let mapTypeDecl = (decl) => {
         | Ok(None) => []
         | Ok(Some(generatorSettings)) => switch (ptype_manifest, ptype_kind) {
             | (None, Ptype_abstract) => fail(ptype_loc, "Can't generate codecs for unspecified type")
-
+            | (Some({ ptyp_desc: Ptyp_variant(rowFields, _, _) }), Ptype_abstract) => {
+                generateCodecDecls(
+                typeName, getParamNames(ptype_params),
+                Polyvariants.generateCodecs(generatorSettings, rowFields, isUnboxed)
+            )}
             | (Some(manifest), _) => generateCodecDecls(
                 typeName, getParamNames(ptype_params),
                 generateCodecs(generatorSettings, manifest)
