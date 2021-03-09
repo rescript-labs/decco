@@ -130,4 +130,4 @@ Js.log(s); /* def */
 
 # Contributing
 
-Please read the [CONTRIBUTE]
+Please read the [./CONTRIBUTING.md]
