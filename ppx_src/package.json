@@ -11,8 +11,8 @@
   },
   "devDependencies": {
     "@esy-ocaml/reason": "^3.5.0",
-    "@opam/dune": "^1.11.0",
-    "@opam/ppx_tools_versioned": "5.2.3",
-    "ocaml": "~4.6.0"
+    "@opam/dune": "~1.11.0",
+    "@opam/ppx_tools_versioned": "^5.2.3",
+    "ocaml": "~4.6.1001"
   }
 }
