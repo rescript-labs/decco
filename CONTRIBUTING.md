@@ -6,7 +6,7 @@ When contributing to this repository, please first discuss the change you wish t
 
 ### PPXs
 
-Writting [ppxs](https://tarides.com/blog/2019-05-09-an-introduction-to-ocaml-ppx-ecosystem) isn't the easier to work with, more if it's the first time. Please ask any question, you can use an issue or go to the Discord https://discord.gg/SmsJyCdH2h.
+[PPXs](https://tarides.com/blog/2019-05-09-an-introduction-to-ocaml-ppx-ecosystem) are not the easiest to work with, especially if it's your first time writing one. Don't be afraid to ask for help by commenting on a related GitHub issue or in the Discord: https://discord.gg/SmsJyCdH2h.
 
 ### Requirements
 
