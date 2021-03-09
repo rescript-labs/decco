@@ -13,7 +13,7 @@ When contributing to this repository, please first discuss the change you wish t
 - git clone https://github.com/reasonml-labs/decco
 - cd decco
 - yarn install
-- cd ppx_src; esy;
+- yarn build-ppx
 - # Make your changes, commits, etc
 - Open the PR
 
