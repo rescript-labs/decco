@@ -109,7 +109,7 @@ let generateDecoderCase = (generatorSettings, row) => {
             pc_guard: None,
             pc_rhs: [%expr
                 (Js.Array.length(tagged) !== [%e argLen]) ?
-                    Decco.error("Invalid number of arguments to variant constructor", v)
+                    Decco.error("Invalid number of arguments to polyvariant constructor", v)
                 :
                     [%e decoded]
             ]
@@ -163,7 +163,7 @@ let generateCodecs = ({ doEncode, doDecode } as generatorSettings, rowFields, un
 
     let decoder = !doDecode
         ? None
-        : false
+        : unboxed
             ? generateUnboxedDecode(generatorSettings, List.hd(rowFields))
             : {
               let decoderSwitch =
