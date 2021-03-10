@@ -9,7 +9,13 @@ let generateEncoderCase = (generatorSettings, unboxed, row) => {
     switch (row) {
       | Rtag({ txt: name, loc }, _attributes, _, coreTypes) => {
         let constructorExpr = Exp.constant(Pconst_string(name, None));
-        let lhsVars = switch coreTypes {
+        /* Polyvariants arguments are wrapped inside a Tuple, this is different from Variants. */
+        let args = switch (coreTypes) {
+            | [] => []
+            | [coreType] => [coreType.ptyp_desc]
+            | [...rest] => rest |> List.map(coreType => coreType.ptyp_desc)
+        };
+        let lhsVars = switch args {
             | [] => None
             | [_] => Some(Pat.var(Location.mknoloc("v0")))
             | _ =>
@@ -40,7 +46,7 @@ let generateEncoderCase = (generatorSettings, unboxed, row) => {
         }
       }
       /* We don't have enough information to generate a encoder */
-      | Rinherit(coreType) => fail(coreType.ptyp_loc, "This syntax is not yet implemented by decco")
+      | Rinherit(arg) => fail(arg.ptyp_loc, "This syntax is not yet implemented by decco")
     };
 };
 
