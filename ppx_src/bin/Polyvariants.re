@@ -5,28 +5,39 @@ open Parsetree;
 open Ast_helper;
 open Utils;
 
+/* Polyvariants arguments are wrapped inside a Tuple, meaning that if there's only
+one arg it's the coreType, but if there's more than one arg it's a tuple of one tuple with those args.
+This function abstract this particuliarity from polyvariants (It's different from Variants). */
+let getArgsFromPolyvars = (~loc, coreTypes) =>
+    switch (coreTypes) {
+        | [] => []
+        | [coreType] => switch (coreType.ptyp_desc) {
+            /* If it's a tuple, return the args */
+            | Ptyp_tuple(coreTypes) => coreTypes
+            /* If it's any other coreType, return it */
+            | _ => [coreType]
+        }
+        | _ => fail(loc, "This error shoudn't happen, means that the AST of your polyvariant is wrong")
+    };
+
 let generateEncoderCase = (generatorSettings, unboxed, row) => {
     switch (row) {
       | Rtag({ txt: name, loc }, _attributes, _, coreTypes) => {
         let constructorExpr = Exp.constant(Pconst_string(name, None));
-        /* Polyvariants arguments are wrapped inside a Tuple, this is different from Variants. */
-        let args = switch (coreTypes) {
-            | [] => []
-            | [coreType] => [coreType.ptyp_desc]
-            | [...rest] => rest |> List.map(coreType => coreType.ptyp_desc)
-        };
+        let args = getArgsFromPolyvars(~loc, coreTypes);
+
         let lhsVars = switch args {
             | [] => None
             | [_] => Some(Pat.var(Location.mknoloc("v0")))
             | _ =>
-                coreTypes
+                args
                 |> List.mapi((i, _) =>
                     Location.mkloc("v" ++ string_of_int(i), loc) |> Pat.var)
                 |> Pat.tuple
                 |> (v) => Some(v)
         };
 
-        let rhsList = coreTypes
+        let rhsList = args
           |> List.map(Codecs.generateCodecs(generatorSettings))
           |> List.map(((encoder, _)) => BatOption.get(encoder)) /* TODO: refactor */
           |> List.mapi((i, e) =>
@@ -81,7 +92,7 @@ let generateArgDecoder = (generatorSettings, args, constructorName) => {
                 Asttypes.Nolabel,
                 {
                     /* +1 because index 0 is the constructor */
-                    let idx = Pconst_integer(string_of_int(i + 1), None)
+                    let idx = Pconst_integer(string_of_int(i), None)
                         |> Exp.constant;
 
                     [%expr Belt.Array.getExn(jsonArr, [%e idx])];
@@ -94,7 +105,8 @@ let generateArgDecoder = (generatorSettings, args, constructorName) => {
 
 let generateDecoderCase = (generatorSettings, row) => {
     switch (row) {
-      | Rtag({ txt }, _, _, args) => {
+      | Rtag({ txt, loc }, _, _, coreTypes) => {
+        let args = getArgsFromPolyvars(~loc, coreTypes);
         let argLen =
           Pconst_integer(string_of_int(List.length(args) + 1), None)
           |> Exp.constant;
