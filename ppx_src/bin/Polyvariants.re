@@ -92,7 +92,7 @@ let generateArgDecoder = (generatorSettings, args, constructorName) => {
                 Asttypes.Nolabel,
                 {
                     /* +1 because index 0 is the constructor */
-                    let idx = Pconst_integer(string_of_int(i), None)
+                    let idx = Pconst_integer(string_of_int(i + 1), None)
                         |> Exp.constant;
 
                     [%expr Belt.Array.getExn(jsonArr, [%e idx])];
