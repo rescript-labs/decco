@@ -1,5 +1,4 @@
-open Migrate_parsetree;
-open Ast_406;
+open Ppxlib;
 open Parsetree;
 open Ast_helper;
 open Utils;
