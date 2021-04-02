@@ -10,10 +10,7 @@ let decoderVarPrefix = "decoder_";
 
 let loc = default_loc^;
 
-let fail = (loc, message) =>
-    Location.raise_errorf(~loc, "%s", message);
-    /* |> (v) => Location.Error(v) */
-    /* |> raise; */
+let fail = (loc, message) => Location.raise_errorf(~loc, "%s", message);
 
 [@ocaml.warning("-3")] let longidentParse = Longident.parse
 
