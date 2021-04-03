@@ -1,6 +1,4 @@
-open Migrate_parsetree;
-open Ast_406;
-open Ppx_tools_406;
+open Ppxlib
 open Parsetree;
 open Ast_helper;
 open Utils;
@@ -60,12 +58,12 @@ let generateErrorCase = ({ key }) => {
 
 let generateFinalRecordExpr = (decls) =>
     decls
-    |> List.map(({ name }) => (Ast_convenience.lid(name), makeIdentExpr(name)))
+    |> List.map(({ name }) => (lid(name), makeIdentExpr(name)))
     |> (l) => [%expr Belt.Result.Ok([%e Exp.record(l, None)])];
 
 let generateSuccessCase = ({ name }, successExpr) => {
     pc_lhs:
-        Location.mknoloc(name)
+        mknoloc(name)
         |> Pat.var
         |> (p) => [%pat? Belt.Result.Ok([%p p])],
     pc_guard: None,
@@ -95,7 +93,7 @@ let generateDecoder = (decls, unboxed) => {
             let (_, d) = codecs;
 
             let recordExpr =
-                [(Ast_convenience.lid(name), makeIdentExpr("v"))]
+                [(lid(name), makeIdentExpr("v"))]
                 |> Exp.record(_, None);
 
             [%expr (v) =>
@@ -121,15 +119,14 @@ let parseDecl = (generatorSettings, { pld_name: { txt }, pld_loc, pld_type, pld_
 
     let key = switch (getAttributeByName(pld_attributes, "decco.key")) {
         | Ok(Some(attribute)) => getExpressionFromPayload(attribute)
-        | Ok(None) => Exp.constant(Pconst_string(txt, None))
+        | Ok(None) => Exp.constant(Pconst_string(txt, Location.none, None))
         | Error(s) => fail(pld_loc, s)
     };
 
     {
         name: txt,
         key,
-        field: Ast_convenience.lid(txt)
-            |> Exp.field([%expr v]),
+        field: Exp.field([%expr v], lid(txt)),
         codecs: Codecs.generateCodecs(generatorSettings, pld_type),
         default
     };

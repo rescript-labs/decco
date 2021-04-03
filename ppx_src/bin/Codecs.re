@@ -1,6 +1,4 @@
-open Migrate_parsetree;
-open Ast_406;
-open Ppx_tools_406;
+open Ppxlib;
 open Parsetree;
 open Ast_helper;
 open Utils;
@@ -84,12 +82,12 @@ and generateConstrCodecs = ({ doEncode, doDecode }, { Location.txt: identifier, 
             doDecode ? Some([%expr (v) => Belt.Result.Ok(v)]) : None,
         )
         | Lident(s) => (
-            doEncode ? Some(Exp.ident(Ast_convenience.lid(s ++ Utils.encoderFuncSuffix))) : None,
-            doDecode ? Some(Exp.ident(Ast_convenience.lid(s ++ Utils.decoderFuncSuffix))) : None,
+            doEncode ? Some(makeIdentExpr(s ++ Utils.encoderFuncSuffix)) : None,
+            doDecode ? Some(makeIdentExpr(s ++ Utils.decoderFuncSuffix)) : None,
         )
         | Ldot(left, right) => (
-            doEncode ? Some(Exp.ident(Location.mknoloc(Ldot(left, right ++ Utils.encoderFuncSuffix)))) : None,
-            doDecode ? Some(Exp.ident(Location.mknoloc(Ldot(left, right ++ Utils.decoderFuncSuffix)))) : None,
+            doEncode ? Some(Exp.ident(mknoloc(Ldot(left, right ++ Utils.encoderFuncSuffix)))) : None,
+            doDecode ? Some(Exp.ident(mknoloc(Ldot(left, right ++ Utils.decoderFuncSuffix)))) : None,
         )
         | Lapply(_, _) => fail(loc, "Lapply syntax not yet handled by decco")
     };

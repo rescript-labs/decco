@@ -1,7 +1,4 @@
-open Migrate_parsetree;
-open Ast_406;
-open Ppx_tools_406;
-open Ast_mapper;
+open Ppxlib;
 open Parsetree;
 open Utils;
 
@@ -32,7 +29,7 @@ let generateSigDecls = ({ doEncode, doDecode }, typeName, paramNames) => {
 
     let valueType = paramNames
         |> List.map(Ast_helper.Typ.var)
-        |> Ast_helper.Typ.constr(Ast_convenience.lid(typeName));
+        |> Ast_helper.Typ.constr(lid(typeName));
 
     let decls = [];
 
@@ -41,7 +38,7 @@ let generateSigDecls = ({ doEncode, doDecode }, typeName, paramNames) => {
             decls @
             [[%type: [%t valueType] => Js.Json.t]
                 |> addEncoderParams(List.rev(paramNames))
-                |> Ast_helper.Val.mk(Location.mknoloc(encoderPat))
+                |> Ast_helper.Val.mk(mknoloc(encoderPat))
                 |> Ast_helper.Sig.value]
         : decls;
 
@@ -50,7 +47,7 @@ let generateSigDecls = ({ doEncode, doDecode }, typeName, paramNames) => {
             decls @
             [[%type: Js.Json.t => [%t makeResultType(valueType)]]
                 |> addDecoderParams(List.rev(paramNames))
-                |> Ast_helper.Val.mk(Location.mknoloc(decoderPat))
+                |> Ast_helper.Val.mk(mknoloc(decoderPat))
                 |> Ast_helper.Sig.value]
         : decls;
 
@@ -76,9 +73,9 @@ let mapSignatureItem = (mapper, { psig_desc } as signatureItem) =>
                 |> List.map(mapTypeDecl)
                 |> List.concat;
 
-            [   mapper.signature_item(mapper, signatureItem),
+            [   mapper#signature_item(signatureItem),
                 ...generatedSigItems ];
         }
 
-        | _ => [ mapper.signature_item(mapper, signatureItem) ]
+        | _ => [ mapper#signature_item(signatureItem) ]
     };

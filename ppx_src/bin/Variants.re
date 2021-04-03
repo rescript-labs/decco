@@ -1,6 +1,4 @@
-open Migrate_parsetree;
-open Ast_406;
-open Ppx_tools_406;
+open Ppxlib;
 open Parsetree;
 open Ast_helper;
 open Utils;
@@ -10,16 +8,16 @@ let generateEncoderCase = (generatorSettings, unboxed, { pcd_name: { txt: name }
         | Pcstr_tuple(args) => {
             let lhsVars = switch args {
                 | [] => None
-                | [_] => Some(Pat.var(Location.mknoloc("v0")))
+                | [_] => Some(Pat.var(mknoloc("v0")))
                 | _ =>
                     args
                     |> List.mapi((i, _) =>
-                        Location.mkloc("v" ++ string_of_int(i), pcd_loc) |> Pat.var)
+                        mkloc("v" ++ string_of_int(i), pcd_loc) |> Pat.var)
                     |> Pat.tuple
                     |> (v) => Some(v)
             };
 
-            let constructorExpr = Exp.constant(Pconst_string(name, None));
+            let constructorExpr = Exp.constant(Pconst_string(name, Location.none, None));
 
             let rhsList = args
                 |> List.map(Codecs.generateCodecs(generatorSettings))
@@ -33,7 +31,7 @@ let generateEncoderCase = (generatorSettings, unboxed, { pcd_name: { txt: name }
                 |> List.append([[%expr Js.Json.string([%e constructorExpr])]]);
 
             {
-                pc_lhs: Pat.construct(Ast_convenience.lid(name), lhsVars),
+                pc_lhs: Pat.construct(lid(name), lhsVars),
                 pc_guard: None,
                 pc_rhs: unboxed
                   ? List.tl(rhsList) |> List.hd
@@ -47,7 +45,7 @@ let generateEncoderCase = (generatorSettings, unboxed, { pcd_name: { txt: name }
 let generateDecodeSuccessCase = (numArgs, constructorName) => {
     pc_lhs:
         Array.init(numArgs, i =>
-            Location.mknoloc("v" ++ string_of_int(i))
+            mknoloc("v" ++ string_of_int(i))
             |> Pat.var
             |> (p) => [%pat? Belt.Result.Ok([%p p])]
         )
@@ -59,7 +57,7 @@ let generateDecodeSuccessCase = (numArgs, constructorName) => {
         |> Array.to_list
         |> tupleOrSingleton(Exp.tuple)
         |> (v) => Some(v)
-        |> Exp.construct(Ast_convenience.lid(constructorName))
+        |> Exp.construct(lid(constructorName))
         |> (e) => [%expr Belt.Result.Ok([%e e])]
 };
 
@@ -95,17 +93,17 @@ let generateDecoderCase = (generatorSettings, { pcd_name: { txt: name }, pcd_arg
 
             let decoded = switch(args) {
                 | [] => {
-                    let ident = Longident.parse(name) |> Location.mknoloc;
+                    let ident = lid(name);
                     [%expr Belt.Result.Ok([%e Exp.construct(ident, None)])]
                 }
                 | _ => generateArgDecoder(generatorSettings, args, name)
             };
 
             {
-                pc_lhs: Pconst_string(name, None)
+                pc_lhs: Pconst_string(name, Location.none, None)
                     |> Pat.constant
                     |> (v) => Some(v)
-                    |> Pat.construct(Ast_convenience.lid("Js.Json.JSONString")),
+                    |> Pat.construct(lid("Js.Json.JSONString")),
                 pc_guard: None,
                 pc_rhs: [%expr
                     (Js.Array.length(tagged) !== [%e argLen]) ?
@@ -128,7 +126,7 @@ let generateUnboxedDecode = (generatorSettings, { pcd_name: { txt: name }, pcd_a
                     switch d {
                         | Some(d) => {
                             let constructor = Exp.construct(
-                                Ast_convenience.lid(name), Some([%expr v])
+                                lid(name), Some([%expr v])
                             );
 
                             Some([%expr (v) =>
