@@ -1,0 +1,10 @@
+(library
+  (name ppx_decco)
+  (public_name ppx_decco)
+  (kind ppx_rewriter)
+  (libraries ppxlib)
+  (preprocess
+  (pps ppxlib.metaquot))
+  (flags (:standard -w -9)) ; 9 = labels not bound in record pattern
+)
+

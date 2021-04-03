@@ -1,0 +1,3 @@
+
+let () =
+  Ppxlib.Driver.standalone()
