@@ -16,9 +16,6 @@
     "@opam/reason": "^3.7.0",
     "@opam/dune": ">=2.8.4",
     "@opam/ppxlib": "^0.22.0",
-    "ocaml": "4.12.0+BS"
-  },
-  "resolutions": {
-    "ocaml": "anmonteiro/ocaml#75f22c872451c66a4c4aadc43abee55697268a57"
+    "ocaml": "4.12.x"
   }
 }
