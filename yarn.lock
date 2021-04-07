@@ -283,11 +283,6 @@
     exec-sh "^0.3.2"
     minimist "^1.2.0"
 
-"@esy-ocaml/esy-opam@0.0.15":
-  version "0.0.15"
-  resolved "https://registry.yarnpkg.com/@esy-ocaml/esy-opam/-/esy-opam-0.0.15.tgz#97656c8e5774cf84692a680319784cb833cc5b70"
-  integrity sha512-s3gEaDMCSJwxxz+vjVYAVYWOMqJC+lIckT20A9sB2nYLQ8qGkkm8nIHd7LvgCFPUGxmETOy0etGMLA+K6v6WZw==
-
 "@glennsl/bs-jest@0.6.0":
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/@glennsl/bs-jest/-/bs-jest-0.6.0.tgz#b914f4fb9cf4b4562d16a5d527f0e99f476e9358"
@@ -1598,18 +1593,10 @@ esutils@^2.0.2:
   resolved "https://registry.yarnpkg.com/esutils/-/esutils-2.0.3.tgz#74d2eb4de0b8da1293711910d50775b9b710ef64"
   integrity sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==
 
-esy-solve-cudf@^0.1.10:
-  version "0.1.10"
-  resolved "https://registry.yarnpkg.com/esy-solve-cudf/-/esy-solve-cudf-0.1.10.tgz#2cd48af78183ae8f06c035a398beb65673c2d77d"
-  integrity sha512-/MrZOBH0wuJndvZN8pl+S3Mg3zJaK70PH9ZZwqDeJHulghEWROEZxpmenNiS9pqAaxyUVhTZJBt2/vL9jKCJbg==
-
-esy@^0.5.8:
-  version "0.5.8"
-  resolved "https://registry.yarnpkg.com/esy/-/esy-0.5.8.tgz#09698649cdd0310836ca278b827860aadc3140eb"
-  integrity sha512-LT5d/uAoIoAsaGg133y0U/8DkCgoldu2TO66qQG5Iq/kI1zjbMCDpwcp3yrhQSro0uS6+bYeuVupqrboPcYKyQ==
-  dependencies:
-    "@esy-ocaml/esy-opam" "0.0.15"
-    esy-solve-cudf "^0.1.10"
+esy@^0.6.8:
+  version "0.6.8"
+  resolved "https://registry.yarnpkg.com/esy/-/esy-0.6.8.tgz#77489e479f2efc912eac571e1ef8631c68c8d865"
+  integrity sha512-tSNYVoLV0ps3hVPG0kaJCdaB0cQKwPMuydPqZQ+VsyfA7TMBLIVv1hoqoVf6e6slyyCepPu2KMDApL2H2smlew==
 
 exec-sh@^0.3.2:
   version "0.3.4"
@@ -4520,9 +4507,9 @@ xmlchars@^2.1.1, xmlchars@^2.2.0:
   integrity sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==
 
 y18n@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/y18n/-/y18n-4.0.0.tgz#95ef94f85ecc81d007c264e190a120f0a3c8566b"
-  integrity sha512-r9S/ZyXu/Xu9q1tYlpsLIsa3EeLXXk0VwlxqTcFRfg9EhMW+17kbt9G0NrgCmhGb5vT2hyhJZLfDGx+7+5Uj/w==
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/y18n/-/y18n-4.0.1.tgz#8db2b83c31c5d75099bb890b23f3094891e247d4"
+  integrity sha512-wNcy4NvjMYL8gogWWYAO7ZFWFfHcbdbE57tZO8e4cbpj8tfUcwrwqSl3ad8HxpYWCdXcJUCeKKZS62Av1affwQ==
 
 yallist@^4.0.0:
   version "4.0.0"

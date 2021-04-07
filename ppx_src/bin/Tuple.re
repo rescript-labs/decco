@@ -1,6 +1,4 @@
-open Migrate_parsetree;
-open Ast_406;
-open Ppx_tools_406;
+open Ppxlib;
 open Parsetree;
 open Ast_helper;
 open Utils;
@@ -8,13 +6,13 @@ open Utils;
 let generateEncoder = (compositeEncoders) => {
     let arrExp = compositeEncoders
         |> List.mapi((i, e) => {
-            let vExp = Exp.ident(Ast_convenience.lid("v" ++ string_of_int(i)));
+            let vExp = Exp.ident(lid("v" ++ string_of_int(i)));
             [%expr [%e e]([%e vExp])];
         })
         |> Exp.array;
 
     let deconstructorPattern = compositeEncoders
-        |> List.mapi((i, _) => Pat.var(Location.mknoloc("v" ++ string_of_int(i))))
+        |> List.mapi((i, _) => Pat.var(mknoloc("v" ++ string_of_int(i))))
         |> Pat.tuple;
 
     [%expr ([%p deconstructorPattern]) => [%e arrExp] |> Js.Json.array];
@@ -23,7 +21,7 @@ let generateEncoder = (compositeEncoders) => {
 let generateDecodeSuccessCase = (numArgs) => {
     pc_lhs:
         Array.init(numArgs, i =>
-            Location.mknoloc("v" ++ string_of_int(i))
+            mknoloc("v" ++ string_of_int(i))
             |> Pat.var
             |> (p) => [%pat? Belt.Result.Ok([%p p])]
         )
@@ -40,9 +38,7 @@ let generateDecodeSuccessCase = (numArgs) => {
 let generateDecodeSwitch = (compositeDecoders) => {
     let decodeExpr = compositeDecoders
         |> List.mapi((i, d) => {
-            let ident = "v" ++ string_of_int(i)
-                |> Ast_convenience.lid
-                |> Exp.ident;
+            let ident = makeIdentExpr("v" ++ string_of_int(i));
             [%expr [%e d]([%e ident])];
         })
         |> Exp.tuple;
@@ -55,7 +51,7 @@ let generateDecodeSwitch = (compositeDecoders) => {
 
 let generateDecoder = (compositeDecoders) => {
     let matchArrPattern = compositeDecoders
-        |> List.mapi((i, _) => Pat.var(Location.mknoloc("v" ++ string_of_int(i))))
+        |> List.mapi((i, _) => Pat.var(mknoloc("v" ++ string_of_int(i))))
         |> Pat.array;
 
     let matchPattern = [%pat? Js.Json.JSONArray([%p matchArrPattern])];

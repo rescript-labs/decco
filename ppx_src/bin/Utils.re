@@ -1,5 +1,4 @@
-open Migrate_parsetree;
-open Ast_406;
+open Ppxlib;
 open Parsetree;
 open Ast_helper;
 
@@ -9,22 +8,31 @@ let decoderFuncSuffix = "_decode";
 let encoderVarPrefix = "encoder_";
 let decoderVarPrefix = "decoder_";
 
-let fail = (loc, message) =>
-    Location.error(~loc, message)
-    |> (v) => Location.Error(v)
-    |> raise;
+let loc = default_loc^;
+
+let fail = (loc, message) => Location.raise_errorf(~loc, "%s", message);
+
+[@ocaml.warning("-3")] let longidentParse = Longident.parse
+
+let mkloc = (txt, loc) => {
+  {Location.txt, loc};
+};
+let mknoloc = txt => {
+  mkloc(txt, Location.none);
+};
+
+let lid = (~loc=Location.none, s) =>
+  mkloc(Longident.parse (s), loc)
 
 let makeIdentExpr = (s) =>
-    Longident.parse(s)
-    |> Location.mknoloc
-    |> Exp.ident;
+  Exp.ident(mknoloc(longidentParse(s)));
 
 let tupleOrSingleton = (tuple, l) =>
     List.length(l) > 1 ? tuple(l) : List.hd(l);
 
 let getAttributeByName = (attributes, name) => {
     let filtered = attributes
-        |> List.filter((({ Location.txt }, _)) => txt == name);
+        |> List.filter(({attr_name: { Location.txt }}) => txt == name);
 
     switch filtered {
         | [] => Ok(None)
@@ -53,7 +61,7 @@ let getGeneratorSettingsFromAttributes = (attributes) =>
         | Error(_) as e => e
     };
 
-let getExpressionFromPayload = (({ loc } : Location.loc('a), payload)) =>
+let getExpressionFromPayload = ({ attr_name: { loc }, attr_payload: payload }) =>
     switch payload {
         | PStr([{ pstr_desc }]) => switch pstr_desc {
             | Pstr_eval(expr, _) => expr
@@ -74,7 +82,7 @@ let getParamNames = (params) =>
     );
 
 let indexConst = (i) =>
-    Pconst_string("[" ++ string_of_int(i) ++ "]", None)
+    Pconst_string("[" ++ string_of_int(i) ++ "]", Location.none, None)
     |> Exp.constant;
 
 let rec isIdentifierUsedInCoreType = (typeName, {ptyp_desc, ptyp_loc}) =>
@@ -94,9 +102,9 @@ let rec isIdentifierUsedInCoreType = (typeName, {ptyp_desc, ptyp_loc}) =>
     };
 
 let attrWarning = expr => {
-  let loc = default_loc^;
-  (
-    {Location.txt: "ocaml.warning", loc},
-    PStr([{pstr_desc: Pstr_eval(expr, []), pstr_loc: loc}]),
-  );
+  {
+    attr_name: mkloc("ocaml.warning", loc),
+    attr_payload: PStr([{pstr_desc: Pstr_eval(expr, []), pstr_loc: loc}]),
+    attr_loc: loc
+  };
 };

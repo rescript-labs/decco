@@ -1,21 +1,26 @@
-open Migrate_parsetree;
-open Ast_406;
-open Ast_mapper;
+open Ppxlib;
 
-let mapStructure = (mapper, structure) =>
-    structure
-    |> List.map(Structure.mapStructureItem(mapper))
-    |> List.concat;
 
-let mapSignature = (mapper, signature) =>
+class mapper = {
+  as self;
+  inherit class Ast_traverse.map;
+  pub! signature = signature => {
     signature
-    |> List.map(Signature.mapSignatureItem(mapper))
+    |> List.map(Signature.mapSignatureItem(self))
     |> List.concat;
-
-let mapper = (_, _) => {
-    ...default_mapper,
-    structure: mapStructure,
-    signature: mapSignature
+  };
+  pub! structure = structure => {
+    structure
+    |> List.map(Structure.mapStructureItem(self))
+    |> List.concat;
+  };
 };
 
-Driver.register(~name="decco", Versions.ocaml_406, mapper);
+let structure_mapper = s => (new mapper)#structure(s);
+let signature_mapper = s => (new mapper)#signature(s);
+
+Ppxlib.Driver.register_transformation(
+  ~preprocess_impl=structure_mapper,
+  ~preprocess_intf=signature_mapper,
+  "decco",
+);

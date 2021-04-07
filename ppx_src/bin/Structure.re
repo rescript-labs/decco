@@ -1,6 +1,4 @@
-open Migrate_parsetree;
-open Ast_406;
-open Ast_mapper;
+open Ppxlib;
 open Parsetree;
 open Ast_helper;
 open Codecs;
@@ -8,15 +6,15 @@ open Utils;
 
 let addParams = (paramNames, expr) =>
     List.fold_right((s, acc) => {
-        let pat = Pat.var(Location.mknoloc(s));
+        let pat = Pat.var(mknoloc(s));
         Exp.fun_(Asttypes.Nolabel, None, pat, acc);
     }, paramNames, [%expr (v) => [%e expr](v)]);
 
 let generateCodecDecls = (typeName, paramNames, (encoder, decoder)) => {
-    let encoderPat = Pat.var(Location.mknoloc(typeName ++ Utils.encoderFuncSuffix));
+    let encoderPat = Pat.var(mknoloc(typeName ++ Utils.encoderFuncSuffix));
     let encoderParamNames = List.map(s => encoderVarPrefix ++ s, paramNames);
 
-    let decoderPat = Pat.var(Location.mknoloc(typeName ++ Utils.decoderFuncSuffix));
+    let decoderPat = Pat.var(mknoloc(typeName ++ Utils.decoderFuncSuffix));
     let decoderParamNames = List.map(s => decoderVarPrefix ++ s, paramNames);
 
     let vbs = [];
@@ -93,11 +91,11 @@ let mapStructureItem = (mapper, { pstr_desc } as structureItem) =>
                 |> List.map(mapTypeDecl)
                 |> List.concat;
 
-            [   mapper.structure_item(mapper, structureItem)]
+            [   mapper#structure_item(structureItem)]
             @ (List.length(valueBindings) > 0 ?
                 [ Str.value(recFlag, valueBindings) ]
                 : []);
         }
 
-        | _ => [ mapper.structure_item(mapper, structureItem) ]
+        | _ => [ mapper#structure_item(structureItem) ]
     };
