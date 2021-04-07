@@ -1,6 +1,3 @@
-open Migrate_parsetree;
-open Ast_406;
-open Ppx_tools_406;
 open Parsetree;
 open Ast_helper;
 open Utils;
@@ -22,17 +19,17 @@ let getArgsFromPolyvars = (~loc, coreTypes) =>
 
 let generateEncoderCase = (generatorSettings, unboxed, row) => {
     switch (row) {
-      | Rtag({ txt: name, loc }, _attributes, _, coreTypes) => {
-        let constructorExpr = Exp.constant(Pconst_string(name, None));
+      | Rtag({ txt: name, loc }, _attributes, coreTypes) => {
+        let constructorExpr = Exp.constant(Pconst_string(name, Location.none, None));
         let args = getArgsFromPolyvars(~loc, coreTypes);
 
         let lhsVars = switch args {
             | [] => None
-            | [_] => Some(Pat.var(Location.mknoloc("v0")))
+            | [_] => Some(Pat.var(mknoloc("v0")))
             | _ =>
                 args
                 |> List.mapi((i, _) =>
-                    Location.mkloc("v" ++ string_of_int(i), loc) |> Pat.var)
+                    mkloc("v" ++ string_of_int(i), loc) |> Pat.var)
                 |> Pat.tuple
                 |> (v) => Some(v)
         };
@@ -64,7 +61,7 @@ let generateEncoderCase = (generatorSettings, unboxed, row) => {
 let generateDecodeSuccessCase = (numArgs, constructorName) => {
     pc_lhs:
         Array.init(numArgs, i =>
-            Location.mknoloc("v" ++ string_of_int(i))
+            mknoloc("v" ++ string_of_int(i))
             |> Pat.var
             |> (p) => [%pat? Belt.Result.Ok([%p p])]
         )
@@ -105,7 +102,7 @@ let generateArgDecoder = (generatorSettings, args, constructorName) => {
 
 let generateDecoderCase = (generatorSettings, row) => {
     switch (row) {
-      | Rtag({ txt, loc }, _, _, coreTypes) => {
+      | Rtag({ txt, loc }, _, coreTypes) => {
         let args = getArgsFromPolyvars(~loc, coreTypes);
         let argLen =
           Pconst_integer(string_of_int(List.length(args) + 1), None)
@@ -120,10 +117,10 @@ let generateDecoderCase = (generatorSettings, row) => {
             };
 
         {
-            pc_lhs: Pconst_string(txt, None)
+            pc_lhs: Pconst_string(txt, Location.none, None)
                 |> Pat.constant
                 |> (v) => Some(v)
-                |> Pat.construct(Ast_convenience.lid("Js.Json.JSONString")),
+                |> Pat.construct(lid("Js.Json.JSONString")),
             pc_guard: None,
             pc_rhs: [%expr
                 (Js.Array.length(tagged) !== [%e argLen]) ?
@@ -139,14 +136,14 @@ let generateDecoderCase = (generatorSettings, row) => {
 
 let generateUnboxedDecode = (generatorSettings, row) => {
     switch (row) {
-      | Rtag({ txt, loc }, _, _, args) => {
+      | Rtag({ txt, loc }, _, args) => {
             switch args {
                 | [a] => {
                     let (_, d) = Codecs.generateCodecs(generatorSettings, a);
                     switch d {
                         | Some(d) => {
                             let constructor = Exp.construct(
-                                Ast_convenience.lid(txt), Some([%expr v])
+                                lid(txt), Some([%expr v])
                             );
 
                             Some([%expr (v) =>
