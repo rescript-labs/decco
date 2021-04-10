@@ -63,7 +63,7 @@ module type EncOnly = {
 module EncOnly : EncOnly = {
     let t_decode = 1;
     [@decco.encode] type t = int;
-    t_decode + 1; /** this won't typecheck if t_decode is generated  */
+    t_decode + 1 |> ignore; /** this won't typecheck if t_decode is generated  */
 };
 
 module type DecOnly = {
@@ -72,7 +72,7 @@ module type DecOnly = {
 module DecOnly : DecOnly = {
     let t_encode = 1;
     [@decco.decode] type t = int;
-    t_encode + 1;
+    t_encode + 1 |> ignore;
 };
 
 describe("string", () => {

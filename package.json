@@ -26,7 +26,7 @@
   },
   "_": [],
   "peerDependencies": {
-    "bs-platform": "6 || 7 || 8"
+    "bs-platform": "6 || 7 || 8 || 9"
   },
   "devDependencies": {
     "@glennsl/bs-jest": "0.6.0",

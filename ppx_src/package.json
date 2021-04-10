@@ -5,7 +5,7 @@
   "main": "index.js",
   "license": "MIT",
   "esy": {
-    "build": "dune build --root=.",
+    "build": "dune build -p #{self.name}",
     "release": {
       "bin": [
         "Ppx_decco"
