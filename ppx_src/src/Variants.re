@@ -6,6 +6,8 @@ open Utils;
 let generateEncoderCase = (generatorSettings, unboxed, { pcd_name: { txt: name }, pcd_args, pcd_loc }) => {
     switch pcd_args {
         | Pcstr_tuple(args) => {
+            let constructorExpr = Exp.constant(Pconst_string(name, Location.none, None));
+
             let lhsVars = switch args {
                 | [] => None
                 | [_] => Some(Pat.var(mknoloc("v0")))
@@ -16,8 +18,6 @@ let generateEncoderCase = (generatorSettings, unboxed, { pcd_name: { txt: name }
                     |> Pat.tuple
                     |> (v) => Some(v)
             };
-
-            let constructorExpr = Exp.constant(Pconst_string(name, Location.none, None));
 
             let rhsList = args
                 |> List.map(Codecs.generateCodecs(generatorSettings))

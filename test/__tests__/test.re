@@ -22,6 +22,7 @@ open Belt.Result; */
 [@decco] type optionList = l(o(s));
 [@decco] type dictInt = d(int);
 [@decco] type variant = A | B(i) | C(i, s);
+[@decco] type polyvariant = [ | `A | `B(i) | `C(i, s)];
 [@decco] type record = {
     hey: s,
     opt: option(int),
@@ -602,6 +603,89 @@ describe("variant", () => {
                 value: Js.Json.string("oh")
             });
         });
+    });
+});
+
+describe("polyvariant", () => {
+  describe("polyvariant_encode", () => {
+      testEncode("A", `A, polyvariant_encode, {|["A"]|});
+      testEncode("B", `B(5), polyvariant_encode, {|["B",5]|});
+      testEncode("C", `C(7, "8"), polyvariant_encode, {|["C",7,"8"]|});
+    });
+
+    describe("polyvariant_decode", () => {
+       describe("good", () => {
+         let json = {|["A"]|} |> Js.Json.parseExn;
+         testGoodDecode("A", polyvariant_decode, json, `A);
+         let json = {|["B",5]|} |> Js.Json.parseExn;
+         testGoodDecode("B", polyvariant_decode, json, `B(5));
+         let json = {|["C",7,"8"]|} |> Js.Json.parseExn;
+         testGoodDecode("C", polyvariant_decode, json, `C(7, "8"));
+       });
+       describe("bad", () => {
+        testBadDecode(
+          "non-polyvariant",
+          polyvariant_decode,
+          Js.Json.number(12.),
+          {path: "", message: "Not a polyvariant", value: Js.Json.number(12.)},
+        );
+
+        let json = {|["D"]|} |> Js.Json.parseExn;
+        testBadDecode(
+          "bad constructor",
+          polyvariant_decode,
+          json,
+          {
+            path: "",
+            message: "Invalid polyvariant constructor",
+            value: Js.Json.string("D"),
+          },
+        );
+
+        let json = {|["A",1]|} |> Js.Json.parseExn;
+        testBadDecode(
+          "too many arguments",
+          polyvariant_decode,
+          json,
+          {
+            path: "",
+            message: "Invalid number of arguments to polyvariant constructor",
+            value: json,
+          },
+        );
+
+        let json = {|[]|} |> Js.Json.parseExn;
+        testBadDecode(
+          "no arguments",
+          polyvariant_decode,
+          json,
+          {
+            path: "",
+            message: "Expected polyvariant, found empty array",
+            value: json,
+          },
+        );
+
+        let json = {|["B"]|} |> Js.Json.parseExn;
+        testBadDecode(
+          "not enough arguments",
+          polyvariant_decode,
+          json,
+          {
+            path: "",
+            message: "Invalid number of arguments to polyvariant constructor",
+            value: json,
+          },
+        );
+
+        let json = {|["B","oh"]|} |> Js.Json.parseExn;
+        testBadDecode(
+          "invalid argument",
+          polyvariant_decode,
+          json,
+          {path: "[0]", message: "Not a number", value: Js.Json.string("oh")},
+        );
+      });
     });
 });
 

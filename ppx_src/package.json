@@ -16,6 +16,7 @@
     "@opam/reason": "^3.7.0",
     "@opam/dune": ">=2.8.4",
     "@opam/ppxlib": "^0.22.0",
-    "ocaml": "4.12.x"
+    "ocaml": "4.12.x",
+    "@opam/ocaml-lsp-server": "*"
   }
 }

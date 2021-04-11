@@ -4,7 +4,7 @@
   "description": "Bucklescript PPX which generates JSON (de)serializers for user-defined types",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest lib/js/test",
     "build-lib": "bsb -clean-world -make-world",
     "watch": "bsb -clean-world -make-world -w",
     "clean": "rm -rf lib && bsb -clean-world && rm -rf ppx_src/_esy",
@@ -29,8 +29,8 @@
     "bs-platform": "6 || 7 || 8 || 9"
   },
   "devDependencies": {
-    "@glennsl/bs-jest": "^0.5.1",
-    "bs-platform": "8",
+    "@glennsl/bs-jest": "0.6.0",
+    "bs-platform": "8.4.2",
     "esy": "^0.6.8",
     "jest": "^25.1.0"
   }
