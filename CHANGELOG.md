@@ -1,3 +1,13 @@
+## v1.4.0
+### Added
+* Support for Polyvariants ([#64](https://github.com/reasonml-labs/decco/pull/64))
+* Add support for bs-platform 9 ([#67](https://github.com/reasonml-labs/decco/pull/67))
+* Integrate ppxlib, allowing decco to be used with other versions of OCaml ([#68](https://github.com/reasonml-labs/decco/pull/68))
+* Run Ppx_decco as a standalone ppx ([#70](https://github.com/reasonml-labs/decco/pull/70))
+
+### Fixed
+* Build error on some platforms ([#66](https://github.com/reasonml-labs/decco/pull/66))
+
 ## v1.3.0
 ### Added
 * bs-platform@8 to peer dependency ([#58](https://github.com/reasonml-labs/decco/pull/58))
