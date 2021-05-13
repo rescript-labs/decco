@@ -4,6 +4,7 @@
   "description": "Bucklescript PPX which generates JSON (de)serializers for user-defined types",
   "main": "index.js",
   "scripts": {
+    "postinstall": "node postinstall.js",
     "test": "jest lib/js/test",
     "build-lib": "bsb -clean-world -make-world",
     "watch": "bsb -clean-world -make-world -w",
@@ -13,6 +14,7 @@
   },
   "files": [
     "/bsconfig.json",
+    "/postinstall.js",
     "/src",
     "/ppx",
     "/ppx-linux.exe",
