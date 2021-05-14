@@ -12,9 +12,20 @@ node_js:
 - '11'
 script:
 - yarn build-ppx
+- |-
+    case $TRAVIS_OS_NAME in
+      windows)
+        for binary in ppx_src/_esy/default/store/b/*/default/bin/bin.exe; do
+          echo found $binary
+          mv $binary ppx-windows.exe
+        done
+        ;;
+      *)
+        mv ppx_src/_esy/default/build/default/bin/bin.exe ppx-$TRAVIS_OS_NAME.exe
+        ;;
+    esac
 - yarn build-lib
 - npm test
-- mv ppx_src/_esy/default/build/default/bin/bin.exe ppx-$TRAVIS_OS_NAME.exe
 deploy:
   provider: releases
   skip_cleanup: true
