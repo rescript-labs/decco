@@ -4,6 +4,8 @@ os:
 - osx
 - windows
 osx_image: xcode12
+env:
+  - YARN_GPG=no
 cache:
   yarn: true
   directories:
