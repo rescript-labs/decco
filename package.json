@@ -4,6 +4,7 @@
   "description": "Bucklescript PPX which generates JSON (de)serializers for user-defined types",
   "main": "index.js",
   "scripts": {
+    "postinstall": "node postinstall.js",
     "test": "jest lib/js/test",
     "build-lib": "bsb -clean-world -make-world",
     "watch": "bsb -clean-world -make-world -w",
@@ -13,10 +14,13 @@
   },
   "files": [
     "/bsconfig.json",
+    "/postinstall.js",
     "/src",
     "/ppx",
+    "/ppx.cmd",
     "/ppx-linux.exe",
-    "/ppx-osx.exe"
+    "/ppx-osx.exe",
+    "/ppx-windows.exe"
   ],
   "keywords": [],
   "license": "MIT",
@@ -30,8 +34,8 @@
   },
   "devDependencies": {
     "@glennsl/bs-jest": "0.6.0",
-    "bs-platform": "8.4.2",
-    "esy": "^0.6.8",
+    "bs-platform": "9",
+    "esy": "^0.6.10",
     "jest": "^25.1.0"
   }
 }

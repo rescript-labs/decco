@@ -12,4 +12,7 @@ elif [ "$(uname)" = "Darwin" ]; then
 elif [ "$(expr substr $(uname -s) 1 5)" = "Linux" ]; then
     # Run the Linux PPX
     $DIR/ppx-linux.exe $@
+else
+    echo "No release available for '$(uname)'"
+    exit 1
 fi
