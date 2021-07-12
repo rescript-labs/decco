@@ -1,5 +1,9 @@
 # Decco
 
+## Project Status
+
+I'm no longer using Reason, and thus am not actively making updates to Decco. PRs will still be accepted and are appreciated. Thanks!
+
 ## What is it?
 
 A Bucklescript PPX which generates JSON serializers and deserializers for user-defined types.
@@ -130,4 +134,4 @@ Js.log(s); /* def */
 
 # Contributing
 
-Please read the [./CONTRIBUTING.md]
+Please read the [CONTRIBUTING.md](./CONTRIBUTING.md)
