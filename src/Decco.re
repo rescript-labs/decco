@@ -111,7 +111,7 @@ let optionToJson = (encoder, opt) =>
     };
 
 let optionFromJson = (decoder, json) =>
-    switch (Js.Null_undefined.return(json)->Js.Null_undefined.toOption) {
+    switch (Js.Null_undefined.return(json) |> Js.Null_undefined.toOption) {
         | None => Belt.Result.Ok(None)
         | Some(json) => decoder(json) |> Belt.Result.map(_, v => Some(v))
     };
