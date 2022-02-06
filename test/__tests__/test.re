@@ -706,7 +706,7 @@ describe("record", () => {
             testGoodDecode("missing optional", record_decode, json, { hey: "hey", opt: None, o: None, f: 1.0, otherKey: "!" });
 
             let json: Js.Json.t = [%raw {|{"hey":"hey","other_key":"!","opt": undefined}|}]
-            testGoodDecode("missing optional", record_decode, json, { hey: "hey", opt: None, o: None, f: 1.0, otherKey: "!" });
+            testGoodDecode("optional field set to undefined", record_decode, json, { hey: "hey", opt: None, o: None, f: 1.0, otherKey: "!" });
         });
 
         describe("bad", () => {
