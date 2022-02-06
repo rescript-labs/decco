@@ -346,6 +346,7 @@ describe("option", () => {
     describe("o_decode", () => {
         describe("good", () => {
             testGoodDecode("null", o_decode(s_decode), Js.Json.null, None);
+            testGoodDecode("undefined", o_decode(s_decode), [%raw {|undefined|}], None);
             testGoodDecode("non-null", o_decode(s_decode), Js.Json.string("heyy"), Some("heyy"));
         });
 
@@ -702,6 +703,9 @@ describe("record", () => {
             testGoodDecode("base case", record_decode, json, { hey: "hey", opt: Some(100), o: Some(99), f: 1.5, otherKey: "!" });
 
             let json = {|{"hey":"hey","other_key":"!"}|} |> Js.Json.parseExn;
+            testGoodDecode("missing optional", record_decode, json, { hey: "hey", opt: None, o: None, f: 1.0, otherKey: "!" });
+
+            let json: Js.Json.t = [%raw {|{"hey":"hey","other_key":"!","opt": undefined}|}]
             testGoodDecode("missing optional", record_decode, json, { hey: "hey", opt: None, o: None, f: 1.0, otherKey: "!" });
         });
 
