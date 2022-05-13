@@ -52,9 +52,6 @@ let { s, i, o, complex, f, otherKey, magic } =
     |> Belt.Result.getExn;
 ```
 
-## What state is it in?
-Working fine in active production code.
-
 ## How do I install it?
 1. Install package
 ```
