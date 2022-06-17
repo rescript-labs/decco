@@ -111,9 +111,9 @@ let optionToJson = (encoder, opt) =>
     };
 
 let optionFromJson = (decoder, json) =>
-    switch (Js.Json.decodeNull(json)) {
-        | Some(_) => Belt.Result.Ok(None)
-        | None => decoder(json) |> Belt.Result.map(_, v => Some(v))
+    switch (Js.Null_undefined.return(json) |> Js.Null_undefined.toOption) {
+        | None => Belt.Result.Ok(None)
+        | Some(json) => decoder(json) |> Belt.Result.map(_, v => Some(v))
     };
 
 let resultToJson = (okEncoder, errorEncoder, result) =>
@@ -155,10 +155,10 @@ let dictFromJson = (decoder, json) =>
         ->Belt.Array.reduce(Ok(Js.Dict.empty()), (acc, (key, value)) =>
             switch (acc, decoder(value)) {
                 | (Error(_), _) => acc
-            
+
                 | (_, Error({ path } as error)) => Error({...error, path: "." ++ key ++ path})
-            
-                | (Ok(prev), Ok(newVal)) => 
+
+                | (Ok(prev), Ok(newVal)) =>
                     let () = prev->Js.Dict.set(key, newVal);
                     Ok(prev);
             }
