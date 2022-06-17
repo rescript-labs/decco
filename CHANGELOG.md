@@ -1,3 +1,7 @@
+## Unreleased
+### Added
+* optionFromJson now supports undefined values (([#80](https://github.com/reasonml-labs/decco/pull/80)))
+
 ## v1.5.0
 ### Added
 * windows support ([#20](https://github.com/reasonml-labs/decco/pull/20))
