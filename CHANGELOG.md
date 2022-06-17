@@ -1,6 +1,7 @@
 ## Unreleased
 ### Added
 * optionFromJson now supports undefined values (([#80](https://github.com/reasonml-labs/decco/pull/80)))
+* OCaml 4.14 support (([#82](https://github.com/reasonml-labs/decco/pull/82)))
 
 ## v1.5.0
 ### Added
