@@ -1,0 +1,21 @@
+name: PR Build
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  build-ppx:
+    name: PR Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Esy
+      run: yarn global add esy
+    - name: Install Dependencies
+      run: yarn
+    - name: Build PPX
+      run: yarn build-ppx
+    - name: Build Library
+      run: yarn build-lib
+    - name: Run tests
+      run: yarn test 

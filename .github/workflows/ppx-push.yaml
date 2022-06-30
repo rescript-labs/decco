@@ -1,0 +1,75 @@
+name: Release Build 
+on:
+  release:
+    types: published
+
+jobs:
+  cancel-previous-runs:
+    name: Cancel Previous Runs
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.0
+        with:
+          access_token: ${{ github.token }}
+
+  build:
+    name: PPX Build Matrix
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ github.ref }}
+    - name: Install esy
+      run: yarn global add esy
+    - name: Run Build
+      run: yarn build-ppx
+    - name: Upload Build Mac / Linux
+      if: ${{ matrix.os != 'windows-latest' }} 
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.os }}
+        path: ppx_src/_esy/default/build/default/bin/bin.exe 
+        retention-days: 1
+    - name: Upload Build Windows
+      if: ${{ matrix.os == 'windows-latest' }} 
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.os }}
+        path: ppx_src/_esy/default/store/b/*/default/bin/bin.exe 
+        retention-days: 1
+
+  npm-release:
+    name: NPM Release
+    runs-on: ubuntu-latest
+    if: github.event.action == 'published'
+    needs: 
+      - build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Move / Rename Artifacts
+        run: |
+          mv ubuntu-latest/bin.exe ./ppx-linux.exe
+          mv macos-latest/bin.exe ./ppx-osx.exe
+          mv windows-latest/*/default/bin/bin.exe ./ppx-windows.exe
+
+      - uses: actions/setup-node@v1
+        with:
+          always-auth: true
+          registry-url: "https://registry.npmjs.org"
+
+      - env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          yarn publish
