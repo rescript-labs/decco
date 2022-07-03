@@ -1,7 +1,7 @@
 opam-version: "2.0"
 synopsis: "LSP Server for OCaml"
 description: "An LSP server for OCaml."
-maintainer: ["Rudi Grinberg <me@rgrinerg.com>"]
+maintainer: ["Rudi Grinberg <me@rgrinberg.com>"]
 authors: [
   "Andrey Popp <8mayday@gmail.com>"
   "Rusty Key <iam@stfoo.ru>"
@@ -53,10 +53,10 @@ build: [
 ]
 url {
   src:
-    "https://github.com/ocaml/ocaml-lsp/releases/download/1.11.6/jsonrpc-1.11.6.tbz"
+    "https://github.com/ocaml/ocaml-lsp/releases/download/1.12.2/lsp-1.12.2.tbz"
   checksum: [
-    "sha256=50b546ced5332c4a038bcf68b65b7888cb8e61aebe102e8c80b23a4c5899bbbb"
-    "sha512=e7c6d07d3943b088198af383120f2e75478b84dd6077eafa0f01fc808072b9cebe667651d22e11592c1f134f5d289cccf7c58e1ad1aae6c0ce92a4eca32b1371"
+    "sha256=cf25c8587c848aa913a5e5cc6417e95901be58623c049116e733d8473597dd39"
+    "sha512=b5aa4278006a0ed8dac3fb18a331c18c5e877c5910165b34e32a1ba346951bf234864ff2b53d58191130b38e07dadaab9778e6bfb2bce351ba98c54c09d6028e"
   ]
 }
-x-commit-hash: "1c02a6b8c44f3858ad8c0b7c114d4f14fbf53f9c"
+x-commit-hash: "bc3e9c298185fdcb3b80d2d89562b586ba21eb74"
