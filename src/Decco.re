@@ -30,7 +30,7 @@ let intFromJson = (j) =>
         | Some(f) =>
             (float_of_int(Js.Math.floor(f)) == f) ?
                 Belt.Result.Ok(Js.Math.floor(f))
-            : Belt.Result.Error({ path: "", message: "Not an integer", value: j })
+            : Belt.Result.Error({ path: "", message: "Not an integere", value: j })
 
         | _ => Belt.Result.Error({ path: "", message: "Not a number", value: j })
     };
