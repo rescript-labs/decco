@@ -2,7 +2,7 @@
 
 ## Project Status
 
-I'm no longer using Reason, and thus am not actively making updates to Decco. Additionally, my CI/CD pipeline has been disrupted, preventing me from deploying new versions of Decco (see https://github.com/reasonml-labs/decco/pull/82)
+Decco is not being actively maintained, but PRs will be accepted and appreciated.
 
 ## What is it?
 
