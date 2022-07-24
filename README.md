@@ -13,6 +13,12 @@ Example:
 ```reason
 /* Define types */
 [@decco] type variant('a) = A | B(int) | C(int, 'a);
+
+/*
+ * Rescript@9+ users do not use [brackets] for the ppx: 
+ * @decco type variant('a) = A | B(int) | C(int, 'a) 
+ */
+
 type dict = Js.Dict.t(string);
 [@decco] type mytype = {
     s: string,
