@@ -1,0 +1,20 @@
+{
+  "name": "decco",
+  "bs-dev-dependencies": ["@glennsl/rescript-jest"],
+  "sources": [
+    {
+      "dir": "src",
+      "public": ["Decco"]
+    },
+    {
+      "dir": "test",
+      "type": "dev",
+      "subdirs": true
+    }
+  ],
+  "ppx-flags": ["./ppx"],
+  "warnings": {
+    "number": "+A-9-40-42"
+  },
+  "bsc-flags": ["-bs-super-errors"]
+}

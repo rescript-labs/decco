@@ -6,14 +6,15 @@
   "scripts": {
     "postinstall": "node postinstall.js",
     "test": "jest lib/js/test",
-    "build-lib": "bsb -clean-world -make-world",
-    "watch": "bsb -clean-world -make-world -w",
-    "clean": "rm -rf lib && bsb -clean-world && rm -rf ppx_src/_esy",
-    "build-ppx": "cd ppx_src && esy",
-    "watch-ppx": "cd ppx_src && esy dune build -w"
+    "build-lib": "rescript build",
+    "watch": "rescript build -w",
+    "clean": "rm -rf lib && rescript clean && rm -rf ppx_src/_build",
+    "build-ppx": "cd ppx_src && dune build",
+    "watch-ppx": "cd ppx_src && dune build -w",
+    "preview-ppx": "echo 'pass a file to this command to see what the ppx will do\n\n' && ./node_modules/rescript/bsc -ppx ./ppx -bs-no-builtin-ppx -reprint-source"
   },
   "files": [
-    "/bsconfig.json",
+    "/rescript.json",
     "/postinstall.js",
     "/src",
     "/ppx",
@@ -30,12 +31,11 @@
   },
   "_": [],
   "peerDependencies": {
-    "bs-platform": "6 || 7 || 8 || 9"
+    "rescript": "11"
   },
   "devDependencies": {
-    "@glennsl/bs-jest": "0.6.0",
-    "bs-platform": "9",
-    "esy": "^0.6.10",
-    "jest": "^25.1.0"
+    "@glennsl/rescript-jest": "^0.11.0",
+    "jest": "^25.1.0",
+    "rescript": "^11.1.0"
   }
 }

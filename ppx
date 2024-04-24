@@ -3,9 +3,9 @@
 # Get the directory of the script to work from.
 DIR=$(dirname "$0")
 
-if [ -f $DIR/ppx_src/_esy/default/build/default/bin/bin.exe ]; then
+if [ -f $DIR/ppx_src/_build/default/bin/bin.exe ]; then
     # Use the dev build
-    $DIR/ppx_src/_esy/default/build/default/bin/bin.exe $@
+    $DIR/ppx_src/_build/default/bin/bin.exe $@
 elif [ "$(uname)" = "Darwin" ]; then
     # Run the Mac PPX
     $DIR/ppx-osx.exe $@
