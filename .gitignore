@@ -19,8 +19,6 @@ _build/
 setup.data
 setup.log
 
-
-
 #Node
 # Logs
 logs
@@ -76,5 +74,5 @@ package-links.json
 # dune
 *.install
 
-_esy/
+_opam
 *.exe
