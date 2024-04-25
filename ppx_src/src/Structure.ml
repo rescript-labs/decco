@@ -3,13 +3,15 @@ open Parsetree
 open Ast_helper
 open Codecs
 open Utils
+
 let addParams paramNames expr =
   List.fold_right
     (fun s acc ->
       let pat = Pat.var (mknoloc s) in
       Exp.fun_ Asttypes.Nolabel None pat acc)
     paramNames
-    [%expr fun v -> [%e expr] v]
+    (Utils.expr_func ~arity:1 [%expr fun v -> [%e expr] v])
+
 let generateCodecDecls typeName paramNames (encoder, decoder) =
   let encoderPat = Pat.var (mknoloc (typeName ^ Utils.encoderFuncSuffix)) in
   let encoderParamNames = List.map (fun s -> encoderVarPrefix ^ s) paramNames in
@@ -27,6 +29,7 @@ let generateCodecDecls typeName paramNames (encoder, decoder) =
             encoderPat
             (addParams encoderParamNames encoder);
         ]
+    (* [Vb.mk encoderPat (Exp.constant (Pconst_integer ("0", None)))] *)
   in
   let vbs =
     match decoder with
@@ -41,6 +44,7 @@ let generateCodecDecls typeName paramNames (encoder, decoder) =
         ]
   in
   vbs
+
 let mapTypeDecl decl =
   let {
     ptype_attributes;
@@ -85,6 +89,7 @@ let mapTypeDecl decl =
         (Records.generateCodecs generatorSettings decls isUnboxed)
     | _ -> fail ptype_loc "This type is not handled by decco")
   | ((Error s) [@explicit_arity]) -> fail ptype_loc s
+
 let mapStructureItem mapper ({pstr_desc} as structureItem) =
   match pstr_desc with
   | ((Pstr_type (recFlag, decls)) [@explicit_arity]) -> (

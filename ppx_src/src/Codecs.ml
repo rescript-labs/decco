@@ -113,11 +113,14 @@ and generateConstrCodecs {doEncode; doDecode} {Location.txt = identifier; loc} =
          "t" ))
   [@explicit_arity]) ->
     ( (match doEncode with
-      | true -> Some [%expr fun v -> v] [@explicit_arity]
+      | true ->
+        Some (Utils.expr_func ~arity:1 [%expr fun v -> v]) [@explicit_arity]
       | false -> None),
       match doDecode with
       | true ->
-        Some [%expr fun v -> (Belt.Result.Ok v [@explicit_arity])]
+        Some
+          (Utils.expr_func ~arity:1
+             [%expr fun v -> (Belt.Result.Ok v [@explicit_arity])])
         [@explicit_arity]
       | false -> None )
   | ((Lident s) [@explicit_arity]) ->

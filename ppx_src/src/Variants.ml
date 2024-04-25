@@ -38,6 +38,7 @@ let generateEncoderCase generatorSettings unboxed
         | false -> [%expr Js.Json.array [%e rhsList |> Exp.array]]);
     }
   | Pcstr_record _ -> fail pcd_loc "This syntax is not yet implemented by decco"
+
 let generateDecodeSuccessCase numArgs constructorName =
   {
     pc_lhs =
@@ -124,6 +125,7 @@ let generateUnboxedDecode generatorSettings
       | None -> None)
     | _ -> fail pcd_loc "Expected exactly one type argument")
   | Pcstr_record _ -> fail pcd_loc "This syntax is not yet implemented by decco"
+
 let generateCodecs ({doEncode; doDecode} as generatorSettings) constrDecls
     unboxed =
   let encoder =
@@ -131,7 +133,8 @@ let generateCodecs ({doEncode; doDecode} as generatorSettings) constrDecls
     | true ->
       List.map (generateEncoderCase generatorSettings unboxed) constrDecls
       |> Exp.match_ [%expr v]
-      |> Exp.fun_ Asttypes.Nolabel None [%pat? v]
+      |> (fun e ->
+           Utils.expr_func ~arity:1 (Exp.fun_ Asttypes.Nolabel None [%pat? v] e))
       |> BatOption.some
     | false -> None
   in

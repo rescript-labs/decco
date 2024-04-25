@@ -14,7 +14,7 @@ let generateEncoder decls unboxed =
   | true ->
     let {codecs; field} = List.hd decls in
     let e, _ = codecs in
-    [%expr fun v -> [%e BatOption.get e] [%e field]]
+    Utils.expr_func ~arity:1 [%expr fun v -> [%e BatOption.get e] [%e field]]
   | false ->
     let arrExpr =
       decls

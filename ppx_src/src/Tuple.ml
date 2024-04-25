@@ -15,7 +15,8 @@ let generateEncoder compositeEncoders =
     |> List.mapi (fun i _ -> Pat.var (mknoloc ("v" ^ string_of_int i)))
     |> Pat.tuple
   in
-  [%expr fun [%p deconstructorPattern] -> [%e arrExp] |> Js.Json.array]
+  Utils.expr_func ~arity:1
+    [%expr fun [%p deconstructorPattern] -> [%e arrExp] |> Js.Json.array]
 let generateDecodeSuccessCase numArgs =
   {
     pc_lhs =
@@ -60,4 +61,4 @@ let generateDecoder compositeDecoders =
         Exp.case [%pat? _] [%expr Decco.error "Not a tuple" json];
       ]
   in
-  [%expr fun json -> [%e outerSwitch]]
+  Utils.expr_func ~arity:1 [%expr fun json -> [%e outerSwitch]]

@@ -1,14 +1,17 @@
 open Ppxlib
 open Parsetree
 open Utils
+
 let rec addEncoderParams paramNames resultType =
   match paramNames with
   | [] -> resultType
   | hd :: tl ->
     [%type: ([%t Ast_helper.Typ.var hd] -> Js.Json.t) -> [%t resultType]]
     |> addEncoderParams tl
+
 let makeResultType valueType =
   [%type: ([%t valueType], Decco.decodeError) Belt.Result.t]
+
 let rec addDecoderParams paramNames resultType =
   match paramNames with
   | [] -> resultType
@@ -17,6 +20,7 @@ let rec addDecoderParams paramNames resultType =
       [%type: Js.Json.t -> [%t makeResultType (Ast_helper.Typ.var hd)]]
     in
     [%type: [%t decoderParam] -> [%t resultType]] |> addDecoderParams tl
+
 let generateSigDecls {doEncode; doDecode} typeName paramNames =
   let encoderPat = typeName ^ Utils.encoderFuncSuffix in
   let decoderPat = typeName ^ Utils.decoderFuncSuffix in
@@ -26,31 +30,29 @@ let generateSigDecls {doEncode; doDecode} typeName paramNames =
     |> Ast_helper.Typ.constr (lid typeName)
   in
   let decls = [] in
-  let decls =
+  let encoderDecls =
     match doEncode with
     | true ->
-      decls
-      @ [
-          [%type: [%t valueType] -> Js.Json.t]
-          |> addEncoderParams (List.rev paramNames)
-          |> Ast_helper.Val.mk (mknoloc encoderPat)
-          |> Ast_helper.Sig.value;
-        ]
-    | false -> decls
+      [
+        [%type: [%t valueType] -> Js.Json.t]
+        |> addEncoderParams (List.rev paramNames)
+        |> Ast_helper.Val.mk (mknoloc encoderPat)
+        |> Ast_helper.Sig.value;
+      ]
+    | false -> []
   in
-  let decls =
+  let decoderDecls =
     match doDecode with
     | true ->
-      decls
-      @ [
-          [%type: Js.Json.t -> [%t makeResultType valueType]]
-          |> addDecoderParams (List.rev paramNames)
-          |> Ast_helper.Val.mk (mknoloc decoderPat)
-          |> Ast_helper.Sig.value;
-        ]
-    | false -> decls
+      [
+        [%type: Js.Json.t -> [%t makeResultType valueType]]
+        |> addDecoderParams (List.rev paramNames)
+        |> Ast_helper.Val.mk (mknoloc decoderPat)
+        |> Ast_helper.Sig.value;
+      ]
+    | false -> []
   in
-  decls
+  List.concat [decls; encoderDecls; decoderDecls]
 
 let mapTypeDecl decl =
   let {ptype_attributes; ptype_name = {txt = typeName}; ptype_params; ptype_loc}
@@ -62,6 +64,7 @@ let mapTypeDecl decl =
   | ((Ok None) [@explicit_arity]) -> []
   | ((Ok ((Some generatorSettings) [@explicit_arity])) [@explicit_arity]) ->
     generateSigDecls generatorSettings typeName (getParamNames ptype_params)
+
 let mapSignatureItem mapper ({psig_desc} as signatureItem) =
   match psig_desc with
   | ((Psig_type (_, decls)) [@explicit_arity]) ->

@@ -4,7 +4,7 @@ open Expect
 let testBadDecode = (name, decode, json, expectedError) =>
   test(name, () =>
     switch decode(json) {
-    | Belt.Result.Error(e) => toEqual(expectedError, expect(e))
+    | Belt.Result.Error(e) => toEqual(expect(expectedError), e)
     | Ok(_) => failwith("Decode erroneously succeeded")
     }
   )
