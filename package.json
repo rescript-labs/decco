@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "node postinstall.js",
-    "test": "jest lib/js/test",
+    "test": "jest",
     "build-lib": "rescript build",
     "watch": "rescript build -w",
     "clean": "rm -rf lib && rescript clean && rm -rf ppx_src/_build",
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@glennsl/rescript-jest": "^0.11.0",
-    "jest": "^25.1.0",
+    "jest": "^27.3.1",
     "rescript": "^11.1.0"
   }
 }
