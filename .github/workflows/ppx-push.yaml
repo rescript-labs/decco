@@ -25,9 +25,9 @@ jobs:
       with:
         ref: ${{ github.ref }}
     - name: Install OPAM and OCaml
-      uses: avsm/setup-ocaml@v1
+      uses: ocaml/setup-ocaml@v2
       with:
-        ocaml-version: 4.12.1  # replace with your desired version
+        ocaml-compiler: 4.12.1
     - name: Install OCaml Dependencies and build
       run: |
         cd ppx_src
