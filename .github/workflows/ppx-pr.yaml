@@ -14,8 +14,14 @@ jobs:
       with:
         ocaml-version: 4.12.1  # replace with your desired version
     - name: Install Dune
-      run: opam install dune
-    - name: Install Dependencies
+      run: |
+        opam install dune
+        eval $(opam env)
+    - name: Install OCaml Dependencies
+      run: |
+        cd ppx_src
+        opam install -y . --deps-only
+    - name: Install Yarn Dependencies
       run: yarn
     - name: Build PPX
       run: yarn build-ppx

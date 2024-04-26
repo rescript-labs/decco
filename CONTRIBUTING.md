@@ -33,7 +33,7 @@ You would need to have [opam](https://opam.ocaml.org) installed.
 - cd ppx_src;
 - opam switch create . 4.12.1 --deps-only # If it's the first time you create a switch it can take a while.
 - eval $(opam env)
-- opam install -y ocaml-lsp-server dune ocaml ppx_tools_versioned # Install ppx's dependencies inside the switch
+- opam install -y . --deps-only
 - Profit, this should make your editor a little more smart
 
 ### Testing
