@@ -1,6 +1,6 @@
 {
   "ocaml.sandbox": {
-    "kind": "esy",
-    "root": "${workspaceFolder:decco}"
+    "kind": "opam",
+    "switch": "${workspaceFolder:decco}"
   }
 }

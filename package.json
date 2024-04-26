@@ -1,19 +1,23 @@
 {
   "name": "decco",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "Bucklescript PPX which generates JSON (de)serializers for user-defined types",
   "main": "index.js",
   "scripts": {
     "postinstall": "node postinstall.js",
-    "test": "jest lib/js/test",
-    "build-lib": "bsb -clean-world -make-world",
-    "watch": "bsb -clean-world -make-world -w",
-    "clean": "rm -rf lib && bsb -clean-world && rm -rf ppx_src/_esy",
-    "build-ppx": "cd ppx_src && esy",
-    "watch-ppx": "cd ppx_src && esy dune build -w"
+    "test": "jest",
+    "build-lib": "rescript build",
+    "watch": "rescript build -w",
+    "clean": "rm -rf lib && rescript clean && rm -rf ppx_src/_build",
+    "build-ppx": "cd ppx_src && dune build",
+    "watch-ppx": "cd ppx_src && dune build -w",
+    "preview-ppx": "./bin/preview-ppx.sh",
+    "preview-ppx-watch": "./bin/preview-ppx-watch.sh",
+    "print-parse-tree": "./node_modules/rescript/bsc -dparsetree",
+    "print-parse-tree-with-ppx": "./node_modules/rescript/bsc -dparsetree -ppx ./ppx"
   },
   "files": [
-    "/bsconfig.json",
+    "/rescript.json",
     "/postinstall.js",
     "/src",
     "/ppx",
@@ -30,12 +34,11 @@
   },
   "_": [],
   "peerDependencies": {
-    "bs-platform": "6 || 7 || 8 || 9"
+    "rescript": "11"
   },
   "devDependencies": {
-    "@glennsl/bs-jest": "0.6.0",
-    "bs-platform": "9",
-    "esy": "^0.6.10",
-    "jest": "^25.1.0"
+    "@glennsl/rescript-jest": "^0.11.0",
+    "jest": "^27.3.1",
+    "rescript": "^11.1.0"
   }
 }
