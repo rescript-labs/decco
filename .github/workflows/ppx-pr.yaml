@@ -8,24 +8,23 @@ jobs:
     name: PR Build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Install OPAM and OCaml
-      uses: avsm/setup-ocaml@v1
-      with:
-        ocaml-version: 4.12.1  # replace with your desired version
-    - name: Install Dune
-      run: |
-        opam install dune
-        eval $(opam env)
-    - name: Install OCaml Dependencies
-      run: |
-        cd ppx_src
-        opam install -y . --deps-only
-    - name: Install Yarn Dependencies
-      run: yarn
-    - name: Build PPX
-      run: yarn build-ppx
-    - name: Build Library
-      run: yarn build-lib
-    - name: Run tests
-      run: yarn test 
+      - uses: actions/checkout@v2
+      - name: Install OPAM and OCaml
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: 4.12.1 # replace with your desired version
+      - name: Install OCaml Dependencies and build
+        run: |
+          cd ppx_src
+          opam install dune
+          eval $(opam env)
+          opam install -y . --deps-only
+          dune build
+      - name: Install Yarn Dependencies
+        run: yarn
+      - name: Build PPX
+        run: yarn build-ppx
+      - name: Build Library
+        run: yarn build-lib
+      - name: Run tests
+        run: yarn test
