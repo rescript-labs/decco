@@ -28,12 +28,12 @@ jobs:
       with:
         ocaml-version: 4.12.1  # replace with your desired version
     - name: Install OCaml Dependencies and build
-        run: |
-          cd ppx_src
-          opam install dune
-          eval $(opam env)
-          opam install -y . --deps-only
-          dune build
+      run: |
+        cd ppx_src
+        opam install dune
+        eval $(opam env)
+        opam install -y . --deps-only
+        dune build
     - name: Upload Build Mac / Linux
       if: ${{ matrix.os != 'windows-latest' }} 
       uses: actions/upload-artifact@v2
