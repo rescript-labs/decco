@@ -8,7 +8,7 @@ describe("Js.Json.t", () => {
   test("j_encode", () => {
     let v = Js.Json.string("jay")
     let json = j_encode(v)
-    toEqual(v->expect, json)
+    expect(json)->toBe(v)
   })
 
   let json = Js.Json.number(12.)

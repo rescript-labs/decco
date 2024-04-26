@@ -11,7 +11,7 @@ describe("string", () => {
 
     @ocaml.warning("-4")
     switch Js.Json.classify(json) {
-    | Js.Json.JSONString(s2) => toBe(s->expect, s2)
+    | Js.Json.JSONString(s2) => expect(s2)->toBe(s)
     | _ => failwith("Not a JSONString")
     }
   })

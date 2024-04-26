@@ -10,7 +10,7 @@ describe("Ldot", () => {
 
     @ocaml.warning("-4")
     switch Js.Json.classify(json) {
-    | Js.Json.JSONString(s2) => toBe(s->expect, TestMod.mkT(s2))
+    | Js.Json.JSONString(s2) => expect(s)->toBe(TestMod.mkT(s2))
     | _ => failwith("Not a JSONString")
     }
   })

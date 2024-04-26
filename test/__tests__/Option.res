@@ -7,7 +7,7 @@ open TestUtils
 
 describe("option", () => {
   describe("o_encode", () => {
-    test("none", () => toBe(Js.Json.JSONNull->expect, Js.Json.classify(o_encode(s_encode, None))))
+    test("none", () => expect(Js.Json.classify(o_encode(s_encode, None)))->toBe(Js.Json.JSONNull))
 
     test(
       "some",
@@ -17,7 +17,7 @@ describe("option", () => {
 
         @ocaml.warning("-4")
         switch Js.Json.classify(json) {
-        | Js.Json.JSONString(v2) => toBe("yeah"->expect, v2)
+        | Js.Json.JSONString(v2) => expect(v2)->toBe("yeah")
         | _ => failwith("Not a JSONString")
         }
       },

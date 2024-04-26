@@ -12,7 +12,7 @@ describe("simpleVar", () => {
 
     @ocaml.warning("-4")
     switch Js.Json.classify(json) {
-    | Js.Json.JSONString(v2) => toBe("yeah"->expect, v2)
+    | Js.Json.JSONString(v2) => expect(v2)->toBe("yeah")
     | _ => failwith("Not a JSONString")
     }
   })

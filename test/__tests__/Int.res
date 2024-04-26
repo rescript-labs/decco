@@ -11,7 +11,7 @@ describe("int", () => {
 
     @ocaml.warning("-4")
     switch Js.Json.classify(json) {
-    | Js.Json.JSONNumber(i2) => toBe(float_of_int(i)->expect, i2)
+    | Js.Json.JSONNumber(i2) => expect(float_of_int(i))->toBe(i2)
     | _ => failwith("Not a JSONNumber")
     }
   })

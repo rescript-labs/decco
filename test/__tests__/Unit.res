@@ -10,7 +10,7 @@ describe("unit", () => {
 
     @ocaml.warning("-4")
     switch Js.Json.classify(json) {
-    | Js.Json.JSONNumber(n) => toBe(0.->expect, n)
+    | Js.Json.JSONNumber(n) => expect(n)->toBe(0.)
     | _ => failwith("Not a JSONNumber")
     }
   })

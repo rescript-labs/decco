@@ -11,7 +11,7 @@ describe("long path", () => {
     let decoded = bigR_decode(bigR_encode(v))
     switch decoded {
     | Belt.Result.Error(_) => failwith("Decode failure")
-    | Belt.Result.Ok(actual) => toEqual(v->expect, actual)
+    | Belt.Result.Ok(actual) => expect(actual->Js.Json.stringifyAny)->toBe(v->Js.Json.stringifyAny)
     }
   })
 

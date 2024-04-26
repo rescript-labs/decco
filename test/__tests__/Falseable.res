@@ -9,7 +9,7 @@ describe("falseable", () => {
   describe("falseable_encode", () => {
     test(
       "none",
-      () => toBe(Js.Json.JSONFalse->expect, Js.Json.classify(falseable_encode(s_encode, None))),
+      () => expect(Js.Json.JSONFalse)->toBe(Js.Json.classify(falseable_encode(s_encode, None))),
     )
 
     test(
@@ -20,7 +20,7 @@ describe("falseable", () => {
 
         @ocaml.warning("-4")
         switch Js.Json.classify(json) {
-        | Js.Json.JSONString(v2) => toBe("yeah"->expect, v2)
+        | Js.Json.JSONString(v2) => expect("yeah")->toBe(v2)
         | _ => failwith("Not a JSONString")
         }
       },
