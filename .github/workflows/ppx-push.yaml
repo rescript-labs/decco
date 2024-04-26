@@ -2,6 +2,7 @@ name: Release Build
 on:
   release:
     types: published
+  workflow_dispatch: # This line makes the workflow runnable on demand
 
 jobs:
   cancel-previous-runs:
