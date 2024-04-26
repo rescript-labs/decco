@@ -11,7 +11,10 @@
     "clean": "rm -rf lib && rescript clean && rm -rf ppx_src/_build",
     "build-ppx": "cd ppx_src && dune build",
     "watch-ppx": "cd ppx_src && dune build -w",
-    "preview-ppx": "echo 'pass a file to this command to see what the ppx will do\n\n' && ./node_modules/rescript/bsc -ppx ./ppx -bs-no-builtin-ppx -reprint-source"
+    "preview-ppx": "./bin/preview-ppx.sh",
+    "preview-ppx-watch": "./bin/preview-ppx-watch.sh",
+    "print-parse-tree": "./node_modules/rescript/bsc -dparsetree",
+    "print-parse-tree-with-ppx": "./node_modules/rescript/bsc -dparsetree -ppx ./ppx"
   },
   "files": [
     "/rescript.json",

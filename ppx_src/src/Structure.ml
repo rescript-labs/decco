@@ -5,12 +5,19 @@ open Codecs
 open Utils
 
 let addParams paramNames expr =
-  List.fold_right
-    (fun s acc ->
-      let pat = Pat.var (mknoloc s) in
-      Exp.fun_ Asttypes.Nolabel None pat acc)
-    paramNames
-    (Utils.expr_func ~arity:1 [%expr fun v -> [%e expr] v])
+  let wholeCodecExpr =
+    List.fold_right
+      (fun s acc ->
+        let pat = Pat.var (mknoloc s) in
+        Exp.fun_ Asttypes.Nolabel None pat acc)
+      paramNames
+      [%expr fun v -> [%e expr] v]
+  in
+  let arity = List.length paramNames + 1 in
+  (* Set an attribute with the arity matching the param count on the
+     outermost invocation so that we generate a function that's uncurried,
+     expecting all of its arguments at once. *)
+  Utils.wrapFunctionExpressionForUncurrying ~arity wholeCodecExpr
 
 let generateCodecDecls typeName paramNames (encoder, decoder) =
   let encoderPat = Pat.var (mknoloc (typeName ^ Utils.encoderFuncSuffix)) in

@@ -17,7 +17,7 @@ describe("option", () => {
 
         @ocaml.warning("-4")
         switch Js.Json.classify(json) {
-        | Js.Json.JSONString(v2) => toBe("yeah", expect(v2))
+        | Js.Json.JSONString(v2) => toBe("yeah"->expect, v2)
         | _ => failwith("Not a JSONString")
         }
       },
@@ -28,15 +28,15 @@ describe("option", () => {
     describe(
       "good",
       () => {
-        testGoodDecode("null", o_decode(s_decode), Js.Json.null, None)
-        testGoodDecode("undefined", o_decode(s_decode), %raw(`undefined`), None)
-        testGoodDecode("non-null", o_decode(s_decode), Js.Json.string("heyy"), Some("heyy"))
+        testGoodDecode("null", o_decode(s_decode, ...), Js.Json.null, None)
+        testGoodDecode("undefined", o_decode(s_decode, ...), %raw(`undefined`), None)
+        testGoodDecode("non-null", o_decode(s_decode, ...), Js.Json.string("heyy"), Some("heyy"))
       },
     )
 
     testBadDecode(
       "bad",
-      o_decode(s_decode),
+      o_decode(s_decode, ...),
       Js.Json.number(12.),
       {
         path: "",

@@ -54,6 +54,7 @@ let generateDecodeSuccessCase numArgs constructorName =
         (Some v [@explicit_arity]) |> Exp.construct (lid constructorName)
         |> fun e -> [%expr Belt.Result.Ok [%e e] [@explicit_arity]] );
   }
+
 let generateArgDecoder generatorSettings args constructorName =
   let numArgs = List.length args in
   args
@@ -74,6 +75,7 @@ let generateArgDecoder generatorSettings args constructorName =
                     [%expr Belt.Array.getExn jsonArr [%e idx]] );
                 ])
        |> tupleOrSingleton Exp.tuple)
+
 let generateDecoderCase generatorSettings
     {pcd_name = {txt = name}; pcd_args; pcd_loc} =
   match pcd_args with
@@ -106,6 +108,7 @@ let generateDecoderCase generatorSettings
           | false -> [%e decoded]];
     }
   | Pcstr_record _ -> fail pcd_loc "This syntax is not yet implemented by decco"
+
 let generateUnboxedDecode generatorSettings
     {pcd_name = {txt = name}; pcd_args; pcd_loc} =
   match pcd_args with
@@ -134,7 +137,8 @@ let generateCodecs ({doEncode; doDecode} as generatorSettings) constrDecls
       List.map (generateEncoderCase generatorSettings unboxed) constrDecls
       |> Exp.match_ [%expr v]
       |> (fun e ->
-           Utils.expr_func ~arity:1 (Exp.fun_ Asttypes.Nolabel None [%pat? v] e))
+           Utils.wrapFunctionExpressionForUncurrying ~arity:1
+             (Exp.fun_ Asttypes.Nolabel None [%pat? v] e))
       |> BatOption.some
     | false -> None
   in

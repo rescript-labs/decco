@@ -2,6 +2,7 @@ open Ppxlib
 open Parsetree
 open Ast_helper
 open Utils
+
 type parsedDecl = {
   name: string;
   key: expression;
@@ -9,12 +10,14 @@ type parsedDecl = {
   codecs: expression option * expression option;
   default: expression option;
 }
+
 let generateEncoder decls unboxed =
   match unboxed with
   | true ->
     let {codecs; field} = List.hd decls in
     let e, _ = codecs in
-    Utils.expr_func ~arity:1 [%expr fun v -> [%e BatOption.get e] [%e field]]
+    Utils.wrapFunctionExpressionForUncurrying ~arity:1
+      [%expr fun v -> [%e BatOption.get e] [%e field]]
   | false ->
     let arrExpr =
       decls
@@ -22,40 +25,39 @@ let generateEncoder decls unboxed =
              [%expr [%e key], [%e BatOption.get encoder] [%e field]])
       |> Exp.array
     in
-    [%expr [%e arrExpr] |> Js.Dict.fromArray |> Js.Json.object_]
+    [%expr Js.Json.object_ (Js.Dict.fromArray [%e arrExpr])]
     |> Exp.fun_ Asttypes.Nolabel None [%pat? v]
+
 let generateDictGet {key; codecs = _, decoder; default} =
   let decoder = BatOption.get decoder in
   match default with
-  | ((Some default) [@explicit_arity]) ->
+  | Some default ->
     [%expr
       ((Js.Dict.get dict [%e key] |. Belt.Option.map) [%e decoder]
       |. Belt.Option.getWithDefault)
-        (Belt.Result.Ok [%e default] [@explicit_arity])]
+        (Belt.Result.Ok [%e default])]
   | None ->
     [%expr
       (Js.Dict.get dict [%e key] |. Belt.Option.getWithDefault) Js.Json.null
       |> [%e decoder]]
+
 let generateDictGets decls =
   decls |> List.map generateDictGet |> tupleOrSingleton Exp.tuple
+
 let generateErrorCase {key} =
   {
-    pc_lhs =
-      [%pat? ((Belt.Result.Error (e : Decco.decodeError)) [@explicit_arity])];
+    pc_lhs = [%pat? Belt.Result.Error (e : Decco.decodeError)];
     pc_guard = None;
-    pc_rhs =
-      [%expr
-        Belt.Result.Error {e with path = "." ^ [%e key] ^ e.path}
-        [@explicit_arity]];
+    pc_rhs = [%expr Belt.Result.Error {e with path = "." ^ [%e key] ^ e.path}];
   }
+
 let generateFinalRecordExpr decls =
   decls |> List.map (fun {name} -> (lid name, makeIdentExpr name)) |> fun l ->
-  [%expr Belt.Result.Ok [%e Exp.record l None] [@explicit_arity]]
+  [%expr Belt.Result.Ok [%e Exp.record l None]]
+
 let generateSuccessCase {name} successExpr =
   {
-    pc_lhs =
-      ( mknoloc name |> Pat.var |> fun p ->
-        [%pat? ((Belt.Result.Ok [%p p]) [@explicit_arity])] );
+    pc_lhs = (mknoloc name |> Pat.var |> fun p -> [%pat? Belt.Result.Ok [%p p]]);
     pc_guard = None;
     pc_rhs = successExpr;
   }
@@ -75,6 +77,7 @@ let rec generateNestedSwitchesRecurse allDecls remainingDecls =
   \ *  decoding the first record items, then (if successful) the second, etc. "]
 
 let generateNestedSwitches decls = generateNestedSwitchesRecurse decls decls
+
 let generateDecoder decls unboxed =
   match unboxed with
   | true ->
@@ -93,6 +96,7 @@ let generateDecoder decls unboxed =
         | ((Js.Json.JSONObject dict) [@explicit_arity]) ->
           [%e generateNestedSwitches decls]
         | _ -> Decco.error "Not an object" v]
+
 let parseDecl generatorSettings
     {pld_name = {txt}; pld_loc; pld_type; pld_attributes} =
   let default =
@@ -117,6 +121,7 @@ let parseDecl generatorSettings
     codecs = Codecs.generateCodecs generatorSettings pld_type;
     default;
   }
+
 let generateCodecs ({doEncode; doDecode} as generatorSettings) decls unboxed =
   let parsedDecls = List.map (parseDecl generatorSettings) decls in
   ( (match doEncode with

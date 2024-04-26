@@ -124,9 +124,22 @@ let attr_uapp : Ppxlib.Parsetree.attribute =
     attr_loc = Location.none;
   }
 
-let expr_func ?(loc = Location.none) ~arity e =
+let wrapFunctionExpressionForUncurrying ?(loc = Location.none) ~arity e =
   let attr_arity =
     Attr.mk {txt = "res.arity"; loc}
       (PStr [Str.eval (Exp.constant (Const.int arity))])
   in
   Exp.construct ~attrs:[attr_arity] {txt = Lident "Function$"; loc} (Some e)
+
+let wrapFunctionTypeSignatureForUncurrying ?(loc = Location.none) ~arity
+    typeExpression =
+  let arityType : core_type =
+    Ast_helper.Typ.variant
+      [Ast_helper.Rf.tag {txt = "Has_arity" ^ string_of_int arity; loc} true []]
+      Closed None
+  in
+  Ast_helper.Typ.constr (lid "function$") [typeExpression; arityType]
+
+let print_strings strings =
+  let formatted = String.concat "; " strings in
+  Printf.printf "[%s]\n" formatted

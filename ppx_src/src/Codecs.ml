@@ -11,15 +11,23 @@ let rec parameterizeCodecs typeArgs encoderFunc decoderFunc generatorSettings =
   ( (match encoderFunc with
     | None -> None
     | ((Some encoderFunc) [@explicit_arity]) ->
+      let uncurriedApplicationAttrs =
+        [Attr.mk {txt = "res.partial"; loc} (PStr [])]
+      in
       subEncoders
       |> List.map (fun e -> (Asttypes.Nolabel, BatOption.get e))
-      |> Exp.apply encoderFunc |> BatOption.some),
+      |> Exp.apply ~attrs:uncurriedApplicationAttrs encoderFunc
+      |> BatOption.some),
     match decoderFunc with
     | None -> None
     | ((Some decoderFunc) [@explicit_arity]) ->
+      let uncurriedApplicationAttrs =
+        [Attr.mk {txt = "res.partial"; loc} (PStr [])]
+      in
       subDecoders
       |> List.map (fun e -> (Asttypes.Nolabel, BatOption.get e))
-      |> Exp.apply decoderFunc |> BatOption.some )
+      |> Exp.apply ~attrs:uncurriedApplicationAttrs decoderFunc
+      |> BatOption.some )
 
 and generateConstrCodecs {doEncode; doDecode} {Location.txt = identifier; loc} =
   let open Longident in
@@ -114,12 +122,15 @@ and generateConstrCodecs {doEncode; doDecode} {Location.txt = identifier; loc} =
   [@explicit_arity]) ->
     ( (match doEncode with
       | true ->
-        Some (Utils.expr_func ~arity:1 [%expr fun v -> v]) [@explicit_arity]
+        Some
+          (Utils.wrapFunctionExpressionForUncurrying ~arity:1
+             [%expr fun v -> v])
+        [@explicit_arity]
       | false -> None),
       match doDecode with
       | true ->
         Some
-          (Utils.expr_func ~arity:1
+          (Utils.wrapFunctionExpressionForUncurrying ~arity:1
              [%expr fun v -> (Belt.Result.Ok v [@explicit_arity])])
         [@explicit_arity]
       | false -> None )

@@ -1,5 +1,4 @@
 open Jest
-open Expect
 open TestUtils
 
 @decco type t = (int, string)

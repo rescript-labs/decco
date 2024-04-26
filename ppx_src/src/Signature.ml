@@ -34,8 +34,10 @@ let generateSigDecls {doEncode; doDecode} typeName paramNames =
     match doEncode with
     | true ->
       [
-        [%type: [%t valueType] -> Js.Json.t]
-        |> addEncoderParams (List.rev paramNames)
+        Utils.wrapFunctionTypeSignatureForUncurrying
+          ~arity:(List.length paramNames + 1)
+          ([%type: [%t valueType] -> Js.Json.t]
+          |> addEncoderParams (List.rev paramNames))
         |> Ast_helper.Val.mk (mknoloc encoderPat)
         |> Ast_helper.Sig.value;
       ]
@@ -45,8 +47,10 @@ let generateSigDecls {doEncode; doDecode} typeName paramNames =
     match doDecode with
     | true ->
       [
-        [%type: Js.Json.t -> [%t makeResultType valueType]]
-        |> addDecoderParams (List.rev paramNames)
+        Utils.wrapFunctionTypeSignatureForUncurrying
+          ~arity:(List.length paramNames + 1)
+          ([%type: Js.Json.t -> [%t makeResultType valueType]]
+          |> addDecoderParams (List.rev paramNames))
         |> Ast_helper.Val.mk (mknoloc decoderPat)
         |> Ast_helper.Sig.value;
       ]
@@ -60,9 +64,9 @@ let mapTypeDecl decl =
     decl
   in
   match getGeneratorSettingsFromAttributes ptype_attributes with
-  | ((Error s) [@explicit_arity]) -> fail ptype_loc s
-  | ((Ok None) [@explicit_arity]) -> []
-  | ((Ok ((Some generatorSettings) [@explicit_arity])) [@explicit_arity]) ->
+  | Error s -> fail ptype_loc s
+  | Ok None -> []
+  | Ok (Some generatorSettings) ->
     generateSigDecls generatorSettings typeName (getParamNames ptype_params)
 
 let mapSignatureItem mapper ({psig_desc} as signatureItem) =
