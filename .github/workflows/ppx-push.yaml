@@ -23,8 +23,12 @@ jobs:
     - uses: actions/checkout@v2
       with:
         ref: ${{ github.ref }}
-    - name: Install esy
-      run: yarn global add esy
+    - name: Install OPAM and OCaml
+      uses: avsm/setup-ocaml@v1
+      with:
+        ocaml-version: 4.12.1  # replace with your desired version
+    - name: Install Dune
+      run: opam install dune
     - name: Run Build
       run: yarn build-ppx
     - name: Upload Build Mac / Linux

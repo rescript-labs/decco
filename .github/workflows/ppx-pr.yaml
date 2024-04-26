@@ -9,8 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Install Esy
-      run: yarn global add esy
+    - name: Install OPAM and OCaml
+      uses: avsm/setup-ocaml@v1
+      with:
+        ocaml-version: 4.12.1  # replace with your desired version
+    - name: Install Dune
+      run: opam install dune
     - name: Install Dependencies
       run: yarn
     - name: Build PPX
