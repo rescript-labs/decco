@@ -22,8 +22,6 @@ jobs:
           dune build
       - name: Install Yarn Dependencies
         run: yarn
-      - name: Build PPX
-        run: yarn build-ppx
       - name: Build Library
         run: yarn build-lib
       - name: Run tests
