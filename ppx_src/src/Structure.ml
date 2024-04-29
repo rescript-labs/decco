@@ -1,20 +1,48 @@
 open Ppxlib
 open Parsetree
 open Ast_helper
-open Codecs
 open Utils
 
 let buildRightHandSideOfEqualSignForCodecDeclarations (paramNames : label list)
-    (codecGutsExpression : expression) (typeName : string) =
+    (codecGutsExpression : expression) (typeName : string) (isEncoder : bool) =
+  (* If we're dealing with an encoder, we need to specify the exact type that
+     will be fed to this function. If it's a decoder, we're always taking in
+     JSON *)
+  let incomingTypeName = if isEncoder then typeName else "Js.Json.t" in
+  let returnTypeName = if isEncoder then "Js.Json.t" else typeName in
+  let incomingType = Utils.labelToCoreType incomingTypeName in
+  let returnType =
+    if isEncoder then Utils.labelToCoreType returnTypeName
+    else
+      Ast_helper.Typ.constr (lid "Belt.Result.t")
+        [
+          Utils.labelToCoreType returnTypeName;
+          Utils.labelToCoreType "decodeError";
+        ]
+  in
+  (* This is the node that specifies the arguments coming in to the function *)
+  let basePattern =
+    Ast_helper.Pat.constraint_
+      (Ast_helper.Pat.var (mknoloc "value"))
+      incomingType
+  in
+  let codecGutsWithReturnType =
+    Ast_helper.Exp.constraint_ [%expr [%e codecGutsExpression] value] returnType
+  in
+  (* The base expression is what you'd think of as the "codec function". Takes json, returns a type, and vice-versa
+     but below we handle parameterized types by wrapping the base expression in new functions for every parameter.
+     In OCaml, this is the same concept as having a function with an argument for each parameter. But not in Rescript,
+     so down at the bottom we wrap the whole darn thing in a special expression that tells Rescript to use the same
+     arity as the number of incoming params, thus building an uncurried function. *)
+  let baseExpression =
+    Exp.fun_ Asttypes.Nolabel None basePattern codecGutsWithReturnType
+  in
   let wholeCodecExpr =
     List.fold_right
       (fun s acc ->
         let pat = Pat.var (mknoloc s) in
         Exp.fun_ Asttypes.Nolabel None pat acc)
-      paramNames
-      [%expr
-        fun (value : [%t Utils.labelToCoreType typeName]) ->
-          [%e codecGutsExpression] value]
+      paramNames baseExpression
   in
   let arity = List.length paramNames + 1 in
   (* Set an attribute with the arity matching the param count on the
@@ -22,8 +50,9 @@ let buildRightHandSideOfEqualSignForCodecDeclarations (paramNames : label list)
      expecting all of its arguments at once. *)
   Utils.wrapFunctionExpressionForUncurrying ~arity wholeCodecExpr
 
-(* Now we're getting into the guts a bit. This is where the actual
-   t_encode and t_decode functions get generated (optionally). *)
+(* This is where the value bindings get made for the codec functions
+   but it isn't where the codec functions themselves are generated. Those
+   get passed in. This is the outermost layer of the t_encode and t_decode functions *)
 let generateCodecDecls typeName paramNames (encoder, decoder) =
   let encoderPat = Pat.var (mknoloc (typeName ^ Utils.encoderFuncSuffix)) in
   let encoderParamNames = List.map (fun s -> encoderVarPrefix ^ s) paramNames in
@@ -38,7 +67,7 @@ let generateCodecDecls typeName paramNames (encoder, decoder) =
           ~attrs:[attrWarning [%expr "-39"]]
           encoderPat
           (buildRightHandSideOfEqualSignForCodecDeclarations encoderParamNames
-             encoder typeName);
+             encoder typeName true);
       ]
   in
   let decoderBindings =
@@ -50,7 +79,7 @@ let generateCodecDecls typeName paramNames (encoder, decoder) =
           ~attrs:[attrWarning [%expr "-4"]; attrWarning [%expr "-39"]]
           decoderPat
           (buildRightHandSideOfEqualSignForCodecDeclarations decoderParamNames
-             decoder typeName);
+             decoder typeName false);
       ]
   in
   [] @ encoderBindings @ decoderBindings
@@ -77,6 +106,13 @@ let mapTypeDecl decl =
   match makeEncodeDecodeFlagsFromDecoratorAttributes ptype_attributes with
   | Ok None -> []
   | Ok (Some encodeDecodeFlags) -> (
+    (* Here we call the code to generate the codecs and build their
+       value bindings (the let t_decode = ... part). We have various different
+       types to handle, so there's a switch. Most simple cases are covered in
+       Codecs.generateCodecs, but there are some cases that get handled in their
+       own modules. Probably for the sake of breaking up complex code.
+       Why aren't those cases just handled in Codecs.generateCodecs? I'm not sure,
+       I could probably find out by snooping around longer though. *)
     match (ptype_manifest, ptype_kind) with
     | None, Ptype_abstract ->
       fail ptype_loc "Can't generate codecs for unspecified type"
@@ -88,7 +124,7 @@ let mapTypeDecl decl =
     | Some manifest, _ ->
       generateCodecDecls typeName
         (getParamNames ptype_params)
-        (generateCodecs encodeDecodeFlags manifest)
+        (Codecs.generateCodecs encodeDecodeFlags manifest)
     | None, Ptype_variant decls ->
       generateCodecDecls typeName
         (getParamNames ptype_params)
@@ -96,7 +132,7 @@ let mapTypeDecl decl =
     | None, Ptype_record decls ->
       generateCodecDecls typeName
         (getParamNames ptype_params)
-        (Records.generateCodecs encodeDecodeFlags decls isUnboxed)
+        (Records.generateCodecs encodeDecodeFlags decls isUnboxed typeName)
     | _ -> fail ptype_loc "This type is not handled by decco")
   | Error s -> fail ptype_loc s
 

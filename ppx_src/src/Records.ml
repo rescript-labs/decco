@@ -11,13 +11,19 @@ type parsedDecl = {
   default: expression option;
 }
 
-let generateEncoder decls unboxed =
+let generateEncoder decls unboxed (rootTypeNameOfRecord : label) =
+  let constrainedFunctionArgsPattern =
+    Ast_helper.Pat.constraint_
+      [%pat? valueToEncode]
+      (Utils.labelToCoreType rootTypeNameOfRecord)
+  in
   match unboxed with
   | true ->
     let {codecs; field} = List.hd decls in
     let e, _ = codecs in
-    Utils.wrapFunctionExpressionForUncurrying ~arity:1
-      [%expr fun v -> [%e BatOption.get e] [%e field]]
+
+    Exp.fun_ Asttypes.Nolabel None constrainedFunctionArgsPattern
+      [%expr [%e BatOption.get e] [%e field]]
   | false ->
     let arrExpr =
       decls
@@ -26,7 +32,9 @@ let generateEncoder decls unboxed =
       |> Exp.array
     in
     [%expr Js.Json.object_ (Js.Dict.fromArray [%e arrExpr])]
-    |> Exp.fun_ Asttypes.Nolabel None [%pat? v]
+    (* This is where the final encoder function is constructed. If
+       you need to do something with the parameters, this is the place. *)
+    |> Exp.fun_ Asttypes.Nolabel None constrainedFunctionArgsPattern
 
 let generateDictGet {key; codecs = _, decoder; default} =
   let decoder = BatOption.get decoder in
@@ -97,7 +105,7 @@ let generateDecoder decls unboxed =
           [%e generateNestedSwitches decls]
         | _ -> Decco.error "Not an object" v]
 
-let parseDecl encodeDecodeFlags
+let parseRecordField encodeDecodeFlags (rootTypeNameOfRecord : label)
     {pld_name = {txt}; pld_loc; pld_type; pld_attributes} =
   let default =
     match getAttributeByName pld_attributes "decco.default" with
@@ -122,11 +130,18 @@ let parseDecl encodeDecodeFlags
     default;
   }
 
-let generateCodecs ({doEncode; doDecode} as encodeDecodeFlags) decls unboxed =
-  let parsedDecls = List.map (parseDecl encodeDecodeFlags) decls in
+let generateCodecs ({doEncode; doDecode} as encodeDecodeFlags)
+    recordFieldDeclarations unboxed (rootTypeNameOfRecord : label) =
+  let parsedFieldDeclarations =
+    List.map
+      (parseRecordField encodeDecodeFlags rootTypeNameOfRecord)
+      recordFieldDeclarations
+  in
   ( (match doEncode with
-    | true -> Some (generateEncoder parsedDecls unboxed) [@explicit_arity]
+    | true ->
+      Some
+        (generateEncoder parsedFieldDeclarations unboxed rootTypeNameOfRecord)
     | false -> None),
     match doDecode with
-    | true -> Some (generateDecoder parsedDecls unboxed) [@explicit_arity]
+    | true -> Some (generateDecoder parsedFieldDeclarations unboxed)
     | false -> None )

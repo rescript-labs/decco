@@ -22,6 +22,9 @@ let mknoloc txt = mkloc txt Location.none
 
 let lid ?(loc = Location.none) s = mkloc (Longident.parse s) loc
 
+(* Turn a label into an identifier, where an identifier is something like
+   x, or M.x: https://v2.ocaml.org/releases/5.1/api/compilerlibref/Parsetree.html#1_Corelanguage
+*)
 let makeIdentExpr s = Exp.ident (mknoloc (longidentParse s))
 
 let tupleOrSingleton tuple l =
