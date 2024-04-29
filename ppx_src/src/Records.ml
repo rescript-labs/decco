@@ -97,7 +97,7 @@ let generateDecoder decls unboxed =
           [%e generateNestedSwitches decls]
         | _ -> Decco.error "Not an object" v]
 
-let parseDecl generatorSettings
+let parseDecl encodeDecodeFlags
     {pld_name = {txt}; pld_loc; pld_type; pld_attributes} =
   let default =
     match getAttributeByName pld_attributes "decco.default" with
@@ -118,12 +118,12 @@ let parseDecl generatorSettings
     name = txt;
     key;
     field = Exp.field [%expr v] (lid txt);
-    codecs = Codecs.generateCodecs generatorSettings pld_type;
+    codecs = Codecs.generateCodecs encodeDecodeFlags pld_type;
     default;
   }
 
-let generateCodecs ({doEncode; doDecode} as generatorSettings) decls unboxed =
-  let parsedDecls = List.map (parseDecl generatorSettings) decls in
+let generateCodecs ({doEncode; doDecode} as encodeDecodeFlags) decls unboxed =
+  let parsedDecls = List.map (parseDecl encodeDecodeFlags) decls in
   ( (match doEncode with
     | true -> Some (generateEncoder parsedDecls unboxed) [@explicit_arity]
     | false -> None),

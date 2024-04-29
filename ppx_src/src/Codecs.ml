@@ -2,10 +2,10 @@ open Ppxlib
 open Parsetree
 open Ast_helper
 open Utils
-let rec parameterizeCodecs typeArgs encoderFunc decoderFunc generatorSettings =
+let rec parameterizeCodecs typeArgs encoderFunc decoderFunc encodeDecodeFlags =
   let subEncoders, subDecoders =
     typeArgs
-    |> List.map (fun core_type -> generateCodecs generatorSettings core_type)
+    |> List.map (fun core_type -> generateCodecs encodeDecodeFlags core_type)
     |> List.split
   in
   ( (match encoderFunc with
@@ -163,7 +163,7 @@ and generateConstrCodecs {doEncode; doDecode} {Location.txt = identifier; loc} =
   | ((Lapply (_, _)) [@explicit_arity]) ->
     fail loc "Lapply syntax not yet handled by decco"
 
-and generateCodecs ({doEncode; doDecode} as generatorSettings)
+and generateCodecs ({doEncode; doDecode} as encodeDecodeFlags)
     {ptyp_desc; ptyp_loc; ptyp_attributes} =
   match ptyp_desc with
   | Ptyp_any -> fail ptyp_loc "Can't generate codecs for `any` type"
@@ -171,7 +171,7 @@ and generateCodecs ({doEncode; doDecode} as generatorSettings)
     fail ptyp_loc "Can't generate codecs for function type"
   | Ptyp_package _ -> fail ptyp_loc "Can't generate codecs for module type"
   | ((Ptyp_tuple types) [@explicit_arity]) -> (
-    let compositeCodecs = List.map (generateCodecs generatorSettings) types in
+    let compositeCodecs = List.map (generateCodecs encodeDecodeFlags) types in
     ( (match doEncode with
       | true ->
         Some
@@ -200,7 +200,7 @@ and generateCodecs ({doEncode; doDecode} as generatorSettings)
     let encode, decode =
       match customCodec with
       | ((Ok None) [@explicit_arity]) ->
-        generateConstrCodecs generatorSettings constr
+        generateConstrCodecs encodeDecodeFlags constr
       | ((Ok ((Some attribute) [@explicit_arity])) [@explicit_arity]) -> (
         let expr = getExpressionFromPayload attribute in
         ( (match doEncode with
@@ -223,5 +223,5 @@ and generateCodecs ({doEncode; doDecode} as generatorSettings)
     in
     match List.length typeArgs = 0 with
     | true -> (encode, decode)
-    | false -> parameterizeCodecs typeArgs encode decode generatorSettings)
+    | false -> parameterizeCodecs typeArgs encode decode encodeDecodeFlags)
   | _ -> fail ptyp_loc "This syntax is not yet handled by decco"

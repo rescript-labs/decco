@@ -2,7 +2,7 @@ open Ppxlib
 open Parsetree
 open Ast_helper
 open Utils
-let generateEncoderCase generatorSettings unboxed
+let generateEncoderCase encodeDecodeFlags unboxed
     {pcd_name = {txt = name}; pcd_args; pcd_loc} =
   match pcd_args with
   | ((Pcstr_tuple args) [@explicit_arity]) ->
@@ -22,7 +22,7 @@ let generateEncoderCase generatorSettings unboxed
     in
     let rhsList =
       args
-      |> List.map (Codecs.generateCodecs generatorSettings)
+      |> List.map (Codecs.generateCodecs encodeDecodeFlags)
       |> List.map (fun (encoder, _) -> BatOption.get encoder)
       |> List.mapi (fun i e ->
              Exp.apply ~loc:pcd_loc e
@@ -55,14 +55,14 @@ let generateDecodeSuccessCase numArgs constructorName =
         |> fun e -> [%expr Belt.Result.Ok [%e e] [@explicit_arity]] );
   }
 
-let generateArgDecoder generatorSettings args constructorName =
+let generateArgDecoder encodeDecodeFlags args constructorName =
   let numArgs = List.length args in
   args
   |> List.mapi (DecodeCases.generateErrorCase numArgs)
   |> List.append [generateDecodeSuccessCase numArgs constructorName]
   |> Exp.match_
        (args
-       |> List.map (Codecs.generateCodecs generatorSettings)
+       |> List.map (Codecs.generateCodecs encodeDecodeFlags)
        |> List.mapi (fun i (_, decoder) ->
               Exp.apply (BatOption.get decoder)
                 [
@@ -76,7 +76,7 @@ let generateArgDecoder generatorSettings args constructorName =
                 ])
        |> tupleOrSingleton Exp.tuple)
 
-let generateDecoderCase generatorSettings
+let generateDecoderCase encodeDecodeFlags
     {pcd_name = {txt = name}; pcd_args; pcd_loc} =
   match pcd_args with
   | ((Pcstr_tuple args) [@explicit_arity]) ->
@@ -90,7 +90,7 @@ let generateDecoderCase generatorSettings
       | [] ->
         let ident = lid name in
         [%expr Belt.Result.Ok [%e Exp.construct ident None] [@explicit_arity]]
-      | _ -> generateArgDecoder generatorSettings args name
+      | _ -> generateArgDecoder encodeDecodeFlags args name
     in
     {
       pc_lhs =
@@ -109,13 +109,13 @@ let generateDecoderCase generatorSettings
     }
   | Pcstr_record _ -> fail pcd_loc "This syntax is not yet implemented by decco"
 
-let generateUnboxedDecode generatorSettings
+let generateUnboxedDecode encodeDecodeFlags
     {pcd_name = {txt = name}; pcd_args; pcd_loc} =
   match pcd_args with
   | ((Pcstr_tuple args) [@explicit_arity]) -> (
     match args with
     | a :: [] -> (
-      let _, d = Codecs.generateCodecs generatorSettings a in
+      let _, d = Codecs.generateCodecs encodeDecodeFlags a in
       match d with
       | ((Some d) [@explicit_arity]) ->
         let constructor =
@@ -129,12 +129,12 @@ let generateUnboxedDecode generatorSettings
     | _ -> fail pcd_loc "Expected exactly one type argument")
   | Pcstr_record _ -> fail pcd_loc "This syntax is not yet implemented by decco"
 
-let generateCodecs ({doEncode; doDecode} as generatorSettings) constrDecls
+let generateCodecs ({doEncode; doDecode} as encodeDecodeFlags) constrDecls
     unboxed =
   let encoder =
     match doEncode with
     | true ->
-      List.map (generateEncoderCase generatorSettings unboxed) constrDecls
+      List.map (generateEncoderCase encodeDecodeFlags unboxed) constrDecls
       |> Exp.match_ [%expr v]
       |> (fun e ->
            Utils.wrapFunctionExpressionForUncurrying ~arity:1
@@ -157,10 +157,10 @@ let generateCodecs ({doEncode; doDecode} as generatorSettings) constrDecls
     | true -> None
     | false -> (
       match unboxed with
-      | true -> generateUnboxedDecode generatorSettings (List.hd constrDecls)
+      | true -> generateUnboxedDecode encodeDecodeFlags (List.hd constrDecls)
       | false ->
         let decoderSwitch =
-          List.map (generateDecoderCase generatorSettings) constrDecls
+          List.map (generateDecoderCase encodeDecodeFlags) constrDecls
           |> fun l ->
           l @ [decoderDefaultCase]
           |> Exp.match_ [%expr Belt.Array.getExn tagged 0]

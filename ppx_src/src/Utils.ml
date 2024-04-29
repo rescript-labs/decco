@@ -2,7 +2,9 @@ open Ppxlib
 open Parsetree
 open Ast_helper
 
-let annotationName = "decco"
+let decoratorLabel = "decco"
+let decoratorDecodeLabel = decoratorLabel ^ ".decode"
+let decoratorEncodeLabel = decoratorLabel ^ ".encode"
 let encoderFuncSuffix = "_encode"
 let decoderFuncSuffix = "_decode"
 let encoderVarPrefix = "encoder_"
@@ -38,31 +40,26 @@ let getAttributeByName attributes name =
     Error ("Too many occurrences of \"" ^ name ^ "\" attribute")
     [@explicit_arity]
 
-type generatorSettings = {doEncode: bool; doDecode: bool}
+type encodeDecodeFlags = {doEncode: bool; doDecode: bool}
 
-let getGeneratorSettingsFromAttributes attributes =
-  match getAttributeByName attributes annotationName with
-  | ((Ok None) [@explicit_arity]) -> (
+let makeEncodeDecodeFlagsFromDecoratorAttributes attributes =
+  match getAttributeByName attributes decoratorLabel with
+  | Ok None -> (
+    (* This is the case where there's no @decco decorator found. We'll go ahead
+       and check for encode/decode-specific versions instead *)
     match
-      ( getAttributeByName attributes (annotationName ^ ".decode"),
-        getAttributeByName attributes (annotationName ^ ".encode") )
+      ( getAttributeByName attributes decoratorDecodeLabel,
+        getAttributeByName attributes decoratorEncodeLabel )
     with
-    | ((Ok (Some _)) [@explicit_arity]), ((Ok (Some _)) [@explicit_arity]) ->
-      Ok (Some {doEncode = true; doDecode = true} [@explicit_arity])
-      [@explicit_arity]
-    | ((Ok (Some _)) [@explicit_arity]), ((Ok None) [@explicit_arity]) ->
-      Ok (Some {doEncode = false; doDecode = true} [@explicit_arity])
-      [@explicit_arity]
-    | ((Ok None) [@explicit_arity]), ((Ok (Some _)) [@explicit_arity]) ->
-      Ok (Some {doEncode = true; doDecode = false} [@explicit_arity])
-      [@explicit_arity]
-    | ((Ok None) [@explicit_arity]), ((Ok None) [@explicit_arity]) ->
-      Ok None [@explicit_arity]
+    | Ok (Some _), Ok (Some _) -> Ok (Some {doEncode = true; doDecode = true})
+    | Ok (Some _), Ok None -> Ok (Some {doEncode = false; doDecode = true})
+    | Ok None, Ok (Some _) -> Ok (Some {doEncode = true; doDecode = false})
+    | Ok None, Ok None -> Ok None
     | (Error _ as e), _ -> e
     | _, (Error _ as e) -> e)
-  | ((Ok (Some _)) [@explicit_arity]) ->
-    Ok (Some {doEncode = true; doDecode = true} [@explicit_arity])
-    [@explicit_arity]
+  | Ok (Some _) ->
+    (* This is the case where the @decco decorator was found, which means we generate both *)
+    Ok (Some {doEncode = true; doDecode = true})
   | Error _ as e -> e
 
 let getExpressionFromPayload {attr_name = {loc}; attr_payload = payload} =
@@ -114,22 +111,15 @@ let attrWarning expr =
     attr_loc = loc;
   }
 
-(* The following functions come from https://github.com/green-labs/ppx_spice/pull/49/files#diff-25e55eeac0911adb8041a5ee5c0a5fb5291bc174eea8711c3694c51bf6a219aaR127
+(* The following function comes from https://github.com/green-labs/ppx_spice/pull/49/files#diff-25e55eeac0911adb8041a5ee5c0a5fb5291bc174eea8711c3694c51bf6a219aaR127
    And are also under the MIT license, Copyright (c) 2021 Greenlabs *)
-
-let attr_uapp : Ppxlib.Parsetree.attribute =
-  {
-    attr_name = {txt = "res.uapp"; loc = Location.none};
-    attr_payload = PStr [];
-    attr_loc = Location.none;
-  }
-
 let wrapFunctionExpressionForUncurrying ?(loc = Location.none) ~arity e =
   let attr_arity =
     Attr.mk {txt = "res.arity"; loc}
       (PStr [Str.eval (Exp.constant (Const.int arity))])
   in
   Exp.construct ~attrs:[attr_arity] {txt = Lident "Function$"; loc} (Some e)
+(* End function from Spice  *)
 
 let wrapFunctionTypeSignatureForUncurrying ?(loc = Location.none) ~arity
     typeExpression =
@@ -143,3 +133,5 @@ let wrapFunctionTypeSignatureForUncurrying ?(loc = Location.none) ~arity
 let print_strings strings =
   let formatted = String.concat "; " strings in
   Printf.printf "[%s]\n" formatted
+
+let labelToCoreType label = Ast_helper.Typ.constr (lid label) []
