@@ -3,7 +3,7 @@ open Parsetree
 open Ast_helper
 open Utils
 
-type parsedDecl = {
+type parsedRecordFieldDeclaration = {
   name: string;
   key: expression;
   field: expression;
@@ -11,27 +11,68 @@ type parsedDecl = {
   default: expression option;
 }
 
-let generateEncoder decls unboxed (rootTypeNameOfRecord : label) =
+let makeArrayOfJsonFieldsFromParsedFieldDeclarations parsedFields =
+  parsedFields
+  |> List.map (fun {key; field; codecs = encoder, _} ->
+         [%expr [%e key], [%e BatOption.get encoder] [%e field]])
+  |> Exp.array
+
+let wrapInSpreadDecoder parsedFields baseExpr =
+  let spreadExpr =
+    match List.find_opt (fun {name} -> name = "...") parsedFields with
+    | Some {codecs = Some otherEncoder, _} ->
+      (* We've encountered a spread operator here. At this point, we
+         want to call the encode function for the name of the thing
+         that's being spread, and then produce an expression that will
+         merge another object over the encoded spread object.
+
+         Make sure to use the text 'valueToEncode' here. It should match the value defined in
+         generateEncoder below. There's a comment there about why we don't pass this name in
+         as a parameter. *)
+      let otherEncoderLident = [%expr [%e otherEncoder] valueToEncode] in
+      Some [%expr Decco.unsafeMergeJsonObjectsCurried [%e otherEncoderLident]]
+    | _ -> None
+  in
+  match spreadExpr with
+  (* If we have a spread expression to apply, wrap the whole base encoder expression in
+     the function that merges it with the result of the spread *)
+  | Some spreadExpr -> [%expr [%e spreadExpr] [%e baseExpr]]
+  | None ->
+    (* If we're not handling a spread record, just return the base encoder expression *)
+    baseExpr
+
+let generateEncoder parsedFields unboxed (rootTypeNameOfRecord : label) =
+  (* If we've got a record with a spread type in it, we'll need to omit the spread
+     from the generated fields, and handle its encoding differently. *)
+  let parsedFieldsWithoutSpread =
+    List.filter (fun {name} -> name <> "...") parsedFields
+  in
   let constrainedFunctionArgsPattern =
+    (* Make sure you use the specific name 'valueToEncode' here, becuase it's also
+       used above when calling the encoder for a spread. Instead of passing in a
+       variable with the name, I'm writing the name directly in the quoted expression,
+       because expression quotes don't support dropping strings in, and I'd have to
+       do more construction of things by hand with Ast_helper. *)
     Ast_helper.Pat.constraint_
       [%pat? valueToEncode]
       (Utils.labelToCoreType rootTypeNameOfRecord)
   in
   match unboxed with
   | true ->
-    let {codecs; field} = List.hd decls in
+    (* In unboxed mode, we aren't going to handle spreading at all, since unboxeding
+       is only supported on records with one field anyway. *)
+    let {codecs; field} = List.hd parsedFieldsWithoutSpread in
     let e, _ = codecs in
-
     Exp.fun_ Asttypes.Nolabel None constrainedFunctionArgsPattern
       [%expr [%e BatOption.get e] [%e field]]
   | false ->
-    let arrExpr =
-      decls
-      |> List.map (fun {key; field; codecs = encoder, _} ->
-             [%expr [%e key], [%e BatOption.get encoder] [%e field]])
-      |> Exp.array
-    in
-    [%expr Js.Json.object_ (Js.Dict.fromArray [%e arrExpr])]
+    [%expr
+      Js.Json.object_
+        (Js.Dict.fromArray
+           [%e
+             makeArrayOfJsonFieldsFromParsedFieldDeclarations
+               parsedFieldsWithoutSpread])]
+    |> wrapInSpreadDecoder parsedFields
     (* This is where the final encoder function is constructed. If
        you need to do something with the parameters, this is the place. *)
     |> Exp.fun_ Asttypes.Nolabel None constrainedFunctionArgsPattern
@@ -109,18 +150,15 @@ let parseRecordField encodeDecodeFlags (rootTypeNameOfRecord : label)
     {pld_name = {txt}; pld_loc; pld_type; pld_attributes} =
   let default =
     match getAttributeByName pld_attributes "decco.default" with
-    | ((Ok ((Some attribute) [@explicit_arity])) [@explicit_arity]) ->
-      Some (getExpressionFromPayload attribute) [@explicit_arity]
-    | ((Ok None) [@explicit_arity]) -> None
-    | ((Error s) [@explicit_arity]) -> fail pld_loc s
+    | Ok (Some attribute) -> Some (getExpressionFromPayload attribute)
+    | Ok None -> None
+    | Error s -> fail pld_loc s
   in
   let key =
     match getAttributeByName pld_attributes "decco.key" with
-    | ((Ok ((Some attribute) [@explicit_arity])) [@explicit_arity]) ->
-      getExpressionFromPayload attribute
-    | ((Ok None) [@explicit_arity]) ->
-      Exp.constant (Pconst_string (txt, Location.none, None) [@explicit_arity])
-    | ((Error s) [@explicit_arity]) -> fail pld_loc s
+    | Ok (Some attribute) -> getExpressionFromPayload attribute
+    | Ok None -> Exp.constant (Pconst_string (txt, Location.none, None))
+    | Error s -> fail pld_loc s
   in
   {
     name = txt;
