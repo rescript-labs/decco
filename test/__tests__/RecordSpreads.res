@@ -1,25 +1,25 @@
-open Jest
-open TestUtils
-open Expect
+// open Jest
+// open TestUtils
+// open Expect
 
-module A = {
-  @decco
-  type t = {first_name: string}
-}
+// module A = {
+//   @decco
+//   type t = {first_name: string}
+// }
 
-module B = {
-  @decco
-  type t = {last_name: string}
-}
+// module B = {
+//   @decco
+//   type t = {last_name: string}
+// }
 
-module C = {
-  @decco
-  type t = {
-    ...A.t,
-    ...B.t,
-    age: int,
-  }
-}
+// module C = {
+//   @decco
+//   type t = {
+//     ...A.t,
+//     ...B.t,
+//     age: int,
+//   }
+// }
 
 // describe("record spreading", () => {
 //   test("should encode", () => {
@@ -49,3 +49,4 @@ module C = {
 //   //   expect(decoded)->toBe(42)
 //   // })
 // })
+

@@ -17,7 +17,7 @@ let makeArrayOfJsonFieldsFromParsedFieldDeclarations parsedFields =
          [%expr [%e key], [%e BatOption.get encoder] [%e field]])
   |> Exp.array
 
-let wrapInSpreadDecoder parsedFields baseExpr =
+let wrapInSpreadEncoder parsedFields baseExpr =
   let spreadExpr =
     match List.find_opt (fun {name} -> name = "...") parsedFields with
     | Some {codecs = Some otherEncoder, _} ->
@@ -29,7 +29,9 @@ let wrapInSpreadDecoder parsedFields baseExpr =
          Make sure to use the text 'valueToEncode' here. It should match the value defined in
          generateEncoder below. There's a comment there about why we don't pass this name in
          as a parameter. *)
-      let otherEncoderLident = [%expr [%e otherEncoder] valueToEncode] in
+      let otherEncoderLident =
+        [%expr [%e otherEncoder] (Obj.magic valueToEncode)]
+      in
       Some [%expr Decco.unsafeMergeJsonObjectsCurried [%e otherEncoderLident]]
     | _ -> None
   in
@@ -72,7 +74,7 @@ let generateEncoder parsedFields unboxed (rootTypeNameOfRecord : label) =
            [%e
              makeArrayOfJsonFieldsFromParsedFieldDeclarations
                parsedFieldsWithoutSpread])]
-    |> wrapInSpreadDecoder parsedFields
+    |> wrapInSpreadEncoder parsedFields
     (* This is where the final encoder function is constructed. If
        you need to do something with the parameters, this is the place. *)
     |> Exp.fun_ Asttypes.Nolabel None constrainedFunctionArgsPattern
@@ -100,9 +102,10 @@ let generateErrorCase {key} =
     pc_rhs = [%expr Belt.Result.Error {e with path = "." ^ [%e key] ^ e.path}];
   }
 
-let generateFinalRecordExpr decls =
-  decls |> List.map (fun {name} -> (lid name, makeIdentExpr name)) |> fun l ->
-  [%expr Belt.Result.Ok [%e Exp.record l None]]
+let generateFinalRecordExpr allFieldDeclarations =
+  allFieldDeclarations
+  |> List.map (fun {name} -> (lid name, makeIdentExpr name))
+  |> fun l -> [%expr Belt.Result.Ok [%e Exp.record l None]]
 
 let generateSuccessCase {name} successExpr =
   {
@@ -128,9 +131,12 @@ let rec generateNestedSwitchesRecurse allDecls remainingDecls =
 let generateNestedSwitches decls = generateNestedSwitchesRecurse decls decls
 
 let generateDecoder decls unboxed =
+  let fieldDeclarationsWithoutSpread =
+    List.filter (fun {name} -> name <> "...") decls
+  in
   match unboxed with
   | true ->
-    let {codecs; name} = List.hd decls in
+    let {codecs; name} = List.hd fieldDeclarationsWithoutSpread in
     let _, d = codecs in
     let recordExpr =
       [(lid name, makeIdentExpr "v")] |> fun __x -> Exp.record __x None
@@ -142,8 +148,8 @@ let generateDecoder decls unboxed =
     [%expr
       fun v ->
         match Js.Json.classify v with
-        | ((Js.Json.JSONObject dict) [@explicit_arity]) ->
-          [%e generateNestedSwitches decls]
+        | Js.Json.JSONObject dict ->
+          [%e generateNestedSwitches fieldDeclarationsWithoutSpread]
         | _ -> Decco.error "Not an object" v]
 
 let parseRecordField encodeDecodeFlags (rootTypeNameOfRecord : label)
@@ -163,7 +169,7 @@ let parseRecordField encodeDecodeFlags (rootTypeNameOfRecord : label)
   {
     name = txt;
     key;
-    field = Exp.field [%expr v] (lid txt);
+    field = Exp.field [%expr valueToEncode] (lid txt);
     codecs = Codecs.generateCodecs encodeDecodeFlags pld_type;
     default;
   }

@@ -3,21 +3,30 @@ open Parsetree
 open Ast_helper
 open Utils
 
+type typeInfo = {typeName: label; typeParams: label list}
+
+let typeNameAndParamsToTypeDeclaration {typeName; typeParams} =
+  Typ.constr (lid typeName) (List.map (fun s -> Typ.var s) typeParams)
+
+let jsJsonTypeDecl = Typ.constr (lid "Js.Json.t") []
+
 let buildRightHandSideOfEqualSignForCodecDeclarations (paramNames : label list)
-    (codecGutsExpression : expression) (typeName : string) (isEncoder : bool) =
+    (codecGutsExpression : expression) (typeInfo : typeInfo) (isEncoder : bool)
+    =
   (* If we're dealing with an encoder, we need to specify the exact type that
      will be fed to this function. If it's a decoder, we're always taking in
      JSON *)
-  let incomingTypeName = if isEncoder then typeName else "Js.Json.t" in
-  let returnTypeName = if isEncoder then "Js.Json.t" else typeName in
-  let incomingType = Utils.labelToCoreType incomingTypeName in
+  let incomingType =
+    if isEncoder then typeNameAndParamsToTypeDeclaration typeInfo
+    else jsJsonTypeDecl
+  in
   let returnType =
-    if isEncoder then Utils.labelToCoreType returnTypeName
+    if isEncoder then jsJsonTypeDecl
     else
       Ast_helper.Typ.constr (lid "Belt.Result.t")
         [
-          Utils.labelToCoreType returnTypeName;
-          Utils.labelToCoreType "decodeError";
+          typeNameAndParamsToTypeDeclaration typeInfo;
+          Utils.labelToCoreType "Decco.decodeError";
         ]
   in
   (* This is the node that specifies the arguments coming in to the function *)
@@ -67,7 +76,9 @@ let generateCodecDecls typeName paramNames (encoder, decoder) =
           ~attrs:[attrWarning [%expr "-39"]]
           encoderPat
           (buildRightHandSideOfEqualSignForCodecDeclarations encoderParamNames
-             encoder typeName true);
+             encoder
+             {typeName; typeParams = paramNames}
+             true);
       ]
   in
   let decoderBindings =
@@ -79,7 +90,9 @@ let generateCodecDecls typeName paramNames (encoder, decoder) =
           ~attrs:[attrWarning [%expr "-4"]; attrWarning [%expr "-39"]]
           decoderPat
           (buildRightHandSideOfEqualSignForCodecDeclarations decoderParamNames
-             decoder typeName false);
+             decoder
+             {typeName; typeParams = paramNames}
+             false);
       ]
   in
   [] @ encoderBindings @ decoderBindings
