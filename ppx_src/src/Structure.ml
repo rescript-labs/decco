@@ -3,11 +3,6 @@ open Parsetree
 open Ast_helper
 open Utils
 
-type typeInfo = {typeName: label; typeParams: label list}
-
-let typeNameAndParamsToTypeDeclaration {typeName; typeParams} =
-  Typ.constr (lid typeName) (List.map (fun s -> Typ.var s) typeParams)
-
 let jsJsonTypeDecl = Typ.constr (lid "Js.Json.t") []
 
 let buildRightHandSideOfEqualSignForCodecDeclarations (paramNames : label list)

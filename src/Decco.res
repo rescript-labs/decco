@@ -153,13 +153,22 @@ let dictFromJson = (decoder, json) =>
   }
 
 /**
-  * Merges two JSON objects together. If there are any duplicate keys, the value from the second object will be used.
+  * Merges two javascript objects together. If there are any duplicate keys, the value from the second object will be used.
   * This function is type-unsafe and should be used with caution. It's here to be used by generated decoder
   * functions for records that use spreads in their types, and these functions are careful only to pass in
-  * JSON objects and not other kinds of values.
+  * objects and not other kinds of values.
  */
-let unsafeMergeJsonObjectsCurried = (a: Js.Json.t) => (b: Js.Json.t): Js.Json.t => {
+let unsafeMergeObjects = (a: 'a, b: 'b): 'c => {
   Js.Obj.assign(a->Obj.magic, b->Obj.magic)->Obj.magic
+}
+
+/**
+  * Adds a field to a javascript object. This function is type-unsafe and should be used with caution. It's here to be used by
+  * generated decoder functions for records that use spreads in their types, and these functions are careful only to pass in
+  * objects and not other kinds of values.
+ */
+let unsafeAddFieldToObject = (key: string, value: 'b, obj: 'a): 'c => {
+  Obj.magic(obj)->Js.Dict.set(key, value)->Obj.magic
 }
 
 module Codecs = {

@@ -5,6 +5,8 @@ open Utils
 
 type parsedRecordFieldDeclaration = {
   name: string;
+  (* If this field was a spread, this is the name that comes after the three dots  *)
+  spreadName: string option;
   key: expression;
   field: expression;
   codecs: expression option * expression option;
@@ -17,31 +19,30 @@ let makeArrayOfJsonFieldsFromParsedFieldDeclarations parsedFields =
          [%expr [%e key], [%e BatOption.get encoder] [%e field]])
   |> Exp.array
 
-let wrapInSpreadEncoder parsedFields baseExpr =
-  let spreadExpr =
-    match List.find_opt (fun {name} -> name = "...") parsedFields with
-    | Some {codecs = Some otherEncoder, _} ->
-      (* We've encountered a spread operator here. At this point, we
-         want to call the encode function for the name of the thing
-         that's being spread, and then produce an expression that will
-         merge another object over the encoded spread object.
+let wrapInSpreadEncoders parsedFields baseExpr =
+  let spreadExprs =
+    List.filter_map
+      (fun {name; codecs} ->
+        match (name, codecs) with
+        | "...", (Some otherEncoder, _) ->
+          (* We've encountered a spread operator here. At this point, we
+             want to call the encode function for the name of the thing
+             that's being spread, and then produce an expression that will
+             merge another object over the encoded spread object.
 
-         Make sure to use the text 'valueToEncode' here. It should match the value defined in
-         generateEncoder below. There's a comment there about why we don't pass this name in
-         as a parameter. *)
-      let otherEncoderLident =
-        [%expr [%e otherEncoder] (Obj.magic valueToEncode)]
-      in
-      Some [%expr Decco.unsafeMergeJsonObjectsCurried [%e otherEncoderLident]]
-    | _ -> None
+             Make sure to use the text 'valueToEncode' here. It should match the value defined in
+             generateEncoder below. There's a comment there about why we don't pass this name in
+             as a parameter. *)
+          let otherEncoderLident =
+            [%expr [%e otherEncoder] (Obj.magic valueToEncode)]
+          in
+          Some [%expr Decco.unsafeMergeObjects [%e otherEncoderLident]]
+        | _, _ -> None)
+      parsedFields
   in
-  match spreadExpr with
-  (* If we have a spread expression to apply, wrap the whole base encoder expression in
-     the function that merges it with the result of the spread *)
-  | Some spreadExpr -> [%expr [%e spreadExpr] [%e baseExpr]]
-  | None ->
-    (* If we're not handling a spread record, just return the base encoder expression *)
-    baseExpr
+  List.fold_right
+    (fun spreadExpr acc -> [%expr [%e spreadExpr] [%e acc]])
+    spreadExprs baseExpr
 
 let generateEncoder parsedFields unboxed (rootTypeNameOfRecord : label) =
   (* If we've got a record with a spread type in it, we'll need to omit the spread
@@ -74,7 +75,7 @@ let generateEncoder parsedFields unboxed (rootTypeNameOfRecord : label) =
            [%e
              makeArrayOfJsonFieldsFromParsedFieldDeclarations
                parsedFieldsWithoutSpread])]
-    |> wrapInSpreadEncoder parsedFields
+    |> wrapInSpreadEncoders parsedFields
     (* This is where the final encoder function is constructed. If
        you need to do something with the parameters, this is the place. *)
     |> Exp.fun_ Asttypes.Nolabel None constrainedFunctionArgsPattern
@@ -95,25 +96,71 @@ let generateDictGet {key; codecs = _, decoder; default} =
 let generateDictGets decls =
   decls |> List.map generateDictGet |> tupleOrSingleton Exp.tuple
 
-let generateErrorCase {key} =
+let generateErrorCase {key; spreadName} =
+  let finalKey =
+    match spreadName with
+    | Some spreadName ->
+      Exp.constant (Pconst_string ("..." ^ spreadName, Location.none, None))
+    | None -> key
+  in
   {
     pc_lhs = [%pat? Belt.Result.Error (e : Decco.decodeError)];
     pc_guard = None;
-    pc_rhs = [%expr Belt.Result.Error {e with path = "." ^ [%e key] ^ e.path}];
+    pc_rhs =
+      [%expr Belt.Result.Error {e with path = "." ^ [%e finalKey] ^ e.path}];
   }
 
 let generateFinalRecordExpr allFieldDeclarations =
-  allFieldDeclarations
-  |> List.map (fun {name} -> (lid name, makeIdentExpr name))
-  |> fun l -> [%expr Belt.Result.Ok [%e Exp.record l None]]
+  let fieldDeclarationsWithoutSpread =
+    List.filter (fun {name} -> name <> "...") allFieldDeclarations
+  in
+  (* If there's a spread on the record, it gets passed as an optional expression as the last argument
+     to the record constructor. I don't know why, but there you go. *)
+  let spreadExpressions =
+    List.filter_map
+      (fun {name; spreadName} ->
+        match (name, spreadName) with
+        | "...", Some spreadName ->
+          (* We found a spread! But the type system won't be happy
+             if we spread it directly because smaller types still can't
+             be spread insto larger types. We'll have to use Object.magic *)
+          Some (Exp.ident (lid spreadName))
+        | _ -> None)
+      allFieldDeclarations
+  in
+  let rootObject =
+    List.fold_right
+      (fun {name} acc ->
+        [%expr
+          Decco.unsafeAddFieldToObject
+            [%e Exp.constant (Ast_helper.Const.string name)]
+            [%e makeIdentExpr name] [%e acc]])
+      fieldDeclarationsWithoutSpread [%expr Js.Dict.empty ()]
+  in
+  let mergedWithSpreads =
+    List.fold_right
+      (fun spreadExpr acc ->
+        [%expr Decco.unsafeMergeObjects [%e spreadExpr] [%e acc]])
+      spreadExpressions rootObject
+  in
+  [%expr Belt.Result.Ok (Obj.magic [%e mergedWithSpreads])]
 
-let generateSuccessCase {name} successExpr =
+let generateSuccessCase {name; spreadName} successExpr =
+  let actualNameToUseForOkayPayload =
+    match (name, spreadName) with
+    | "...", Some spreadName -> spreadName
+    | _ -> name
+  in
   {
-    pc_lhs = (mknoloc name |> Pat.var |> fun p -> [%pat? Belt.Result.Ok [%p p]]);
+    pc_lhs =
+      ( mknoloc actualNameToUseForOkayPayload |> Pat.var |> fun p ->
+        [%pat? Belt.Result.Ok [%p p]] );
     pc_guard = None;
     pc_rhs = successExpr;
   }
 
+(* Recursively generates an expression containing nested switches, first
+   decoding the first record items, then (if successful) the second, etc. *)
 let rec generateNestedSwitchesRecurse allDecls remainingDecls =
   let current, successExpr =
     match remainingDecls with
@@ -121,21 +168,27 @@ let rec generateNestedSwitchesRecurse allDecls remainingDecls =
     | last :: [] -> (last, generateFinalRecordExpr allDecls)
     | first :: tail -> (first, generateNestedSwitchesRecurse allDecls tail)
   in
+  (* Normally the expression we'll switch on is getting a value from Js.Dict,
+     but in the case of a spread operator, ..., we're going to call the decoder
+     for that field instead *)
+  let switchExpression =
+    match current with
+    | {name = "..."; codecs = _, decoder} ->
+      [%expr [%e BatOption.get decoder] v]
+    | _ -> generateDictGet current
+  in
   [generateErrorCase current]
   |> List.append [generateSuccessCase current successExpr]
-  |> Exp.match_ (generateDictGet current)
-[@@ocaml.doc
-  " Recursively generates an expression containing nested switches, first\n\
-  \ *  decoding the first record items, then (if successful) the second, etc. "]
+  |> Exp.match_ switchExpression
 
 let generateNestedSwitches decls = generateNestedSwitchesRecurse decls decls
 
 let generateDecoder decls unboxed =
-  let fieldDeclarationsWithoutSpread =
-    List.filter (fun {name} -> name <> "...") decls
-  in
   match unboxed with
   | true ->
+    let fieldDeclarationsWithoutSpread =
+      List.filter (fun {name} -> name <> "...") decls
+    in
     let {codecs; name} = List.hd fieldDeclarationsWithoutSpread in
     let _, d = codecs in
     let recordExpr =
@@ -148,8 +201,7 @@ let generateDecoder decls unboxed =
     [%expr
       fun v ->
         match Js.Json.classify v with
-        | Js.Json.JSONObject dict ->
-          [%e generateNestedSwitches fieldDeclarationsWithoutSpread]
+        | Js.Json.JSONObject dict -> [%e generateNestedSwitches decls]
         | _ -> Decco.error "Not an object" v]
 
 let parseRecordField encodeDecodeFlags (rootTypeNameOfRecord : label)
@@ -166,8 +218,15 @@ let parseRecordField encodeDecodeFlags (rootTypeNameOfRecord : label)
     | Ok None -> Exp.constant (Pconst_string (txt, Location.none, None))
     | Error s -> fail pld_loc s
   in
+  let spreadName =
+    match (txt, pld_type) with
+    | "...", {ptyp_desc = Ptyp_constr ({txt = Lident spreadName; _}, _); _} ->
+      Some spreadName
+    | _ -> None
+  in
   {
     name = txt;
+    spreadName;
     key;
     field = Exp.field [%expr valueToEncode] (lid txt);
     codecs = Codecs.generateCodecs encodeDecodeFlags pld_type;

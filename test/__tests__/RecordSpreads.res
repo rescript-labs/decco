@@ -1,52 +1,45 @@
-// open Jest
-// open TestUtils
-// open Expect
+open Jest
+open Expect
 
-// module A = {
-//   @decco
-//   type t = {first_name: string}
-// }
+module A = {
+  @decco
+  type t = {first_name: string}
+  @decco
+  type b = {last_name: string}
+}
 
-// module B = {
-//   @decco
-//   type t = {last_name: string}
-// }
+module C = {
+  @decco
+  type t = {
+    ...A.t,
+    ...A.b,
+    age: int,
+  }
+}
 
-// module C = {
-//   @decco
-//   type t = {
-//     ...A.t,
-//     ...B.t,
-//     age: int,
-//   }
-// }
+describe("record spreading", () => {
+  test("should encode", () => {
+    let c: C.t = {
+      first_name: "bob",
+      last_name: "pizza",
+      age: 3,
+    }
 
-// describe("record spreading", () => {
-//   test("should encode", () => {
-//     let a = {
-//       first_name: "Bob",
-//     }
+    let encoded = C.t_encode(c)
 
-//     let b = {
-//       last_name: "pizza",
-//     }
+    expect(Js.Json.stringify(encoded))->toBe(
+      {"first_name": "bob", "last_name": "pizza", "age": 3}
+      ->Obj.magic
+      ->Js.Json.stringify,
+    )
+  })
 
-//     let c: c = {
-//       first_name: "bob",
-//       last_name: "pizza",
-//       age: 3,
-//     }
+  test("should decode", () => {
+    let json = Js.Json.parseExn(`{"first_name":"bob","last_name":"pizza","age":3}`)
+    let decoded = C.t_decode(json)
 
-//     let encoded = c_encode(c)
-
-//     // expect("123")->toBe(Js.Json.stringify(c_encode(c)))
-//     expect("123")->toBe("123")
-//   })
-
-//   // test("should decode", () => {
-//   //   let encoded = "42"
-//   //   let decoded = intAsStr_decode(encoded)
-//   //   expect(decoded)->toBe(42)
-//   // })
-// })
-
+    expect(decoded->Belt.Result.map(x => (x.first_name, x.last_name, x.age)))->toEqual(
+      Ok(("bob", "pizza", 3)),
+    )
+  })
+})

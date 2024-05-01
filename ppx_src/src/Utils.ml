@@ -138,3 +138,8 @@ let print_strings strings =
   Printf.printf "[%s]\n" formatted
 
 let labelToCoreType label = Ast_helper.Typ.constr (lid label) []
+
+type typeInfo = {typeName: label; typeParams: label list}
+
+let typeNameAndParamsToTypeDeclaration {typeName; typeParams} =
+  Typ.constr (lid typeName) (List.map (fun s -> Typ.var s) typeParams)
