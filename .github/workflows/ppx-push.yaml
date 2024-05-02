@@ -43,19 +43,10 @@ jobs:
         working-directory: ppx_src/_build
 
       - name: Upload Build Mac / Linux
-        if: ${{ matrix.os != 'windows-latest' }}
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.os }}
           path: ppx_src/_build/default/bin/bin.exe
-          retention-days: 1
-
-      - name: Upload Build Windows
-        if: ${{ matrix.os == 'windows-latest' }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ matrix.os }}
-          path: ppx_src/_esy/default/store/b/*/default/bin/bin.exe
           retention-days: 1
 
   npm-release:
