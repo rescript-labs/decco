@@ -1,4 +1,4 @@
-name: Release Build 
+name: Release Build
 on:
   release:
     types: published
@@ -21,41 +21,40 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
-      with:
-        ref: ${{ github.ref }}
-    - name: Install OPAM and OCaml
-      uses: ocaml/setup-ocaml@v2
-      with:
-        ocaml-compiler: 4.12.1
-    - name: Install OCaml Dependencies and build
-      shell: bash
-      run: |
-        cd ppx_src
-        opam install dune
-        eval $(opam env)
-        opam install -y . --deps-only
-        dune build
-    - name: Upload Build Mac / Linux
-      if: ${{ matrix.os != 'windows-latest' }} 
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${{ matrix.os }}
-        path: ppx_src/_esy/default/build/default/bin/bin.exe 
-        retention-days: 1
-    - name: Upload Build Windows
-      if: ${{ matrix.os == 'windows-latest' }} 
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${{ matrix.os }}
-        path: ppx_src/_esy/default/store/b/*/default/bin/bin.exe 
-        retention-days: 1
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Install OPAM and OCaml and build
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: 4.12.1
+        working-directory: ppx_src
+
+      - run: opam install . --deps-only
+      - run: opam exec -- dune build
+
+      - name: Upload Build Mac / Linux
+        if: ${{ matrix.os != 'windows-latest' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}
+          path: ppx_src/_esy/default/build/default/bin/bin.exe
+          retention-days: 1
+
+      - name: Upload Build Windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}
+          path: ppx_src/_esy/default/store/b/*/default/bin/bin.exe
+          retention-days: 1
 
   npm-release:
     name: NPM Release
     runs-on: ubuntu-latest
     if: github.event.action == 'published'
-    needs: 
+    needs:
       - build
     steps:
       - name: Checkout
