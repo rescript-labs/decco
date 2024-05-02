@@ -151,7 +151,6 @@ let generateSuccessCase {name; spreadName} successExpr =
     | "...", Some spreadName -> spreadName
     | _ -> name
   in
-  let _ = Printf.printf "spreadName: %s\n" actualNameToUseForOkayPayload in
   {
     pc_lhs =
       ( mknoloc actualNameToUseForOkayPayload |> Pat.var |> fun p ->
