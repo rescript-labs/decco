@@ -54,7 +54,7 @@ If you want to see what's really going on under the hood, read more:
 
 ### Inspect the Parsetree (AST)
 
-See a text representation of the tree you're really operating on, and the real results of your PPX by running `yarn run print-parse-tree-with-ppx`
+See a text representation of the tree you're really operating on, and the real results of your PPX by running `yarn run print-parse-tree-with-ppx <file name>`
 
 You'll probably get compiler errors, because that's calling a private API of bsc that isn't including dependencies. But your goal here is really just to inspect the tree.
 
