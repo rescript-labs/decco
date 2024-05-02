@@ -29,17 +29,13 @@ jobs:
       with:
         ocaml-compiler: 4.12.1
     - name: Install OCaml Dependencies and build
+      shell: bash
       run: |
         cd ppx_src
         opam install dune
-        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
-          opam config exec -- opam install -y . --deps-only
-          opam config exec -- dune build
-        else
-          eval $(opam env)
-          opam install -y . --deps-only
-          dune build
-        fi
+        eval $(opam env)
+        opam install -y . --deps-only
+        dune build
     - name: Upload Build Mac / Linux
       if: ${{ matrix.os != 'windows-latest' }} 
       uses: actions/upload-artifact@v2
