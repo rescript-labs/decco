@@ -20,6 +20,6 @@ describe("CustomCodecs", () => {
   test("should decode", () => {
     let encoded = "42"->Decco.stringToJson
     let decoded = intAsStr_decode(encoded)
-    expect(decoded)->toBe(Ok(42))
+    expect(decoded)->toEqual(Ok(42))
   })
 })

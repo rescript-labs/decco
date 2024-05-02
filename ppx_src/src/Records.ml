@@ -36,7 +36,7 @@ let wrapInSpreadEncoders parsedFields baseExpr =
           let otherEncoderLident =
             [%expr [%e otherEncoder] (Obj.magic valueToEncode)]
           in
-          Some [%expr Decco.unsafeMergeObjects [%e otherEncoderLident]]
+          Some [%expr Decco.unsafeMergeObjectsCurried [%e otherEncoderLident]]
         | _, _ -> None)
       parsedFields
   in
@@ -151,6 +151,7 @@ let generateSuccessCase {name; spreadName} successExpr =
     | "...", Some spreadName -> spreadName
     | _ -> name
   in
+  let _ = Printf.printf "spreadName: %s\n" actualNameToUseForOkayPayload in
   {
     pc_lhs =
       ( mknoloc actualNameToUseForOkayPayload |> Pat.var |> fun p ->
@@ -218,10 +219,23 @@ let parseRecordField encodeDecodeFlags (rootTypeNameOfRecord : label)
     | Ok None -> Exp.constant (Pconst_string (txt, Location.none, None))
     | Error s -> fail pld_loc s
   in
+  let rec getSpreadNameFromLident (longident : Longident.t) =
+    (* The spread name can be a Lident: ...t, or any number of modules in the form of Ldot: X.Y.t.
+       In the case of Lapply we fail, because Rescript only supports spreading records into each other anyway.*)
+    match longident with
+    | Lident spreadName -> spreadName
+    | Ldot (otherLident, b) ->
+      String.lowercase_ascii (getSpreadNameFromLident otherLident) ^ b
+    | Lapply _ ->
+      fail pld_loc
+        "Tried to handle a spread operator that spread the result of a \
+         function call (Lapply). But we only support spreading records into \
+         each other"
+  in
   let spreadName =
     match (txt, pld_type) with
-    | "...", {ptyp_desc = Ptyp_constr ({txt = Lident spreadName; _}, _); _} ->
-      Some spreadName
+    | "...", {ptyp_desc = Ptyp_constr ({txt = lident}, _)} ->
+      Some (getSpreadNameFromLident lident)
     | _ -> None
   in
   {

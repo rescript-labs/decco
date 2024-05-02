@@ -158,8 +158,11 @@ let dictFromJson = (decoder, json) =>
   * functions for records that use spreads in their types, and these functions are careful only to pass in
   * objects and not other kinds of values.
  */
-let unsafeMergeObjects = (a: 'a, b: 'b): 'c => {
+let unsafeMergeObjectsCurried = (a: 'a) => (b: 'b): 'c => {
   Js.Obj.assign(a->Obj.magic, b->Obj.magic)->Obj.magic
+}
+let unsafeMergeObjects = (a: 'a, b: 'b): 'c => {
+  unsafeMergeObjectsCurried(a)(b)
 }
 
 /**
