@@ -1,5 +1,5 @@
 {
-  "name": "decco",
+  "name": "@rescript-labs/decco",
   "bs-dev-dependencies": ["@glennsl/rescript-jest"],
   "sources": [
     {
