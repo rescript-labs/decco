@@ -48,7 +48,6 @@ jobs:
   npm-release:
     name: NPM Release
     runs-on: ubuntu-latest
-    if: github.event.action == 'published'
     needs:
       - build
     steps:
