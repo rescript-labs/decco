@@ -63,11 +63,11 @@ let mapTypeDecl decl =
       =
     decl
   in
-  match getGeneratorSettingsFromAttributes ptype_attributes with
+  match makeEncodeDecodeFlagsFromDecoratorAttributes ptype_attributes with
   | Error s -> fail ptype_loc s
   | Ok None -> []
-  | Ok (Some generatorSettings) ->
-    generateSigDecls generatorSettings typeName (getParamNames ptype_params)
+  | Ok (Some encodeDecodeFlags) ->
+    generateSigDecls encodeDecodeFlags typeName (getParamNames ptype_params)
 
 let mapSignatureItem mapper ({psig_desc} as signatureItem) =
   match psig_desc with

@@ -4,8 +4,8 @@
 open Jest
 open Expect
 
-let intToStr = (i: int) => i->string_of_int
-let intFromStr = (s: string) => s->int_of_string
+let intToStr = (i: int) => i->string_of_int->Decco.stringToJson
+let intFromStr = (s: Js.Json.t) => s->Decco.stringFromJson->Belt.Result.map(int_of_string)
 
 @decco type intAsStr = @decco.codec((intToStr, intFromStr)) int
 
@@ -14,12 +14,12 @@ describe("CustomCodecs", () => {
     let x: intAsStr = 42
 
     let encoded = x->intAsStr_encode
-    expect(encoded)->toBe("42")
+    expect(encoded)->toBe("42"->Decco.stringToJson)
   })
 
   test("should decode", () => {
-    let encoded = "42"
+    let encoded = "42"->Decco.stringToJson
     let decoded = intAsStr_decode(encoded)
-    expect(decoded)->toBe(42)
+    expect(decoded)->toEqual(Ok(42))
   })
 })

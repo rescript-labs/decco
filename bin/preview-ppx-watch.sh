@@ -7,10 +7,10 @@ if [ -z "$file_path" ]; then
 	exit 1
 fi
 
-if ! command -v watch &>/dev/null; then
-	echo "watch command not found. Please install it using Homebrew:"
-	echo "brew install watch"
+if ! command -v viddy &>/dev/null; then
+	echo "viddy command not found. Please install it using Homebrew:"
+	echo "brew install viddy"
 	exit 1
 fi
 
-/opt/homebrew/bin/watch -n 1 -c -d "./node_modules/rescript/bsc -ppx ./ppx -bs-no-builtin-ppx -reprint-source $file_path"
+/opt/homebrew/bin/viddy -n 1 -c -d "./node_modules/rescript/bsc -ppx ./ppx -bs-no-builtin-ppx -reprint-source $file_path"

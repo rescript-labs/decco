@@ -13,7 +13,7 @@ let getArgsFromPolyvars ~loc coreTypes =
     fail loc
       "This error shoudn't happen, means that the AST of your polyvariant is \
        wrong"
-let generateEncoderCase generatorSettings unboxed row =
+let generateEncoderCase encodeDecodeFlags unboxed row =
   match row with
   | ((Rtag ({txt = name; loc}, _attributes, coreTypes)) [@explicit_arity]) ->
     let constructorExpr =
@@ -32,7 +32,7 @@ let generateEncoderCase generatorSettings unboxed row =
     in
     let rhsList =
       args
-      |> List.map (Codecs.generateCodecs generatorSettings)
+      |> List.map (Codecs.generateCodecs encodeDecodeFlags)
       |> List.map (fun (encoder, _) -> BatOption.get encoder)
       |> List.mapi (fun i e ->
              Exp.apply ~loc e
@@ -64,14 +64,14 @@ let generateDecodeSuccessCase numArgs constructorName =
         (Some v [@explicit_arity]) |> Exp.variant constructorName |> fun e ->
         [%expr Belt.Result.Ok [%e e] [@explicit_arity]] );
   }
-let generateArgDecoder generatorSettings args constructorName =
+let generateArgDecoder encodeDecodeFlags args constructorName =
   let numArgs = List.length args in
   args
   |> List.mapi (DecodeCases.generateErrorCase numArgs)
   |> List.append [generateDecodeSuccessCase numArgs constructorName]
   |> Exp.match_
        (args
-       |> List.map (Codecs.generateCodecs generatorSettings)
+       |> List.map (Codecs.generateCodecs encodeDecodeFlags)
        |> List.mapi (fun i (_, decoder) ->
               Exp.apply (BatOption.get decoder)
                 [
@@ -84,7 +84,7 @@ let generateArgDecoder generatorSettings args constructorName =
                     [%expr Belt.Array.getExn jsonArr [%e idx]] );
                 ])
        |> tupleOrSingleton Exp.tuple)
-let generateDecoderCase generatorSettings row =
+let generateDecoderCase encodeDecodeFlags row =
   match row with
   | ((Rtag ({txt; loc}, _, coreTypes)) [@explicit_arity]) ->
     let args = getArgsFromPolyvars ~loc coreTypes in
@@ -98,7 +98,7 @@ let generateDecoderCase generatorSettings row =
       | [] ->
         let resultantExp = Exp.variant txt None in
         [%expr Belt.Result.Ok [%e resultantExp] [@explicit_arity]]
-      | _ -> generateArgDecoder generatorSettings args txt
+      | _ -> generateArgDecoder encodeDecodeFlags args txt
     in
     {
       pc_lhs =
@@ -118,12 +118,12 @@ let generateDecoderCase generatorSettings row =
     }
   | ((Rinherit coreType) [@explicit_arity]) ->
     fail coreType.ptyp_loc "This syntax is not yet implemented by decco"
-let generateUnboxedDecode generatorSettings row =
+let generateUnboxedDecode encodeDecodeFlags row =
   match row with
   | ((Rtag ({txt; loc}, _, args)) [@explicit_arity]) -> (
     match args with
     | a :: [] -> (
-      let _, d = Codecs.generateCodecs generatorSettings a in
+      let _, d = Codecs.generateCodecs encodeDecodeFlags a in
       match d with
       | ((Some d) [@explicit_arity]) ->
         let constructor =
@@ -137,12 +137,12 @@ let generateUnboxedDecode generatorSettings row =
     | _ -> fail loc "Expected exactly one type argument")
   | ((Rinherit coreType) [@explicit_arity]) ->
     fail coreType.ptyp_loc "This syntax is not yet implemented by decco"
-let generateCodecs ({doEncode; doDecode} as generatorSettings) rowFields unboxed
+let generateCodecs ({doEncode; doDecode} as encodeDecodeFlags) rowFields unboxed
     =
   let encoder =
     match doEncode with
     | true ->
-      List.map (generateEncoderCase generatorSettings unboxed) rowFields
+      List.map (generateEncoderCase encodeDecodeFlags unboxed) rowFields
       |> Exp.match_ [%expr v]
       |> Exp.fun_ Asttypes.Nolabel None [%pat? v]
       |> BatOption.some
@@ -163,10 +163,10 @@ let generateCodecs ({doEncode; doDecode} as generatorSettings) rowFields unboxed
     | true -> None
     | false -> (
       match unboxed with
-      | true -> generateUnboxedDecode generatorSettings (List.hd rowFields)
+      | true -> generateUnboxedDecode encodeDecodeFlags (List.hd rowFields)
       | false ->
         let decoderSwitch =
-          rowFields |> List.map (generateDecoderCase generatorSettings)
+          rowFields |> List.map (generateDecoderCase encodeDecodeFlags)
           |> fun l ->
           l @ [decoderDefaultCase]
           |> Exp.match_ [%expr Belt.Array.getExn tagged 0]
