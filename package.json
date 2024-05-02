@@ -1,6 +1,6 @@
 {
   "name": "@rescript-labs/decco",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Rescript PPX which generates JSON (de)serializers for user-defined types",
   "main": "index.js",
   "scripts": {
