@@ -38,11 +38,7 @@ jobs:
         run: opam exec -- dune build
         working-directory: ppx_src
 
-      - name: Print out the tree of the build directory on windows
-        run: ls -R
-        working-directory: ppx_src/_build
-
-      - name: Upload Build Mac / Linux
+      - name: Upload Build
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.os }}
@@ -68,7 +64,7 @@ jobs:
         run: |
           mv ubuntu-latest/bin.exe ./ppx-linux.exe
           mv macos-latest/bin.exe ./ppx-osx.exe
-          mv windows-latest/*/default/bin/bin.exe ./ppx-windows.exe
+          mv windows-latest/bin.exe ./ppx-windows.exe
 
       - uses: actions/setup-node@v1
         with:
