@@ -29,17 +29,25 @@ jobs:
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: 4.12.1
+
+      - name: Install opam packages
+        run: opam install . --deps-only
         working-directory: ppx_src
 
-      - run: opam install . --deps-only
-      - run: opam exec -- dune build
+      - name: Build the ppx
+        run: opam exec -- dune build
+        working-directory: ppx_src
+
+      - name: Print out the tree of the build directory on windows
+        run: ls -R
+        working-directory: ppx_src/_build
 
       - name: Upload Build Mac / Linux
         if: ${{ matrix.os != 'windows-latest' }}
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.os }}
-          path: ppx_src/_esy/default/build/default/bin/bin.exe
+          path: ppx_src/_build/default/bin/bin.exe
           retention-days: 1
 
       - name: Upload Build Windows
