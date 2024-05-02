@@ -32,9 +32,14 @@ jobs:
       run: |
         cd ppx_src
         opam install dune
-        eval $(opam env)
-        opam install -y . --deps-only
-        dune build
+        if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          opam config exec -- opam install -y . --deps-only
+          opam config exec -- dune build
+        else
+          eval $(opam env)
+          opam install -y . --deps-only
+          dune build
+        fi
     - name: Upload Build Mac / Linux
       if: ${{ matrix.os != 'windows-latest' }} 
       uses: actions/upload-artifact@v2
