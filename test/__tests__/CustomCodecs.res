@@ -5,7 +5,7 @@ open Jest
 open Expect
 
 let intToStr = (i: int) => i->string_of_int->Decco.stringToJson
-let intFromStr = (s: Js.Json.t) => s->Decco.stringFromJson->Belt.Result.map(int_of_string)
+let intFromStr = (s: Js.Json.t) => s->Decco.stringFromJson->Belt.Result.mapU(int_of_string)
 
 @decco type intAsStr = @decco.codec((intToStr, intFromStr)) int
 

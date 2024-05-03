@@ -1,13 +1,4 @@
-type decodeError = {
-  path: string,
-  message: string,
-  value: Js.Json.t,
-}
-
-type result<'a> = Belt.Result.t<'a, decodeError>
-type decoder<'a> = Js.Json.t => result<'a>
-type encoder<'a> = 'a => Js.Json.t
-type codec<'a> = (encoder<'a>, decoder<'a>)
+include Decco_types
 
 let error = (~path=?, message, value) => {
   let path = switch path {
@@ -90,7 +81,7 @@ let arrayFromJson = (decoder, json) =>
 let listToJson = (encoder, list) => arrayToJson(encoder, Array.of_list(list))
 
 let listFromJson = (decoder, json) =>
-  (Belt.Result.map(_, Array.to_list))(arrayFromJson(decoder, json))
+  (Belt.Result.mapU(_, x => Array.to_list(x)))(arrayFromJson(decoder, json))
 
 let optionToJson = (encoder, opt) =>
   switch opt {
@@ -101,7 +92,7 @@ let optionToJson = (encoder, opt) =>
 let optionFromJson = (decoder, json) =>
   switch Js.Null_undefined.toOption(Js.Null_undefined.return(json)) {
   | None => Belt.Result.Ok(None)
-  | Some(json) => (Belt.Result.map(_, v => Some(v)))(decoder(json))
+  | Some(json) => (Belt.Result.mapU(_, v => Some(v)))(decoder(json))
   }
 
 let resultToJson = (okEncoder, errorEncoder, result) =>
@@ -116,7 +107,7 @@ let resultFromJson = (okDecoder, errorDecoder, json) =>
   switch Js.Json.decodeArray(json) {
   | Some([variantConstructorId, payload]) =>
     switch Js.Json.decodeString(variantConstructorId) {
-    | Some("Ok") => okDecoder(payload)->Belt.Result.map(v => Belt.Result.Ok(v))
+    | Some("Ok") => okDecoder(payload)->Belt.Result.mapU(v => Belt.Result.Ok(v))
 
     | Some("Error") =>
       switch errorDecoder(payload) {

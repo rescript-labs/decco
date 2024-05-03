@@ -131,7 +131,7 @@ let generateUnboxedDecode encodeDecodeFlags row =
         in
         (Some
            [%expr
-             fun v -> ([%e d] v |. Belt.Result.map) (fun v -> [%e constructor])]
+             fun v -> ([%e d] v |. Belt.Result.mapU) (fun v -> [%e constructor])]
         [@explicit_arity])
       | None -> None)
     | _ -> fail loc "Expected exactly one type argument")

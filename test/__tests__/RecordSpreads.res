@@ -42,7 +42,7 @@ describe("record spreading", () => {
     let json = Js.Json.parseExn(`{"first_name":"bob","last_name":"pizza","age":3, "pizza": "pie"}`)
     let decoded = t_decode(json)
 
-    expect(decoded->Belt.Result.map(x => (x.first_name, x.last_name, x.age, x.pizza)))->toEqual(
+    expect(decoded->Belt.Result.mapU(x => (x.first_name, x.last_name, x.age, x.pizza)))->toEqual(
       Ok(("bob", "pizza", 3, "pie")),
     )
   })

@@ -6,9 +6,9 @@ let falseableEncode = (encoder, opt) =>
 let falseableDecode = (decoder, json) =>
   switch Js.Json.decodeBoolean(json) {
   | Some(false) => Belt.Result.Ok(None)
-  | _ => decoder(json) |> Belt.Result.map(_, v => Some(v))
+  | _ => (Belt.Result.mapU(_, v => Some(v)))(decoder(json))
   }
 let falseable = (falseableEncode, falseableDecode)
 
-let magicDecode = j => Belt.Result.Ok(Obj.magic(j))
-let magic = (Obj.magic, magicDecode)
+let magicDecode: Decco_types.decoder<'a> = j => Belt.Result.Ok(Obj.magic(j))
+let magic: Decco_types.codec<'a> = (x => Obj.magic(x), magicDecode)

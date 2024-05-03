@@ -85,7 +85,7 @@ let generateDictGet {key; codecs = _, decoder; default} =
   match default with
   | Some default ->
     [%expr
-      ((Js.Dict.get dict [%e key] |. Belt.Option.map) [%e decoder]
+      ((Js.Dict.get dict [%e key] |. Belt.Option.mapU) [%e decoder]
       |. Belt.Option.getWithDefault)
         (Belt.Result.Ok [%e default])]
   | None ->
@@ -196,7 +196,7 @@ let generateDecoder decls unboxed =
     in
     [%expr
       fun v ->
-        ([%e BatOption.get d] v |. Belt.Result.map) (fun v -> [%e recordExpr])]
+        ([%e BatOption.get d] v |. Belt.Result.mapU) (fun v -> [%e recordExpr])]
   | false ->
     [%expr
       fun v ->
