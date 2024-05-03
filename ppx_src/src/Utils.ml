@@ -141,5 +141,5 @@ let labelToCoreType label = Ast_helper.Typ.constr (lid label) []
 
 type typeInfo = {typeName: label; typeParams: label list}
 
-let typeNameAndParamsToTypeDeclaration {typeName; typeParams} =
+let typeNameAndParamsToTypeDeclaration ({typeName; typeParams} : typeInfo) =
   Typ.constr (lid typeName) (List.map (fun s -> Typ.var s) typeParams)

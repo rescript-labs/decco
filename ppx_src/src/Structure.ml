@@ -57,11 +57,19 @@ let buildRightHandSideOfEqualSignForCodecDeclarations (paramNames : label list)
 (* This is where the value bindings get made for the codec functions
    but it isn't where the codec functions themselves are generated. Those
    get passed in. This is the outermost layer of the t_encode and t_decode functions *)
-let generateCodecDecls typeName paramNames (encoder, decoder) =
-  let encoderPat = Pat.var (mknoloc (typeName ^ Utils.encoderFuncSuffix)) in
-  let encoderParamNames = List.map (fun s -> encoderVarPrefix ^ s) paramNames in
-  let decoderPat = Pat.var (mknoloc (typeName ^ Utils.decoderFuncSuffix)) in
-  let decoderParamNames = List.map (fun s -> decoderVarPrefix ^ s) paramNames in
+let generateCodecDecls (typeInfo : typeInfo) (encoder, decoder) =
+  let encoderPat =
+    Pat.var (mknoloc (typeInfo.typeName ^ Utils.encoderFuncSuffix))
+  in
+  let encoderParamNames =
+    List.map (fun s -> encoderVarPrefix ^ s) typeInfo.typeParams
+  in
+  let decoderPat =
+    Pat.var (mknoloc (typeInfo.typeName ^ Utils.decoderFuncSuffix))
+  in
+  let decoderParamNames =
+    List.map (fun s -> decoderVarPrefix ^ s) typeInfo.typeParams
+  in
   let encoderBindings =
     match encoder with
     | None -> []
@@ -71,9 +79,7 @@ let generateCodecDecls typeName paramNames (encoder, decoder) =
           ~attrs:[attrWarning [%expr "-39"]]
           encoderPat
           (buildRightHandSideOfEqualSignForCodecDeclarations encoderParamNames
-             encoder
-             {typeName; typeParams = paramNames}
-             true);
+             encoder typeInfo true);
       ]
   in
   let decoderBindings =
@@ -85,9 +91,7 @@ let generateCodecDecls typeName paramNames (encoder, decoder) =
           ~attrs:[attrWarning [%expr "-4"]; attrWarning [%expr "-39"]]
           decoderPat
           (buildRightHandSideOfEqualSignForCodecDeclarations decoderParamNames
-             decoder
-             {typeName; typeParams = paramNames}
-             false);
+             decoder typeInfo false);
       ]
   in
   [] @ encoderBindings @ decoderBindings
@@ -114,6 +118,7 @@ let mapTypeDecl decl =
   match makeEncodeDecodeFlagsFromDecoratorAttributes ptype_attributes with
   | Ok None -> []
   | Ok (Some encodeDecodeFlags) -> (
+    let typeInfo = {typeName; typeParams = getParamNames ptype_params} in
     (* Here we call the code to generate the codecs and build their
        value bindings (the let t_decode = ... part). We have various different
        types to handle, so there's a switch. Most simple cases are covered in
@@ -126,21 +131,17 @@ let mapTypeDecl decl =
       fail ptype_loc "Can't generate codecs for unspecified type"
     | Some {ptyp_desc = Ptyp_variant (rowFields, _, _)}, Ptype_abstract ->
       let rowFieldsDec = List.map (fun row -> row.prf_desc) rowFields in
-      generateCodecDecls typeName
-        (getParamNames ptype_params)
+      generateCodecDecls typeInfo
         (Polyvariants.generateCodecs encodeDecodeFlags rowFieldsDec isUnboxed)
     | Some manifest, _ ->
-      generateCodecDecls typeName
-        (getParamNames ptype_params)
+      generateCodecDecls typeInfo
         (Codecs.generateCodecs encodeDecodeFlags manifest)
     | None, Ptype_variant decls ->
-      generateCodecDecls typeName
-        (getParamNames ptype_params)
+      generateCodecDecls typeInfo
         (Variants.generateCodecs encodeDecodeFlags decls isUnboxed)
     | None, Ptype_record decls ->
-      generateCodecDecls typeName
-        (getParamNames ptype_params)
-        (Records.generateCodecs encodeDecodeFlags decls isUnboxed typeName)
+      generateCodecDecls typeInfo
+        (Records.generateCodecs encodeDecodeFlags decls isUnboxed typeInfo)
     | _ -> fail ptype_loc "This type is not handled by decco")
   | Error s -> fail ptype_loc s
 

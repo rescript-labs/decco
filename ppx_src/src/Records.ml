@@ -44,7 +44,7 @@ let wrapInSpreadEncoders parsedFields baseExpr =
     (fun spreadExpr acc -> [%expr [%e spreadExpr] [%e acc]])
     spreadExprs baseExpr
 
-let generateEncoder parsedFields unboxed (rootTypeNameOfRecord : label) =
+let generateEncoder parsedFields unboxed (rootRecordTypeInfo : typeInfo) =
   (* If we've got a record with a spread type in it, we'll need to omit the spread
      from the generated fields, and handle its encoding differently. *)
   let parsedFieldsWithoutSpread =
@@ -58,7 +58,7 @@ let generateEncoder parsedFields unboxed (rootTypeNameOfRecord : label) =
        do more construction of things by hand with Ast_helper. *)
     Ast_helper.Pat.constraint_
       [%pat? valueToEncode]
-      (Utils.labelToCoreType rootTypeNameOfRecord)
+      (Utils.typeNameAndParamsToTypeDeclaration rootRecordTypeInfo)
   in
   match unboxed with
   | true ->
@@ -204,7 +204,7 @@ let generateDecoder decls unboxed =
         | Js.Json.JSONObject dict -> [%e generateNestedSwitches decls]
         | _ -> Decco.error "Not an object" v]
 
-let parseRecordField encodeDecodeFlags (rootTypeNameOfRecord : label)
+let parseRecordField encodeDecodeFlags
     {pld_name = {txt}; pld_loc; pld_type; pld_attributes} =
   let default =
     match getAttributeByName pld_attributes "decco.default" with
@@ -247,16 +247,13 @@ let parseRecordField encodeDecodeFlags (rootTypeNameOfRecord : label)
   }
 
 let generateCodecs ({doEncode; doDecode} as encodeDecodeFlags)
-    recordFieldDeclarations unboxed (rootTypeNameOfRecord : label) =
+    recordFieldDeclarations unboxed (rootRecordTypeInfo : typeInfo) =
   let parsedFieldDeclarations =
-    List.map
-      (parseRecordField encodeDecodeFlags rootTypeNameOfRecord)
-      recordFieldDeclarations
+    List.map (parseRecordField encodeDecodeFlags) recordFieldDeclarations
   in
   ( (match doEncode with
     | true ->
-      Some
-        (generateEncoder parsedFieldDeclarations unboxed rootTypeNameOfRecord)
+      Some (generateEncoder parsedFieldDeclarations unboxed rootRecordTypeInfo)
     | false -> None),
     match doDecode with
     | true -> Some (generateDecoder parsedFieldDeclarations unboxed)
